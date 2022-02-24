@@ -12,7 +12,8 @@ print('colummn headers',list(df.columns.values))
 #only take the first 8 columns of dataframe as the rest are NaNs
 df2 = df.iloc[:, 0:8]
 
-#the number is 1.76 here
+#get rid of nan
+df2 = df2.dropna()
 
 #convert the values with floats into strings
 df2['Virus Titre (Log10 FFU/mL)'] = df2['Virus Titre (Log10 FFU/mL)'].astype(str)
@@ -21,23 +22,6 @@ df2['Virus Titre (Log10 FFU/mL)'] = df2['Virus Titre (Log10 FFU/mL)'].astype(str
 df2 = df2[df2['Virus Titre (Log10 FFU/mL)'].str.contains("N/A") == False]
 df2 = df2[df2['Virus Titre (Log10 FFU/mL)'].str.contains("N/A ") == False]
 #vir_list_Non_NA = df2['Virus Titre (Log10 FFU/mL)'].tolist()
-
-#the number is empty here
-
-#checking the culprit value
-df_check = df2[df2['Subject ID']==634105]
-df_check = df_check[df_check['Study Day']==7]
-df_check = df_check[df_check['Timepoint'].str.contains("PM") == True]
-print('Check_list culprit type',df_check.dtypes,'df_check_culprit',df_check)
-
-#checking one of the good values
-df_check = df2[df2['Subject ID']==647785]
-df_check = df_check[df_check['Study Day'].str.contains("7") == True]
-df_check = df_check[df_check['Study Day'].str.contains("17") == False]
-df_check = df_check[df_check['Timepoint'].str.contains("PM") == True]
-print('Check_list good type',df_check.dtypes,'df_check_good',df_check)
-
-"""
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 FFU/mL)'].str.len().sort_values().index
@@ -50,14 +34,12 @@ df2_str_sorted = df2_str_sorted[df2_str_sorted.length < 7]
 #convert the strings to numbers
 df2_str_sorted['Virus Titre (Log10 FFU/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 FFU/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
-#print('sorted',df2_str_sorted)
 
+#print all the virus titre to 2dp
 vir_list = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
 round_to_tenths = [round(num, 2) for num in vir_list]
 round_to_tenths.sort()
-#print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
-
-
+print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
 
 ##create the 'effective study day' which takes AM and PM into account
 
@@ -73,7 +55,6 @@ for i in range (len(day_list)):
     if Timepoint_list[i] == "AM":
         effective_day[i] = day_list[i]
     elif Timepoint_list[i] == "PM":
-        print('i',i,'day_list[i]',day_list[i])
         effective_day[i] = day_list[i] + 0.5
 print('effective_day',effective_day)
 
@@ -83,17 +64,17 @@ vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
 print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
 #convert the day numbers to a list
-day_list = df2_str_sorted['Study Day'].tolist()
-print('length day list',len(day_list),'day_list',day_list)
+# day_list = df2_str_sorted['Study Day'].tolist()
+# print('length day list',len(day_list),'day_list',day_list)
 
 #plot the virus against day
 #df2_str_sorted.plot(x='Study Day', y='Virus Titre (Log10 FFU/mL)', style='o')
 plt.figure(0)
-plt.plot(day_list,vir_list_Non_DET,'bx')
+plt.plot(effective_day,vir_list_Non_DET,'bx')
 plt.xlabel('Study Day')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
-
+"""
 
 #plot the means
 
