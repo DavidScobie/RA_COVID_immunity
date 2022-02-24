@@ -4,50 +4,44 @@ import numpy as np
 import seaborn
 
 #import the excel data
-df = pd.read_excel ('C:\RA_COVID_immunity\work\FW__Human_challenge_studies\COVHIC001_FFA_MTS.xlsx')
+df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_MTS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
 
-#only take the first 8 columns of dataframe as the rest is NaNs
-df1 = df.iloc[:, 0:8]
-#print ('df1',df1)
+#only take the first 8 columns of dataframe as the rest are NaNs
+df2 = df.iloc[:, 0:8]
 
-# drop all rows with any NaN values in the viral load
-df2 = df1.dropna()
-#print('df2',df2)
-
-#print the data types in the dat frame
-#print('df2 dtypes',df2.dtypes)
-
-#just the floats
-# df2_floats = df2[df2['Virus Titre (Log10 FFU/mL)'].apply(lambda x: isinstance(x,float))]
-# df2_floats_list = df2_floats['Virus Titre (Log10 FFU/mL)'].tolist()
-# print('df2_floats_list',df2_floats_list)
+#the number is 1.76 here
 
 #convert the values with floats into strings
-df['Virus Titre (Log10 FFU/mL)'] = df['Virus Titre (Log10 FFU/mL)'].astype(str)
-df2_floats_to_str_list = df2['Virus Titre (Log10 FFU/mL)'].tolist()
-#print('df2_floats_to_str_list',df2_floats_to_str_list)
+df2['Virus Titre (Log10 FFU/mL)'] = df2['Virus Titre (Log10 FFU/mL)'].astype(str)
 
-#just the strings
-#df2_str = df2[df2['Virus Titre (Log10 FFU/mL)'].apply(lambda x: isinstance(x,str))]
+# drop all rows with any 'N/A' and 'N/A ' values in the viral load
+df2 = df2[df2['Virus Titre (Log10 FFU/mL)'].str.contains("N/A") == False]
+df2 = df2[df2['Virus Titre (Log10 FFU/mL)'].str.contains("N/A ") == False]
+#vir_list_Non_NA = df2['Virus Titre (Log10 FFU/mL)'].tolist()
+
+#the number is empty here
+
+#checking the culprit value
+df_check = df2[df2['Subject ID']==634105]
+df_check = df_check[df_check['Study Day']==7]
+df_check = df_check[df_check['Timepoint'].str.contains("PM") == True]
+print('Check_list culprit type',df_check.dtypes,'df_check_culprit',df_check)
+
+#checking one of the good values
+df_check = df2[df2['Subject ID']==647785]
+df_check = df_check[df_check['Study Day'].str.contains("7") == True]
+df_check = df_check[df_check['Study Day'].str.contains("17") == False]
+df_check = df_check[df_check['Timepoint'].str.contains("PM") == True]
+print('Check_list good type',df_check.dtypes,'df_check_good',df_check)
+
+"""
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 FFU/mL)'].str.len().sort_values().index
 df2_str_sorted = df2.reindex(s)
-#print('sorted',df2_str_sorted)
-
-#print the list of virus amounts
-vir_list = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
-#print('vir_list',vir_list)
-
-#next get rid of the NaN's, then chop off the DETECTED and NOT DETECTED, combine str and float dataframes, and then plot against days
-
-#get rid of the 'N/A '
-df2_str_sorted = df2_str_sorted[df2_str_sorted['Virus Titre (Log10 FFU/mL)'].str.contains("N/A ") == False]
-vir_list_Non_NA = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
-#print('vir_list_Non_NA',vir_list_Non_NA)
 
 #get rid of the DETECTED AND NOT DETECTED
 df2_str_sorted['length'] = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].str.len()
@@ -56,13 +50,37 @@ df2_str_sorted = df2_str_sorted[df2_str_sorted.length < 7]
 #convert the strings to numbers
 df2_str_sorted['Virus Titre (Log10 FFU/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 FFU/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
+#print('sorted',df2_str_sorted)
 
-#sort the dataframe by day
-#df2_str_sorted = df2_str_sorted.sort_values(['Study Day'], ascending=True)
+vir_list = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
+round_to_tenths = [round(num, 2) for num in vir_list]
+round_to_tenths.sort()
+#print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
+
+
+
+##create the 'effective study day' which takes AM and PM into account
+
+#convert study day and Timepoint into lists
+day_list = df2_str_sorted['Study Day'].tolist()
+print('length day list',len(day_list),'day_list',day_list)
+Timepoint_list = df2_str_sorted['Timepoint'].tolist()
+print('Timepoint_list length',len(Timepoint_list),'Timepoint_list',Timepoint_list)
+
+#create 'effective day' list and add 0.5 to values of study day if it is PM, (keep same as study day if AM)
+effective_day = np.zeros(len(day_list))
+for i in range (len(day_list)):
+    if Timepoint_list[i] == "AM":
+        effective_day[i] = day_list[i]
+    elif Timepoint_list[i] == "PM":
+        print('i',i,'day_list[i]',day_list[i])
+        effective_day[i] = day_list[i] + 0.5
+print('effective_day',effective_day)
+
 
 #convert the virus numbers to a list
 vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
-print('vir_list_Non_DET',vir_list_Non_DET)
+print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
 #convert the day numbers to a list
 day_list = df2_str_sorted['Study Day'].tolist()
@@ -74,6 +92,8 @@ plt.figure(0)
 plt.plot(day_list,vir_list_Non_DET,'bx')
 plt.xlabel('Study Day')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
+
+
 
 #plot the means
 
@@ -123,45 +143,9 @@ seaborn.relplot(data=df2_str_sorted, x='Study Day', y='Virus Titre (Log10 FFU/mL
 plt.figure(2)
 seaborn.pointplot(data=df2_str_sorted, x='Study Day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
 
+#plot individual patients on different days
+
+"""
+
 plt.show()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-
-#print the column for the day
-day = df2[['Study Day']]
-print('day',day)
-
-#print the column for the viral load
-virus = df2['Virus Titre (Log10 FFU/mL)']
-print('virus',virus)
-
-#only take the virus values which are numbers
-#virus_num = virus.select_dtypes(include='float')
-#virus_num = virus.select_dtypes(include=np.number)
-#virus_num = virus._get_numeric_data()
-#print('virus_num',virus_num)
-
-df3 = virus.astype(str, errors = 'raise')
-print('df3',df3)
-
-print('virus dtypes',df3.dtypes)
-
-print(df2.sort_values(by='Virus Titre (Log10 FFU/mL)') )
-
-#plot the virus titre per day
-# df.plot(x='Study Day', y='Virus Titre (Log10 FFU/mL)')
-# plt.show()
-"""
