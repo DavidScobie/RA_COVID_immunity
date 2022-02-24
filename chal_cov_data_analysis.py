@@ -52,10 +52,13 @@ print('Timepoint_list length',len(Timepoint_list),'Timepoint_list',Timepoint_lis
 #create 'effective day' list and add 0.5 to values of study day if it is PM, (keep same as study day if AM)
 effective_day = np.zeros(len(day_list))
 for i in range (len(day_list)):
-    if Timepoint_list[i] == "AM":
+    if Timepoint_list[i] == "AM" or Timepoint_list[i] == "AM ":
         effective_day[i] = day_list[i]
-    elif Timepoint_list[i] == "PM":
+    elif Timepoint_list[i] == "PM" or Timepoint_list[i] == "PM ":
         effective_day[i] = day_list[i] + 0.5
+    else:
+        print('i',i) #for checking if there is an error
+
 print('effective_day',effective_day)
 
 
