@@ -61,28 +61,21 @@ for i in range (len(day_list)):
 
 print('effective_day',effective_day)
 
-
 #convert the virus numbers to a list
 vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
 #print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
-#convert the day numbers to a list
-# day_list = df2_str_sorted['Study Day'].tolist()
-# print('length day list',len(day_list),'day_list',day_list)
-
 #plot the virus against day
-#df2_str_sorted.plot(x='Study Day', y='Virus Titre (Log10 FFU/mL)', style='o')
 plt.figure(0)
 plt.plot(effective_day,vir_list_Non_DET,'bx')
 plt.xlabel('Study Day')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
-
-
 #plot the means
 
 #find all the possible effective day values
 eff_day_vals = list(set(effective_day))
+eff_day_vals.sort()  #THIS ONLY WORKS IF THERE IS AT LEAST 1 COUNT AT EACH TIME POINT
 print('eff_day_vals',eff_day_vals)
 
 #find the occurences of each of the days
@@ -90,8 +83,9 @@ occ=np.zeros(len(eff_day_vals))
 for j in effective_day:
     for i in eff_day_vals:
         if i==j:
-            occ[int(i-min(eff_day_vals))]+=1
-#print('occ',occ)
+            occ[int(2*(i-min(eff_day_vals)))]+=1   #0.5 gap between vals, and begin at min val
+print('occ',occ)
+
 """
 #divide virus amount by number of counts on that day
 div_vir_list=[]
