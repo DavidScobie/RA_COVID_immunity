@@ -39,15 +39,15 @@ df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcas
 vir_list = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
 round_to_tenths = [round(num, 2) for num in vir_list]
 round_to_tenths.sort()
-print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
+#print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
 
 ##create the 'effective study day' which takes AM and PM into account
 
 #convert study day and Timepoint into lists
 day_list = df2_str_sorted['Study Day'].tolist()
-print('length day list',len(day_list),'day_list',day_list)
+#print('length day list',len(day_list),'day_list',day_list)
 Timepoint_list = df2_str_sorted['Timepoint'].tolist()
-print('Timepoint_list length',len(Timepoint_list),'Timepoint_list',Timepoint_list)
+#print('Timepoint_list length',len(Timepoint_list),'Timepoint_list',Timepoint_list)
 
 #create 'effective day' list and add 0.5 to values of study day if it is PM, (keep same as study day if AM)
 effective_day = np.zeros(len(day_list))
@@ -63,7 +63,7 @@ print('effective_day',effective_day)
 
 #convert the virus numbers to a list
 vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
-#print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
+print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
 #plot the virus against day
 plt.figure(0)
@@ -86,29 +86,31 @@ for j in effective_day:
             occ[int(2*(i-min(eff_day_vals)))]+=1   #0.5 gap between vals, and begin at min val
 print('occ',occ)
 
-"""
+
 #divide virus amount by number of counts on that day
 div_vir_list=[]
 k=0
-for j in day_list:
-    for i in all_day_vals:
+for j in effective_day:
+    for i in eff_day_vals:
         if i==j:
-            div_vir_list.append(vir_list_Non_DET[int(k)]/occ[int(i-min(all_day_vals))])
+            div_vir_list.append(vir_list_Non_DET[int(k)]/occ[int(2*(i-min(eff_day_vals)))])
             k+=1
+print('div_vir_list',div_vir_list)
+
 
 #sum the virus amounts on their specific day
-div_vir_list_sum = np.zeros(len(all_day_vals))
+div_vir_list_sum = np.zeros(len(eff_day_vals))
 k=0
-for j in day_list:
-    for i in all_day_vals:
+for j in effective_day:
+    for i in eff_day_vals:
         if i==j:
-            div_vir_list_sum[int(i-min(all_day_vals))]+=div_vir_list[int(k)]
+            div_vir_list_sum[int(2*(i-min(eff_day_vals)))]+=div_vir_list[int(k)]
             k+=1
 print('div_vir_list_sum',div_vir_list_sum)
 
-plt.plot(all_day_vals,div_vir_list_sum,'-rx')
+plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
 
-
+"""
 
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
 
