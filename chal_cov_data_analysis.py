@@ -110,7 +110,7 @@ print('div_vir_list_sum',div_vir_list_sum)
 
 plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
 
-"""
+
 
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
 
@@ -119,15 +119,31 @@ Subject_ID = df2_str_sorted['Subject ID'].tolist()
 Subject_ID_vals = list(set(Subject_ID))
 print('Subject_ID',Subject_ID)
 
+#append effective_day to the dataframe
+df2_str_sorted['effective_day'] = effective_day
+
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
-seaborn.relplot(data=df2_str_sorted, x='Study Day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID')
+seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID')
 plt.figure(2)
-seaborn.pointplot(data=df2_str_sorted, x='Study Day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
+seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
 
 #plot individual patients on different days
 
-"""
+d = 627506
+print(df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(d)) == True])
+#print(df2_str_sorted.loc[df2_str_sorted['Subject ID'] == 627506])
+
+k=2
+for j in Subject_ID_vals:
+    k+=1
+    plt.figure(k)
+    df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True].plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='scatter')
+    plt.title(j)
+    #df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a smaller dataframe, just with the relevant Subject_ID value
+    #print('df2_str_sorted',df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True])
+
+
 
 plt.show()
 
