@@ -64,7 +64,7 @@ print('effective_day',effective_day)
 
 #convert the virus numbers to a list
 vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()
-print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
+#print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
 #convert the day numbers to a list
 # day_list = df2_str_sorted['Study Day'].tolist()
@@ -77,22 +77,22 @@ plt.plot(effective_day,vir_list_Non_DET,'bx')
 plt.xlabel('Study Day')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
-"""
+
 
 #plot the means
 
-#find all the possible day values
-all_day_vals = list(set(day_list))
-print('all_day_vals',all_day_vals)
+#find all the possible effective day values
+eff_day_vals = list(set(effective_day))
+print('eff_day_vals',eff_day_vals)
 
 #find the occurences of each of the days
-occ=np.zeros(len(all_day_vals))
-for j in day_list:
-    for i in all_day_vals:
+occ=np.zeros(len(eff_day_vals))
+for j in effective_day:
+    for i in eff_day_vals:
         if i==j:
-            occ[int(i-min(all_day_vals))]+=1
-print('occ',occ)
-
+            occ[int(i-min(eff_day_vals))]+=1
+#print('occ',occ)
+"""
 #divide virus amount by number of counts on that day
 div_vir_list=[]
 k=0
@@ -113,6 +113,8 @@ for j in day_list:
 print('div_vir_list_sum',div_vir_list_sum)
 
 plt.plot(all_day_vals,div_vir_list_sum,'-rx')
+
+
 
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
 
