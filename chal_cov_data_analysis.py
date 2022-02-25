@@ -111,7 +111,6 @@ print('div_vir_list_sum',div_vir_list_sum)
 plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
 
 
-
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
 
 #find all the possible subject IDs
@@ -130,20 +129,17 @@ seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 
 
 #plot individual patients on different days
 
-d = 627506
-print(df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(d)) == True])
-#print(df2_str_sorted.loc[df2_str_sorted['Subject ID'] == 627506])
-
 k=2
 for j in Subject_ID_vals:
     k+=1
     plt.figure(k)
-    df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True].plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='scatter')
-    plt.title(j)
-    #df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a smaller dataframe, just with the relevant Subject_ID value
-    #print('df2_str_sorted',df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True])
+    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
+    df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
+    df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='line',xlim=[2,12.5],ylim=[1.2,5.1]) #plot the subject points as a line plot
 
-
+    plt.title('Subject ID=%i' %j)
+    plt.xlabel('Study Day')
+    plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
 plt.show()
 
