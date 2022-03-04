@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn
+from lmfit import minimize, Parameters, Parameter, report_fit
+from scipy.integrate import odeint
 
 #import the excel data
 
@@ -151,6 +153,94 @@ for i in range (len(div_vir_list_sum)):
 
 plt.figure(3)
 plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
+plt.xlabel('Effective Day')
+plt.ylabel('Virus Titre (copies/mL)')
+
+#######################################################
+
+def f(y, t, paras):
+    """
+    Your system of differential equations
+    """
+    #the U, V and I
+    U = y[0]
+    V = y[1]
+    I = y[2]
+
+    #the parameters alpha, beta, gamma, delta
+    try:
+        alpha = paras['alpha'].value
+        beta = paras['beta'].value
+        gamma = paras['gamma'].value
+        delta = paras['delta'].value
+
+    except KeyError:
+        alpha, beta, gamma, delta = paras
+
+    # the model equations
+    f0 = - alpha * V * U
+    f1 = (gamma * I) - (delta * V)
+    f2 = (alpha * V * U) - (beta * I)
+    return [f0, f1, f2]
+
+def g(t, x0, paras):
+    """
+    Solution to the ODE x'(t) = f(t,x,k) with initial condition x(0) = x0
+    """
+    x = odeint(f, x0, t, args=(paras,))
+    return x
+
+
+def residual(paras, t, data):
+
+    """
+    compute the residual between actual data and fitted data
+    """
+
+    x0 = paras['U0'].value, paras['V0'].value, paras['I0'].value
+    model = g(t, x0, paras)
+
+    # you only have data for one of your variables
+    V_model = model[:, 1]
+    return (V_model - data).ravel()
+
+
+# initial conditions
+U0 = 4*(10**(8))
+V0 = 0.31
+I0 = 0
+y0 = [U0, V0, I0]
+
+# measured data
+t_measured = eff_day_vals
+V_measured = act_div_vir_list_sum
+
+plt.figure()
+plt.scatter(t_measured, V_measured, marker='o', color='b', label='measured data', s=75)
+
+# set parameters including bounds; you can also fix parameters (use vary=False)
+params = Parameters()
+params.add('U0', value=U0, vary=False)
+params.add('V0', value=V0, vary=False)
+params.add('I0', value=I0, vary=False)
+params.add('alpha', value=4*(10**(-8)), min=0, max=9*(10**(-8)))
+params.add('beta', value=1.07, min=0, max=5)
+params.add('gamma', value=3.07, min=3.06, max=3.08)
+params.add('delta', value=2.4, min=0, max=5)
+
+# fit model
+result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+# check results of the fit
+data_fitted = g(t_measured, y0, result.params)
+
+# plot fitted data
+#plt.figure()
+plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted data')
+plt.legend()
+plt.xlim([0, max(t_measured)])
+plt.ylim([0, 1.1 * max(data_fitted[:, 1])])
+# display fitted statistics
+report_fit(result)
 
 plt.show()
 

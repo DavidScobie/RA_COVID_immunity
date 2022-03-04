@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
+from lmfit import minimize, Parameters, Parameter, report_fit
 
 # function that returns dy/dt
 def model(y,t):
@@ -64,5 +65,8 @@ plt.plot(t,logV,'r-')
 plt.plot(t,logU,'g--')
 plt.xlabel('time')
 plt.ylabel('log10(Virus)')
+
+plt.figure()
+plt.plot(t,V,'r-')
 
 plt.show()
