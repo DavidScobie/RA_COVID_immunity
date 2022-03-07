@@ -7,7 +7,7 @@ from scipy.integrate import odeint
 
 #import the excel data
 
-df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_qPCR_MTS.xlsx')
+df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_qPCR_TS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
@@ -209,6 +209,13 @@ def residual(paras, t, data):
 
 
 # initial conditions
+"""
+#paper initial conditions
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work has shown use <50 copies/ml
+I0 = 0   #Should be zero
+"""
+#my optimised initial conditions
 U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
 V0 = 0.6   #cannot be measured as it is below detectable levels. Previous work has shown use <50 copies/ml
 I0 = 0   #Should be zero
@@ -226,6 +233,14 @@ params = Parameters()
 params.add('U0', value=U0, vary=False)
 params.add('V0', value=V0, vary=False)
 params.add('I0', value=I0, vary=False)
+"""
+#paper parameters
+params.add('alpha', value=4.7*(10**(-8)), min=4.699*(10**(-8)), max=4.7001*(10**(-8)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1.07, min=1.069999, max=1.070001)    #Clearance rate of infected cells
+params.add('gamma', value=3.07, min=3.0699999, max=3.0700001)        #Infected cells release virus at rate gamma
+params.add('delta', value=2.4, min=2.39999, max=2.400001)     #clearance rate of virus particles
+"""
+#my optimised parameters
 params.add('alpha', value=1.3*(10**(-7)), min=1.2*(10**(-7)), max=1.4*(10**(-7)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=1.07, min=1, max=16)    #Clearance rate of infected cells
 params.add('gamma', value=3.07, min=3.06, max=3.08)        #Infected cells release virus at rate gamma
@@ -241,9 +256,20 @@ data_fitted = g(t_measured, y0, result.params)
 plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted data')
 plt.legend()
 plt.xlim([0, max(t_measured)])
-#plt.ylim([0, 1.1 * max(data_fitted[:, 1])])
+plt.ylim([0, 1.1 * max(data_fitted[:, 1])])
+plt.xlabel('Effective Day')
+plt.ylabel('Virus Titre (copies/mL)')
 # display fitted statistics
 report_fit(result)
 
+#plot the fitted data and the model for log(virus) against day
+log_V_measured = np.log10(V_measured)
+log_V_fitted = np.log10(data_fitted[:, 1])
+plt.figure()
+plt.scatter(t_measured, log_V_measured, marker='o', color='b', label='measured data', s=75)
+plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted data')
+plt.legend()
+plt.xlabel('Effective Day')
+plt.ylabel('Virus Titre (Log10 copies/mL)')
 plt.show()
 
