@@ -69,12 +69,12 @@ vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
 #print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
 #plot the virus against day
-
+"""
 plt.figure(0)
 plt.plot(effective_day,vir_list_Non_DET,'bx')
 plt.xlabel('Study Day')
 plt.ylabel('Virus Titre (Log10 copies/mL)')
-
+"""
 #plot the means
 
 #find all the possible effective day values
@@ -111,9 +111,9 @@ for j in effective_day:
             div_vir_list_sum[int(2*(i-min(eff_day_vals)))]+=div_vir_list[int(k)]
             k+=1
 #print('div_vir_list_sum',div_vir_list_sum)
-
+"""
 plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
-
+"""
 
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
 
@@ -127,12 +127,12 @@ df2_str_sorted['effective_day'] = effective_day
 
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
-
+"""
 seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
 
 plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
-
+"""
 #plot individual patients on different days
 """
 k=2
@@ -205,7 +205,12 @@ def residual(paras, t, data):
 
     # you only have data for one of your variables
     V_model = model[:, 1]
-    return (V_model - data).ravel()
+
+    #want to find the residual between the log of the virus measured and fitted data
+    log_V_model = np.log10(V_model)
+    log_data = np.log10(data)
+
+    return (log_V_model - log_data).ravel()
 
 
 # initial conditions
@@ -241,10 +246,10 @@ params.add('gamma', value=3.07, min=3.0699999, max=3.0700001)        #Infected c
 params.add('delta', value=2.4, min=2.39999, max=2.400001)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=1.3*(10**(-7)), min=1.2*(10**(-7)), max=1.4*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1.07, min=1, max=16)    #Clearance rate of infected cells
-params.add('gamma', value=3.07, min=3.06, max=3.08)        #Infected cells release virus at rate gamma
-params.add('delta', value=6, min=5, max=7)     #clearance rate of virus particles
+params.add('alpha', value=4.7*(10**(-8)), min=1*(10**(-8)), max=6*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1.07, min=0, max=16)    #Clearance rate of infected cells
+params.add('gamma', value=3.07, min=0, max=6)        #Infected cells release virus at rate gamma
+params.add('delta', value=2.4, min=0, max=100)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
