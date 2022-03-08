@@ -276,5 +276,16 @@ plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted 
 plt.legend()
 plt.xlabel('Effective Day')
 plt.ylabel('Virus Titre (Log10 copies/mL)')
-plt.show()
 
+#plot the measured data, along with the fitted model for V, I and U
+plt.figure()
+plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+log_U_fitted = np.log10(data_fitted[:, 0])
+log_I_fitted = np.log10(data_fitted[:, 2])
+plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+plt.legend()
+plt.xlabel('Effective Day')
+plt.ylabel('Cell Concentration (Log10 copies/mL)')
+plt.show()
