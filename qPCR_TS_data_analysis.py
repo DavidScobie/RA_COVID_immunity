@@ -70,7 +70,7 @@ vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
 
 #plot the virus against day
 """
-plt.figure(0)
+plt.figure()
 plt.plot(effective_day,vir_list_Non_DET,'bx')
 plt.xlabel('Study Day')
 plt.ylabel('Virus Titre (Log10 copies/mL)')
@@ -134,11 +134,10 @@ plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
 """
 #plot individual patients on different days
-"""
-k=2
-for j in Subject_ID_vals:
+Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
+for j in Subject_ID_vals_short:
     k+=1
-    plt.figure(k)
+    plt.figure()
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
     df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
@@ -147,7 +146,7 @@ for j in Subject_ID_vals:
     plt.xlabel('Study Day')
     plt.ylabel('Virus Titre (Log10 copies/mL)')
 
-"""
+
 
 #plot actual virus amount (instead of log10 of virus amount)
 act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
@@ -293,9 +292,15 @@ plt.legend()
 plt.xlabel('Days Post Infection')
 plt.ylabel('Cell Concentration (Log10 copies/mL)')
 
+#########################################################
+
 #fit models to different patients
-k=3   #starting on the 3rd figure
-for j in Subject_ID_vals:
+
+#just start with trying to plot the first 2 subjects (to minimise the number of figures made)
+Subject_ID_vals_short = Subject_ID_vals[0:3]
+print('Subject_ID_vals_short',Subject_ID_vals_short)
+
+for j in Subject_ID_vals_short:
 
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
@@ -303,14 +308,58 @@ for j in Subject_ID_vals:
     #only use the subjects with more than 5 data points
     if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5:
         k+=1
-        plt.figure(k)
-        print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))
+        #convert the virus and the effective day values to a list
+        div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
+        eff_day_list = df2_Subj_ID_sub_eff_sort['effective_day'].tolist()
 
-        df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
+        print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
 
-        plt.title('Subject ID=%i' %j)
-        plt.xlabel('Study Day')
+        #compute the actual virus amount (not the log)
+        act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
+        for i in range (len(div_vir_list_sum)):
+            act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
+
+        print('initial V value',act_div_vir_list_sum[0])
+
+        # initial conditions
+        U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+        V0 = act_div_vir_list_sum[0]   #just taking the first measured value
+        I0 = 0   #Should be zero
+        y0 = [U0, V0, I0]
+
+        # measured data
+        t_measured = eff_day_list
+        V_measured = act_div_vir_list_sum
+
+        plt.figure()
+        plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
+
+        # set parameters including bounds; you can also fix parameters (use vary=False)
+        params = Parameters()
+        params.add('U0', value=U0, vary=False)
+        params.add('V0', value=V0, vary=False)
+        params.add('I0', value=I0, vary=False)
+
+        #my optimised parameters
+        params.add('alpha', value=9*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
+        params.add('beta', value=50, min=0, max=75)    #Clearance rate of infected cells
+        params.add('gamma', value=0.7, min=0, max=6)        #Infected cells release virus at rate gamma
+        params.add('delta', value=0.5, min=0, max=100)     #clearance rate of virus particles
+
+        # fit model
+        result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+        # check results of the fit
+        data_fitted = g(t_measured, y0, result.params)
+
+        plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
+        plt.legend()
+        plt.xlim([0, max(t_measured)])
+        plt.ylim([0, 1.1 * max(V_measured)])
+        plt.xlabel('Days Post Infection')
         plt.ylabel('Virus Titre (Log10 copies/mL)')
+        plt.title('Subject ID=%i' %j)
+        # display fitted statistics
+        report_fit(result)
 
 #need to somehow sift out the poor datasets
 #maybe get rid of datasets with less than 5 points?
