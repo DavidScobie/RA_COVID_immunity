@@ -132,7 +132,7 @@ seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 co
 
 plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
-"""
+
 #plot individual patients on different days
 Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
 for j in Subject_ID_vals_short:
@@ -146,7 +146,7 @@ for j in Subject_ID_vals_short:
     plt.xlabel('Study Day')
     plt.ylabel('Virus Titre (Log10 copies/mL)')
 
-
+"""
 
 #plot actual virus amount (instead of log10 of virus amount)
 act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
@@ -230,8 +230,9 @@ y0 = [U0, V0, I0]
 t_measured = eff_day_vals
 V_measured = act_div_vir_list_sum
 
-plt.figure()
-plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
+#plt.figure()
+fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+ax1.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured V data', s=75)
 
 # set parameters including bounds; you can also fix parameters (use vary=False)
 params = Parameters()
@@ -258,42 +259,60 @@ data_fitted = g(t_measured, y0, result.params)
 
 # plot fitted data
 #plt.figure()
-plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
-plt.legend()
-plt.xlim([0, max(t_measured)])
-plt.ylim([0, 1.1 * max(V_measured)])
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
+ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
+ax1.legend()
+ax1.set_xlim([0, max(t_measured)])
+ax1.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
+ax1.set_xlabel('Days Post Infection')
+ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
+ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
 
 #plot the fitted data and the model for log(virus) against day
 log_V_measured = np.log10(V_measured)
 log_V_fitted = np.log10(data_fitted[:, 1])
-plt.figure()
-plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
-plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
-plt.xlim(left=0)
-plt.legend()
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (Log10 copies/mL)')
+V_fitted = data_fitted[:, 1]
+#plt.figure()
+ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+ax2.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+ax2.set_xlim(left=0)
+ax2.legend()
+ax2.set_xlabel('Days Post Infection')
+ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
+ax2.set_title('b)')
 
 #plot the measured data, along with the fitted model for V, I and U
-plt.figure()
-plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
-plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+#plt.figure()
+ax3.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured V data', s=75)
+ax3.plot(t_measured, 10**(-6)*V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+U_fitted = data_fitted[:, 0]
+I_fitted = data_fitted[:, 2]
+ax3.plot(t_measured, 10**(-6)*U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+ax3.plot(t_measured, 10**(-6)*I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+#plt.ylim(bottom=0.9 * min(log_V_measured))
+ax3.set_xlim(left=0)
+ax3.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
+ax3.legend()
+ax3.set_xlabel('Days Post Infection')
+ax3.set_ylabel('Concentration (million copies/mL)')
+ax3.set_title('c)')
+"""
+ax3.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+ax3.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
 log_U_fitted = np.log10(data_fitted[:, 0])
 log_I_fitted = np.log10(data_fitted[:, 2])
-plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
-plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+ax3.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+ax3.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
 #plt.ylim(bottom=0.9 * min(log_V_measured))
-plt.xlim(left=0)
-plt.legend()
-plt.xlabel('Days Post Infection')
-plt.ylabel('Cell Concentration (Log10 copies/mL)')
-
+ax3.set_xlim(left=0)
+ax3.legend()
+ax3.set_xlabel('Days Post Infection')
+ax3.set_ylabel('Concentration (Log10 copies/mL)')
+ax3.set_title('c)')
+"""
 #########################################################
-
+"""
 #fit models to different patients
 
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
@@ -361,8 +380,24 @@ for j in Subject_ID_vals_short:
         # display fitted statistics
         report_fit(result)
 
+        log_V_measured = np.log10(V_measured)
+        log_V_fitted = np.log10(data_fitted[:, 1])
+        plt.figure()
+        plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+        plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+        log_U_fitted = np.log10(data_fitted[:, 0])
+        log_I_fitted = np.log10(data_fitted[:, 2])
+        plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+        plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+        #plt.ylim(bottom=0.9 * min(log_V_measured))
+        plt.xlim(left=0)
+        plt.legend()
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Concentration (Log10 copies/mL)')
+        plt.title('Subject ID=%i' %j)
+
 #need to somehow sift out the poor datasets
 #maybe get rid of datasets with less than 5 points?
-
+"""
 plt.show()
 
