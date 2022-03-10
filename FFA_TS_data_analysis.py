@@ -86,8 +86,11 @@ for i in range (len(day_list)):
 df_over_4_len_ppl = pd.DataFrame(list(zip(vir_list_Non_DET, Subj_ID_list,day_list,Timepoint_list,effective_day)), columns =['Virus Titre (Log10 FFU/mL)','Subject ID','Study Day','Timepoint','eff_day'])
 
 #get rid of the rows of dataframe that have effective day above 11
-df_over_4_len_ppl_less_9 = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= 11]
-print('df_over_4_len_ppl_less_9',df_over_4_len_ppl_less_9)         #FIND THE MISSING 2 PEOPLE
+df_over_4_len_ppl_less_9 = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= 9]
+print('df_over_4_len_ppl_less_9',df_over_4_len_ppl_less_9)
+
+plt.figure()
+seaborn.pointplot(data=df_over_4_len_ppl_less_9, x='eff_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
 
 #convert study day and Timepoint into lists
 day_list = df_over_4_len_ppl_less_9['Study Day'].tolist()
@@ -98,6 +101,9 @@ print('Timepoint_list length',len(Timepoint_list),'Timepoint_list',Timepoint_lis
 #convert the virus numbers to a list
 vir_list_Non_DET = df_over_4_len_ppl_less_9['Virus Titre (Log10 FFU/mL)'].tolist()
 print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
+
+effective_day = df_over_4_len_ppl_less_9['eff_day'].tolist()
+print('effective_day',len(effective_day),'effective_day',effective_day)
 
 #plot the virus against day
 """
@@ -112,8 +118,7 @@ plt.ylabel('Virus Titre (Log10 FFU/mL)')
 eff_day_vals = list(set(effective_day))
 eff_day_vals.sort()  #THIS ONLY WORKS IF THERE IS AT LEAST 1 COUNT AT EACH TIME POINT
 print('eff_day_vals',eff_day_vals)
-eff_day_vals = eff_day_vals[:-4]  #get rid of the vals above 8.5
-print('eff_day_vals',eff_day_vals)
+print('eff_day_vals',eff_day_vals,'length eff_day_vals',len(eff_day_vals))
 
 #find the occurences of each of the days
 occ=np.zeros(len(eff_day_vals))
@@ -121,7 +126,7 @@ for j in effective_day:
     for i in eff_day_vals:
         if i==j:
             occ[int(2*(i-min(eff_day_vals)))]+=1   #0.5 gap between vals, and begin at min val
-#print('occ',occ)
+print('occ',occ,'length occ',len(occ))
 
 
 #divide virus amount by number of counts on that day
@@ -132,7 +137,7 @@ for j in effective_day:
         if i==j:
             div_vir_list.append(vir_list_Non_DET[int(k)]/occ[int(2*(i-min(eff_day_vals)))])
             k+=1
-#print('div_vir_list',div_vir_list)
+print('div_vir_list',div_vir_list,'len div_vir_list',len(div_vir_list))     #CORRECT
 
 
 #sum the virus amounts on their specific day
@@ -143,22 +148,11 @@ for j in effective_day:
         if i==j:
             div_vir_list_sum[int(2*(i-min(eff_day_vals)))]+=div_vir_list[int(k)]
             k+=1
-#print('div_vir_list_sum',div_vir_list_sum)
-# plt.figure()
-# plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
-
-
-#how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
-
-#append effective_day to the dataframe
-#df2_str_sorted['effective_day'] = effective_day
-
-#plot the subjects in different colours
-#df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
-
-#seaborn.relplot(data=df_over_4_len_ppl_less_9, x='eff_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID')
+print('div_vir_list_sum',div_vir_list_sum,'length div_vir_list_sum',len(div_vir_list_sum))
 plt.figure()
-seaborn.pointplot(data=df_over_4_len_ppl_less_9, x='eff_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
+plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
+
+
 
 
 # #plot individual patients on different days
