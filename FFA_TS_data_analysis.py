@@ -151,9 +151,8 @@ for j in effective_day:
 print('div_vir_list_sum',div_vir_list_sum,'length div_vir_list_sum',len(div_vir_list_sum))
 plt.figure()
 plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
-
-
-
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
 # #plot individual patients on different days
 # #Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up

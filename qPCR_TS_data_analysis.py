@@ -7,7 +7,7 @@ from scipy.integrate import odeint
 
 #import the excel data
 
-df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_TS.xlsx')
+df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_qPCR_TS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
