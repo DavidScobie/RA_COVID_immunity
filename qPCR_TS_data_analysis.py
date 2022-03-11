@@ -213,6 +213,43 @@ def residual(paras, t, data):
 
 
 # initial conditions
+
+#extrapolation to find initial conditions...
+def best_fit(X, Y):
+
+    xbar = sum(X)/len(X)
+    ybar = sum(Y)/len(Y)
+    n = len(X) # or len(Y)
+
+    numer = sum([xi*yi for xi,yi in zip(X, Y)]) - n * xbar * ybar
+    denum = sum([xi**2 for xi in X]) - n * xbar**2
+
+    b = numer / denum
+    a = ybar - b * xbar
+
+    print('best fit line:\ny = {:.2f} + {:.2f}x'.format(a, b))
+
+    return a, b
+
+#GENERALISE THIS SO THAT IT FINDS INDICIE OF THE PEAK VALUE, DONT JUST HARDCODE AS 6
+a, b = best_fit(eff_day_vals[:6],np.log10(act_div_vir_list_sum)[:6])
+
+plt.figure()
+plt.scatter(eff_day_vals[:6], np.log10(act_div_vir_list_sum)[:6], marker='o', color='red', label='measured V data', s=75)
+yfit = [a + b * xi for xi in eff_day_vals[:6]]
+print('yfit',yfit)
+plt.plot(eff_day_vals[:6], yfit)
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (Log10 copies/mL)')
+plt.xlim(left=0)
+plt.ylim(bottom=0)
+
+#add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
+v1 = 0
+v2 = 933 #THIS IS 10**2.97. 2.97 is the y intercept of the line of best fit
+eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
+act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
+print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
 """
 #paper initial conditions
 U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
@@ -280,7 +317,7 @@ ax2.set_xlim(left=0)
 ax2.legend()
 ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
-ax2.set_title('b)')
+ax2.set_title('a)')
 
 #plot the measured data, along with the fitted model for V, I and U
 #plt.figure()
@@ -296,7 +333,7 @@ ax3.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
 ax3.legend()
 ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
-ax3.set_title('c)')
+ax3.set_title('b)')
 """
 ax3.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
 ax3.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
