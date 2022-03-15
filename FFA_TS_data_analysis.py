@@ -150,167 +150,167 @@ for j in effective_day:
             k+=1
 print('div_vir_list_sum',div_vir_list_sum,'length div_vir_list_sum',len(div_vir_list_sum))
 plt.figure()
-plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
+plt.plot(eff_day_vals[2:-1],div_vir_list_sum[2:-1],'-rx')
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
-# #plot individual patients on different days
-# #Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
-# for j in Subject_ID_vals:
-#     k+=1
-#     #plt.figure()
-#     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
-#     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
-#     df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='line',xlim=[1,12],ylim=[1,5]) #plot the subject points as a line plot
+#plot individual patients on different days
+#Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
+for j in Subject_ID_vals:
+    k+=1
+    #plt.figure()
+    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
+    df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
+    df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='line',xlim=[1,12],ylim=[1,5]) #plot the subject points as a line plot
 
-#     plt.title('Subject ID=%i' %j)
-#     plt.xlabel('Study Day')
-#     plt.ylabel('Virus Titre (Log10 FFU/mL)')
-
-
-# #plot actual virus amount (instead of log10 of virus amount)
-# act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
-# for i in range (len(div_vir_list_sum)):
-#     act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
-
-# plt.figure()
-# plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Virus Titre (copies/mL)')
-
-# #######################################################
-
-# def f(y, t, paras):
-#     """
-#     Your system of differential equations
-#     """
-#     #the U, V and I
-#     U = y[0]
-#     V = y[1]
-#     I = y[2]
-
-#     #the parameters alpha, beta, gamma, delta
-#     try:
-#         alpha = paras['alpha'].value
-#         beta = paras['beta'].value
-#         gamma = paras['gamma'].value
-#         delta = paras['delta'].value
-
-#     except KeyError:
-#         alpha, beta, gamma, delta = paras
-
-#     # the model equations
-#     f0 = - alpha * V * U
-#     f1 = (gamma * I) - (delta * V)
-#     f2 = (alpha * V * U) - (beta * I)
-#     return [f0, f1, f2]
-
-# def g(t, x0, paras):
-#     """
-#     Solution to the ODE x'(t) = f(t,x,k) with initial condition x(0) = x0
-#     """
-#     x = odeint(f, x0, t, args=(paras,))
-#     return x
+    plt.title('Subject ID=%i' %j)
+    plt.xlabel('Study Day')
+    plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
 
-# def residual(paras, t, data):
+#plot actual virus amount (instead of log10 of virus amount)
+act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
+for i in range (len(div_vir_list_sum)):
+    act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-#     """
-#     compute the residual between actual data and fitted data
-#     """
+plt.figure()
+plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (copies/mL)')
 
-#     x0 = paras['U0'].value, paras['V0'].value, paras['I0'].value
-#     model = g(t, x0, paras)
+#######################################################
 
-#     # you only have data for one of your variables
-#     V_model = model[:, 1]
+def f(y, t, paras):
+    """
+    Your system of differential equations
+    """
+    #the U, V and I
+    U = y[0]
+    V = y[1]
+    I = y[2]
 
-#     #want to find the residual between the log of the virus measured and fitted data
-#     log_V_model = np.log10(V_model)
-#     log_data = np.log10(data)
+    #the parameters alpha, beta, gamma, delta
+    try:
+        alpha = paras['alpha'].value
+        beta = paras['beta'].value
+        gamma = paras['gamma'].value
+        delta = paras['delta'].value
 
-#     return (log_V_model - log_data).ravel()
+    except KeyError:
+        alpha, beta, gamma, delta = paras
+
+    # the model equations
+    f0 = - alpha * V * U
+    f1 = (gamma * I) - (delta * V)
+    f2 = (alpha * V * U) - (beta * I)
+    return [f0, f1, f2]
+
+def g(t, x0, paras):
+    """
+    Solution to the ODE x'(t) = f(t,x,k) with initial condition x(0) = x0
+    """
+    x = odeint(f, x0, t, args=(paras,))
+    return x
 
 
-# # initial conditions
-# """
-# #paper initial conditions
-# U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-# V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work has shown use <50 copies/ml
-# I0 = 0   #Should be zero
-# """
-# #my optimised initial conditions
-# U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-# V0 = act_div_vir_list_sum[0]   #just taking the first measured value
-# #V0 = 43652 #an estimate of good start point
-# I0 = 0   #Should be zero
-# y0 = [U0, V0, I0]
+def residual(paras, t, data):
 
-# # measured data
-# t_measured = eff_day_vals
-# V_measured = act_div_vir_list_sum
+    """
+    compute the residual between actual data and fitted data
+    """
 
-# plt.figure()
-# plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
+    x0 = paras['U0'].value, paras['V0'].value, paras['I0'].value
+    model = g(t, x0, paras)
 
-# # set parameters including bounds; you can also fix parameters (use vary=False)
-# params = Parameters()
-# params.add('U0', value=U0, vary=False)
-# params.add('V0', value=V0, vary=False)
-# params.add('I0', value=I0, vary=False)
-# """
-# #parameters optimised on first 6 days of data
-# params.add('alpha', value=4.24*(10**(-7)), min=4.23*(10**(-7)), max=4.25*(10**(-7)))   #rate that viral particles infect susceptible cells
-# params.add('beta', value=61.2, min=61.1, max=61.3)    #Clearance rate of infected cells
-# params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells release virus at rate gamma
-# params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
-# """
-# #my optimised parameters
-# params.add('alpha', value=4*(10**(-6)), min=1*(10**(-8)), max=3*(10**(-5)))   #rate that viral particles infect susceptible cells
-# params.add('beta', value=50, min=0, max=100)    #Clearance rate of infected cells
-# params.add('gamma', value=1, min=0, max=6)        #Infected cells release virus at rate gamma
-# params.add('delta', value=0.5, min=0, max=100)     #clearance rate of virus particles
+    # you only have data for one of your variables
+    V_model = model[:, 1]
 
-# # fit model
-# result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
-# # check results of the fit
-# data_fitted = g(t_measured, y0, result.params)
+    #want to find the residual between the log of the virus measured and fitted data
+    log_V_model = np.log10(V_model)
+    log_data = np.log10(data)
 
-# # plot fitted data
-# #plt.figure()
-# plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
-# plt.legend()
-# plt.xlim([0, max(t_measured)])
-# plt.ylim([0, 1.1 * max(V_measured)])
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Virus Titre (copies/mL)')
-# # display fitted statistics
-# report_fit(result)
+    return (log_V_model - log_data).ravel()
 
-# #plot the fitted data and the model for log(virus) against day
-# log_V_measured = np.log10(V_measured)
-# log_V_fitted = np.log10(data_fitted[:, 1])
-# plt.figure()
-# plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
-# plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
-# plt.xlim(left=0)
-# plt.legend()
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Virus Titre (Log10 FFU/mL)')
 
-# #plot the measured data, along with the fitted model for V, I and U
-# plt.figure()
-# plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
-# plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
-# log_U_fitted = np.log10(data_fitted[:, 0])
-# log_I_fitted = np.log10(data_fitted[:, 2])
-# plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
-# plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
-# #plt.ylim(bottom=0.9 * min(log_V_measured))
-# plt.xlim(left=0)
-# plt.legend()
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Cell Concentration (Log10 copies/mL)')
+# initial conditions
+"""
+#paper initial conditions
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work has shown use <50 copies/ml
+I0 = 0   #Should be zero
+"""
+#my optimised initial conditions
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+V0 = act_div_vir_list_sum[0]   #just taking the first measured value
+#V0 = 43652 #an estimate of good start point
+I0 = 0   #Should be zero
+y0 = [U0, V0, I0]
+
+# measured data
+t_measured = eff_day_vals
+V_measured = act_div_vir_list_sum
+
+plt.figure()
+plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
+
+# set parameters including bounds; you can also fix parameters (use vary=False)
+params = Parameters()
+params.add('U0', value=U0, vary=False)
+params.add('V0', value=V0, vary=False)
+params.add('I0', value=I0, vary=False)
+"""
+#parameters optimised on first 6 days of data
+params.add('alpha', value=4.24*(10**(-7)), min=4.23*(10**(-7)), max=4.25*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=61.2, min=61.1, max=61.3)    #Clearance rate of infected cells
+params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells release virus at rate gamma
+params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
+"""
+#my optimised parameters
+params.add('alpha', value=4*(10**(-6)), min=1*(10**(-8)), max=3*(10**(-5)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=50, min=0, max=100)    #Clearance rate of infected cells
+params.add('gamma', value=1, min=0, max=6)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.5, min=0, max=100)     #clearance rate of virus particles
+
+# fit model
+result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+# check results of the fit
+data_fitted = g(t_measured, y0, result.params)
+
+# plot fitted data
+#plt.figure()
+plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
+plt.legend()
+plt.xlim([0, max(t_measured)])
+plt.ylim([0, 1.1 * max(V_measured)])
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (copies/mL)')
+# display fitted statistics
+report_fit(result)
+
+#plot the fitted data and the model for log(virus) against day
+log_V_measured = np.log10(V_measured)
+log_V_fitted = np.log10(data_fitted[:, 1])
+plt.figure()
+plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+plt.xlim(left=0)
+plt.legend()
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (Log10 FFU/mL)')
+
+#plot the measured data, along with the fitted model for V, I and U
+plt.figure()
+plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+log_U_fitted = np.log10(data_fitted[:, 0])
+log_I_fitted = np.log10(data_fitted[:, 2])
+plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+#plt.ylim(bottom=0.9 * min(log_V_measured))
+plt.xlim(left=0)
+plt.legend()
+plt.xlabel('Days Post Infection')
+plt.ylabel('Cell Concentration (Log10 copies/mL)')
 
 # #########################################################
 # """
