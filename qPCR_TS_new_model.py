@@ -284,10 +284,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=3.53*(10**(-6)), min=3.52*(10**(-6)), max=3.54*(10**(-6)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=55.8, min=55.7, max=55.9)    #Clearance rate of infected cells
-params.add('gamma', value=0.41, min=0.0009, max=1.1)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.51, min=0.50, max=0.52)     #clearance rate of virus particles
+params.add('alpha', value=7.3*(10**(-8)), min=7.29*(10**(-8)), max=7.31*(10**(-8)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=23.1, min=23.0, max=23.2)    #Clearance rate of infected cells
+params.add('gamma', value=0.66, min=0.65, max=0.67)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.40, min=0.39, max=0.41)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, Id_measured), method='leastsq')  # leastsq nelder
