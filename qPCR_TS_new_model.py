@@ -245,10 +245,10 @@ plt.xlim(left=0)
 plt.ylim(bottom=0)
 """
 #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
-# v1 = 0
-# v2 = 933 #THIS IS 10**2.97. 2.97 is the y intercept of the line of best fit
-# eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
-# act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
+v1 = 0
+v2 = 933 #THIS IS 10**2.97. 2.97 is the y intercept of the line of best fit
+eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
+act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
 print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
 """
 #paper initial conditions
@@ -284,10 +284,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=7.3*(10**(-8)), min=7.29*(10**(-8)), max=7.31*(10**(-8)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=23.1, min=23.0, max=23.2)    #Clearance rate of infected cells
-params.add('gamma', value=0.66, min=0.65, max=0.67)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.40, min=0.39, max=0.41)     #clearance rate of virus particles
+params.add('alpha', value=7.3*(10**(-8)), min=7.29*(10**(-9)), max=7.31*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=23.1, min=0, max=200)    #Clearance rate of infected cells
+params.add('gamma', value=0.66, min=0, max=200)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.40, min=0, max=50)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, Id_measured), method='leastsq')  # leastsq nelder

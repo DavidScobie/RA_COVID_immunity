@@ -52,9 +52,8 @@ Timepoint_list = []
 Subj_ID_list = []
 for j in Subject_ID_vals:
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].astype(str).str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
-    #df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
     if len(df2_Subj_ID_sorted['Virus Titre (Log10 FFU/mL)'].tolist()) > 4:
-        print('j',j)
+        print('j',j) #the subjects who have at least 5 datapoints
         #convert virus numbers to list
         vir_list_Non_DET.append(df2_Subj_ID_sorted['Virus Titre (Log10 FFU/mL)'].tolist())
         day_list.append(df2_Subj_ID_sorted['Study Day'].tolist())
@@ -85,24 +84,42 @@ for i in range (len(day_list)):
 #make dataframe of the data from people who have at least 5 datapoints
 df_over_4_len_ppl = pd.DataFrame(list(zip(vir_list_Non_DET, Subj_ID_list,day_list,Timepoint_list,effective_day)), columns =['Virus Titre (Log10 FFU/mL)','Subject ID','Study Day','Timepoint','eff_day'])
 
-#get rid of the rows of dataframe that have effective day above 11
-df_over_4_len_ppl_less_9 = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= 9]
-print('df_over_4_len_ppl_less_9',df_over_4_len_ppl_less_9)
+##we need at least one point at each half day, cut the data off above this threshold where we dont have the data
+
+#sort effective day values into ascending order
+sort_eff_day = np.sort(effective_day)
+
+#remove duplicates in the list of effective days
+uni_sort_eff_day = np.unique(sort_eff_day)
+
+#find if difference between effective day values is greater than 0.5, if so then use this indicie as threshold for later steps
+diff_uni_sort_eff_day = np.diff(uni_sort_eff_day)
+not_zerop5 = np.where(diff_uni_sort_eff_day != 0.5)[0]
+
+#if difference is 0.5 between all the effective days then thresh is the last possible day. If not then choose day accordingly
+if len(not_zerop5) == 0: #case where we have data at every half day
+    thresh = uni_sort_eff_day[-1]
+else: #case where we dont have data at every half day
+    thresh = uni_sort_eff_day[int(not_zerop5[0])] + 0.5
+
+#get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
+df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
+print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
 
 plt.figure()
-seaborn.pointplot(data=df_over_4_len_ppl_less_9, x='eff_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
+seaborn.pointplot(data=df_over_4_len_ppl_less_thresh, x='eff_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
 
 #convert study day and Timepoint into lists
-day_list = df_over_4_len_ppl_less_9['Study Day'].tolist()
+day_list = df_over_4_len_ppl_less_thresh['Study Day'].tolist()
 print('length day list',len(day_list),'day_list',day_list)
-Timepoint_list = df_over_4_len_ppl_less_9['Timepoint'].tolist()
+Timepoint_list = df_over_4_len_ppl_less_thresh['Timepoint'].tolist()
 print('Timepoint_list length',len(Timepoint_list),'Timepoint_list',Timepoint_list)
 
 #convert the virus numbers to a list
-vir_list_Non_DET = df_over_4_len_ppl_less_9['Virus Titre (Log10 FFU/mL)'].tolist()
+vir_list_Non_DET = df_over_4_len_ppl_less_thresh['Virus Titre (Log10 FFU/mL)'].tolist()
 print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
-effective_day = df_over_4_len_ppl_less_9['eff_day'].tolist()
+effective_day = df_over_4_len_ppl_less_thresh['eff_day'].tolist()
 print('effective_day',len(effective_day),'effective_day',effective_day)
 
 #plot the virus against day
@@ -150,23 +167,25 @@ for j in effective_day:
             k+=1
 print('div_vir_list_sum',div_vir_list_sum,'length div_vir_list_sum',len(div_vir_list_sum))
 plt.figure()
-plt.plot(eff_day_vals[2:-1],div_vir_list_sum[2:-1],'-rx')
+plt.plot(eff_day_vals[2:-1],div_vir_list_sum[2:-1],'-rx')  #something is going on with these indicies here, find out what
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
+plt.title('patients with at least 5 datapoints log scale')
 
+"""
 #plot individual patients on different days
 #Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
 for j in Subject_ID_vals:
     k+=1
     #plt.figure()
-    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
+    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].astype(str).str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
     df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='line',xlim=[1,12],ylim=[1,5]) #plot the subject points as a line plot
 
     plt.title('Subject ID=%i' %j)
     plt.xlabel('Study Day')
     plt.ylabel('Virus Titre (Log10 FFU/mL)')
-
+"""
 
 #plot actual virus amount (instead of log10 of virus amount)
 act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
@@ -177,6 +196,7 @@ plt.figure()
 plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
+plt.title('patients with at least 5 datapoints linear scale')
 
 #######################################################
 
@@ -284,6 +304,7 @@ plt.xlim([0, max(t_measured)])
 plt.ylim([0, 1.1 * max(V_measured)])
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
+plt.title('nvjfds')
 # display fitted statistics
 report_fit(result)
 

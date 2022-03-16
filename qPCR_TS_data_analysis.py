@@ -6,7 +6,6 @@ from lmfit import minimize, Parameters, Parameter, report_fit
 from scipy.integrate import odeint
 
 #import the excel data
-
 df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_qPCR_TS.xlsx')
 
 #print the column headers
@@ -38,14 +37,7 @@ df2_str_sorted = df2_str_sorted[df2_str_sorted.length < 7]
 df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
 
-#print all the virus titre to 2dp
-vir_list = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
-round_to_tenths = [round(num, 2) for num in vir_list]
-round_to_tenths.sort()
-#print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
-
 ##create the 'effective study day' which takes AM and PM into account
-
 #convert study day and Timepoint into lists
 day_list = df2_str_sorted['Study Day'].tolist()
 #print('length day list',len(day_list),'day_list',day_list)
@@ -62,20 +54,11 @@ for i in range (len(day_list)):
     else:
         print('i',i) #for checking if there is an error
 
-#print('effective_day',effective_day)
-
 #convert the virus numbers to a list
 vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
 #print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
-#plot the virus against day
-"""
-plt.figure()
-plt.plot(effective_day,vir_list_Non_DET,'bx')
-plt.xlabel('Study Day')
-plt.ylabel('Virus Titre (Log10 copies/mL)')
-"""
-#plot the means
+##plot the means
 
 #find all the possible effective_day values
 eff_day_vals = list(set(effective_day))
@@ -111,11 +94,8 @@ for j in effective_day:
             div_vir_list_sum[int(2*(i-min(eff_day_vals)))]+=div_vir_list[int(k)]
             k+=1
 #print('div_vir_list_sum',div_vir_list_sum)
-"""
-plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
-"""
 
-#how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
+##how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
 
 #find all the possible subject IDs
 Subject_ID = df2_str_sorted['Subject ID'].tolist()
@@ -159,6 +139,7 @@ plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
 
 #######################################################
+#model the data via differential equations
 
 def f(y, t, paras):
     """
@@ -231,14 +212,19 @@ def best_fit(X, Y):
 
     return a, b
 
-#GENERALISE THIS SO THAT IT FINDS INDICIE OF THE PEAK VALUE, DONT JUST HARDCODE AS 6
-a, b = best_fit(eff_day_vals[:6],np.log10(act_div_vir_list_sum)[:6])
+# Get the indices of maximum element in eff_day_vals
+max_indic = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
+print('max_indic',int(max_indic[0]))
+
+a, b = best_fit(eff_day_vals[:int(max_indic[0])],np.log10(act_div_vir_list_sum)[:int(max_indic[0])])
+
+print('10^a',10**a)
 
 plt.figure()
-plt.scatter(eff_day_vals[:6], np.log10(act_div_vir_list_sum)[:6], marker='o', color='red', label='measured V data', s=75)
-yfit = [a + b * xi for xi in eff_day_vals[:6]]
+plt.scatter(eff_day_vals[:int(max_indic[0])], np.log10(act_div_vir_list_sum)[:int(max_indic[0])], marker='o', color='red', label='measured V data', s=75)
+yfit = [a + b * xi for xi in eff_day_vals[:int(max_indic[0])]]
 print('yfit',yfit)
-plt.plot(eff_day_vals[:6], yfit)
+plt.plot(eff_day_vals[:int(max_indic[0])], yfit)
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (Log10 copies/mL)')
 plt.xlim(left=0)
@@ -246,7 +232,7 @@ plt.ylim(bottom=0)
 
 #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
 v1 = 0
-v2 = 933 #THIS IS 10**2.97. 2.97 is the y intercept of the line of best fit
+v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
 eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
 act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
 print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
@@ -349,7 +335,7 @@ ax3.set_ylabel('Concentration (Log10 copies/mL)')
 ax3.set_title('c)')
 """
 #########################################################
-"""
+
 #fit models to different patients
 
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
@@ -435,6 +421,6 @@ for j in Subject_ID_vals_short:
 
 #need to somehow sift out the poor datasets
 #maybe get rid of datasets with less than 5 points?
-"""
+
 plt.show()
 
