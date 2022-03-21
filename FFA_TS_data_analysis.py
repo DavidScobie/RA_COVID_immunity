@@ -5,6 +5,8 @@ import seaborn
 from lmfit import minimize, Parameters, Parameter, report_fit
 from scipy.integrate import odeint
 
+############ Read data in and do the basic preprocessing
+
 #import the excel data
 
 df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_TS.xlsx')
@@ -38,7 +40,7 @@ df2_str_sorted = df2_str_sorted[df2_str_sorted.length < 7]
 df2_str_sorted['Virus Titre (Log10 FFU/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 FFU/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
 
-#################################################################
+#################################################################   #Only considering patients with more than 4 datapoints
 
 #find all the possible subject IDs
 Subject_ID = df2_str_sorted['Subject ID'].tolist()
@@ -106,8 +108,11 @@ else: #case where we dont have data at every half day
 df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
 print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
 
+##plotting the patients in different colours
+
 plt.figure()
 seaborn.pointplot(data=df_over_4_len_ppl_less_thresh, x='eff_day', y='Virus Titre (Log10 FFU/mL)', hue='Subject ID', ci=None)
+plt.title('Plotting individual patients with more than 4 datapoints in different colours')
 
 #convert study day and Timepoint into lists
 day_list = df_over_4_len_ppl_less_thresh['Study Day'].tolist()
@@ -121,15 +126,15 @@ print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_D
 
 effective_day = df_over_4_len_ppl_less_thresh['eff_day'].tolist()
 print('effective_day',len(effective_day),'effective_day',effective_day)
-
-#plot the virus against day
 """
+#plot the virus against day
+
 plt.figure()
 plt.plot(effective_day,vir_list_Non_DET,'bx')
 plt.xlabel('Study Day')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 """
-#plot the means
+##plot the means
 
 #find all the possible effective_day values
 eff_day_vals = list(set(effective_day))
@@ -166,8 +171,13 @@ for j in effective_day:
             div_vir_list_sum[int(2*(i-min(eff_day_vals)))]+=div_vir_list[int(k)]
             k+=1
 print('div_vir_list_sum',div_vir_list_sum,'length div_vir_list_sum',len(div_vir_list_sum))
+
+######cut off the first 2 days and last day value of the arrays as the data here is well off due to different patients
+eff_day_vals = eff_day_vals[2:-1]
+div_vir_list_sum = div_vir_list_sum[2:-1]
+
 plt.figure()
-plt.plot(eff_day_vals[2:-1],div_vir_list_sum[2:-1],'-rx')  #something is going on with these indicies here, find out what
+plt.plot(eff_day_vals,div_vir_list_sum,'-rx')  #something is going on with these indicies here, find out what
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 plt.title('patients with at least 5 datapoints log scale')
@@ -251,6 +261,52 @@ def residual(paras, t, data):
 
     return (log_V_model - log_data).ravel()
 
+######## extrapolation to find initial conditions
+"""
+#extrapolation to find initial conditions...
+def best_fit(X, Y):
+
+    xbar = sum(X)/len(X)
+    ybar = sum(Y)/len(Y)
+    n = len(X) # or len(Y)
+
+    numer = sum([xi*yi for xi,yi in zip(X, Y)]) - n * xbar * ybar
+    denum = sum([xi**2 for xi in X]) - n * xbar**2
+
+    b = numer / denum
+    a = ybar - b * xbar
+
+    print('best fit line:\ny = {:.2f} + {:.2f}x'.format(a, b))
+
+    return a, b
+
+# Get the indices of maximum element in eff_day_vals
+max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
+max_indic = int(max_indic_arr[0])
+
+a, b = best_fit(eff_day_vals[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
+
+print('10^a',10**a)
+
+plt.figure()
+plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
+yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
+print('yfit',yfit)
+plt.plot(eff_day_vals[:max_indic+1], yfit)
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (Log10 copies/mL)')
+plt.title('Extrapolation to find start point for virus')
+plt.xlim(left=0)
+plt.ylim(bottom=0)
+
+#add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
+v1 = 0
+v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
+eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
+act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
+print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
+"""
+###############
 
 # initial conditions
 """
@@ -273,6 +329,9 @@ V_measured = act_div_vir_list_sum
 plt.figure()
 plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
 
+print('t_measured',t_measured)
+print('V_measured',V_measured)
+
 # set parameters including bounds; you can also fix parameters (use vary=False)
 params = Parameters()
 params.add('U0', value=U0, vary=False)
@@ -286,10 +345,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=4*(10**(-6)), min=1*(10**(-8)), max=3*(10**(-5)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=50, min=0, max=100)    #Clearance rate of infected cells
-params.add('gamma', value=1, min=0, max=6)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.5, min=0, max=100)     #clearance rate of virus particles
+params.add('alpha', value=3.5*(10**(-6)), min=3.4*(10**(-6)), max=3.6*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=61, min=60, max=62)    #Clearance rate of infected cells
+params.add('gamma', value=19, min=18, max=20)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.86, min=0.85, max=0.87)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -304,7 +363,7 @@ plt.xlim([0, max(t_measured)])
 plt.ylim([0, 1.1 * max(V_measured)])
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
-plt.title('nvjfds')
+plt.title('Virus with model fitted linear scale (all patients with over 4 data points)')
 # display fitted statistics
 report_fit(result)
 
@@ -314,6 +373,7 @@ log_V_fitted = np.log10(data_fitted[:, 1])
 plt.figure()
 plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
 plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+plt.title('Virus with model fitted log scale (all patients with over 4 data points)')
 plt.xlim(left=0)
 plt.legend()
 plt.xlabel('Days Post Infection')
@@ -332,6 +392,7 @@ plt.xlim(left=0)
 plt.legend()
 plt.xlabel('Days Post Infection')
 plt.ylabel('Cell Concentration (Log10 copies/mL)')
+plt.title('Data with U, V and I model for all patients with over 4 data points')
 
 # #########################################################
 # """

@@ -284,10 +284,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=7.3*(10**(-8)), min=7.29*(10**(-9)), max=7.31*(10**(-6)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=23.1, min=0, max=200)    #Clearance rate of infected cells
-params.add('gamma', value=0.66, min=0, max=200)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.40, min=0, max=50)     #clearance rate of virus particles
+params.add('alpha', value=9.3*(10**(-8)), min=9.2*(10**(-8)), max=9.4*(10**(-8)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=30, min=29, max=31)    #Clearance rate of infected cells
+params.add('gamma', value=0.9, min=0.8, max=1.0)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.05, min=0.04, max=0.06)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, Id_measured), method='leastsq')  # leastsq nelder
@@ -317,7 +317,7 @@ ax2.set_xlim(left=0)
 ax2.legend()
 ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
-ax2.set_title('b)')
+ax2.set_title('a)')
 
 #plot the measured data, along with the fitted model for V, I and U
 #plt.figure()
@@ -329,7 +329,7 @@ ax3.plot(t_measured, 10**(-6)*U_fitted, '-', linewidth=2, color='green', label='
 ax3.plot(t_measured, 10**(-6)*Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
 #plt.ylim(bottom=0.9 * min(log_V_measured))
 ax3.set_xlim(left=0)
-ax3.set_ylim([0, 1.1 * 10**(-6)*max(Id_measured)])
+#ax3.set_ylim([0, 1.1 * 10**(-6)*max(Id_measured)])
 ax3.legend()
 ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
