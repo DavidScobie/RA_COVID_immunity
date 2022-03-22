@@ -109,7 +109,7 @@ df2_str_sorted['effective_day'] = effective_day
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 
 seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
-
+"""
 plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
 
@@ -130,7 +130,7 @@ for j in Subject_ID_vals:
         plt.title('Subject ID=%i' %j)
         plt.xlabel('Study Day')
         plt.ylabel('Virus Titre (Log10 copies/mL)')
-
+"""
 
 
 #plot actual virus amount (instead of log10 of virus amount)

@@ -235,6 +235,7 @@ v1 = 0
 v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
 eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
 act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
+print('LENGTH OF act_div_vir_list_sum',len(act_div_vir_list_sum),act_div_vir_list_sum)
 print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
 """
 #paper initial conditions
@@ -252,6 +253,7 @@ y0 = [U0, V0, I0]
 # measured data
 t_measured = eff_day_vals
 V_measured = act_div_vir_list_sum
+print('LENGTH V_measured',len(V_measured))
 np.save('TS_V_measured', V_measured)
 
 #plt.figure()
@@ -314,14 +316,16 @@ log_V_measured = np.log10(V_measured)
 log_V_fitted = np.log10(data_fitted[:, 1])
 V_fitted = data_fitted[:, 1]
 #plt.figure()
+print('LENGTH t_measured',len(t_measured),t_measured)
 ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured qPCR V data', s=75)
 ax2.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted qPCR V data')
 ax2.set_xlim(left=0)
 ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
 ax2.set_title('b)')
-print('log_V_measured',log_V_measured)
+print('log_V_measured',log_V_measured, 'LENGTH log_V_measured',len(log_V_measured),'IT IS SAVED HERE')
 np.save('TS_log_V_measured', log_V_measured)
+np.save('TS_t_measured', t_measured)
 print('t_measured',t_measured)
 """
 #####plot the FFA data on top
@@ -364,7 +368,7 @@ ax3.set_title('c)')
 #########################################################
 
 #fit models to different patients
-
+"""
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
 Subject_ID_vals_short = Subject_ID_vals[0:3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
@@ -537,6 +541,6 @@ y, x, _ = plt.hist(deltas, density=False, bins=5,color = "skyblue")
 X = [overall_delta, overall_delta]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red')
-
+"""
 plt.show()
 
