@@ -257,7 +257,8 @@ y0 = [U0, V0, I0]
 # measured data
 t_measured = eff_day_vals
 V_measured = act_div_vir_list_sum
-np.save('TS_V_measured', V_measured)
+np.save('MTS_qPCR_V_measured', V_measured)
+np.save('MTS_qPCR_t_measured',t_measured)
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -326,7 +327,6 @@ ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
 ax2.set_title('b)')
 print('log_V_measured',log_V_measured)
-np.save('TS_log_V_measured', log_V_measured)
 print('t_measured',t_measured)
 """
 #####plot the FFA data on top

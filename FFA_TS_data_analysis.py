@@ -206,4 +206,7 @@ plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
 plt.title('patients with at least 5 datapoints linear scale')
 
+# np.save('FFA_TS_V_measured', act_div_vir_list_sum)
+# np.save('FFA_TS_t_measured', eff_day_vals)
+
 plt.show()
