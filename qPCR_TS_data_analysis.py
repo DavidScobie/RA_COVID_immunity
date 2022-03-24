@@ -539,7 +539,7 @@ y, x, _ = plt.hist(deltas, density=False, bins=5,color = "skyblue")
 X = [overall_delta, overall_delta]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red')
-"""
+
 ################ extrapolate back to find virus amounts on days -1, -2 and -3
 plt.figure()
 plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured qPCR V data', s=75)
@@ -550,6 +550,8 @@ plt.ylim([0, 1.1 * 10**(-6)*max(V_measured)])
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre Concentration (million copies/mL)')
 plt.title('a)')
+"""
+
 
 plt.show()
 

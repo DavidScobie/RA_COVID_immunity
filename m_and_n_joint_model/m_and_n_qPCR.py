@@ -235,7 +235,7 @@ plt.plot(eff_day_vals_MTS,act_div_vir_list_sum_MTS,'-rx')
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
 
-"""
+
 #######################################################
 #model the data via differential equations
 
@@ -298,7 +298,7 @@ def residual(paras, t, data):
 
 
 # initial conditions
-
+"""
 #extrapolation to find initial conditions...
 def best_fit(X, Y):
 
@@ -341,18 +341,15 @@ eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
 act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
 print('LENGTH OF act_div_vir_list_sum',len(act_div_vir_list_sum),act_div_vir_list_sum)
 print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
-
-# #paper initial conditions
-# U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-# V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work has shown use <50 copies/ml
-# I0 = 0   #Should be zero
+"""
 
 #my optimised initial conditions
 U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-V0 = act_div_vir_list_sum[0]   #just taking the first measured value
-#V0 = 43652 #an estimate of good start point
-I0 = 0   #Should be zero
-y0 = [U0, V0, I0]
+I_m0 = 0   #Should be zero
+I_n0 = 0   #Should be zero
+V_m0 = act_div_vir_list_sum_TS[0]   #just taking the first measured value
+V_n0 = act_div_vir_list_sum_MTS[0]   #just taking the first measured value
+y0 = [U0, I_m0, I_n0, V_m0, V_n0]
 
 # measured data
 t_measured = eff_day_vals
@@ -467,7 +464,7 @@ ax3.set_title('c)')
 # ax3.set_xlabel('Days Post Infection')
 # ax3.set_ylabel('Concentration (Log10 copies/mL)')
 # ax3.set_title('c)')
-"""
+
 
 plt.show()
 
