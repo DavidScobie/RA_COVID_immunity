@@ -127,7 +127,7 @@ df2_str_sorted['effective_day'] = effective_day
 
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
-"""
+
 seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
 
 plt.figure()
@@ -135,9 +135,9 @@ seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 
 
 #plot individual patients on different days
 Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
-for j in Subject_ID_vals_short:
+for j in Subject_ID_vals:
     k+=1
-    plt.figure()
+    #plt.figure()
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
     df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
@@ -146,7 +146,7 @@ for j in Subject_ID_vals_short:
     plt.xlabel('Study Day')
     plt.ylabel('Virus Titre (Log10 copies/mL)')
 
-"""
+
 
 #plot actual virus amount (instead of log10 of virus amount)
 act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
@@ -284,10 +284,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=9.3*(10**(-8)), min=9.2*(10**(-8)), max=9.4*(10**(-8)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=30, min=29, max=31)    #Clearance rate of infected cells
-params.add('gamma', value=0.9, min=0.8, max=1.0)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.05, min=0.04, max=0.06)     #clearance rate of virus particles
+params.add('alpha', value=7.2*(10**(-7)), min=7.1*(10**(-7)), max=7.3*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=152, min=150, max=154)    #Clearance rate of infected cells
+params.add('gamma', value=131, min=129, max=133)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.49, min=0.45, max=0.55)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, Id_measured), method='leastsq')  # leastsq nelder
@@ -349,9 +349,9 @@ ax3.set_ylabel('Concentration (Log10 copies/mL)')
 ax3.set_title('c)')
 """
 #########################################################
-"""
-#fit models to different patients
 
+#fit models to different patients
+"""
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
 Subject_ID_vals_short = Subject_ID_vals[0:3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)

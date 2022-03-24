@@ -273,10 +273,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=9*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=50, min=0, max=75)    #Clearance rate of infected cells
-params.add('gamma', value=0.7, min=0, max=6)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.5, min=0, max=100)     #clearance rate of virus particles
+params.add('alpha', value=6.63*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=56, min=0, max=75)    #Clearance rate of infected cells
+params.add('gamma', value=0.66, min=0, max=6)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.51, min=0, max=100)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -316,7 +316,6 @@ log_V_measured = np.log10(V_measured)
 log_V_fitted = np.log10(data_fitted[:, 1])
 V_fitted = data_fitted[:, 1]
 #plt.figure()
-print('LENGTH t_measured',len(t_measured),t_measured)
 ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured qPCR V data', s=75)
 ax2.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted qPCR V data')
 ax2.set_xlim(left=0)
@@ -324,8 +323,8 @@ ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
 ax2.set_title('b)')
 print('log_V_measured',log_V_measured, 'LENGTH log_V_measured',len(log_V_measured),'IT IS SAVED HERE')
-np.save('TS_log_V_measured', log_V_measured)
-np.save('TS_t_measured', t_measured)
+#np.save('TS_log_V_measured', log_V_measured)
+#np.save('TS_t_measured', t_measured)
 print('t_measured',t_measured)
 """
 #####plot the FFA data on top
@@ -366,9 +365,9 @@ ax3.set_ylabel('Concentration (Log10 copies/mL)')
 ax3.set_title('c)')
 """
 #########################################################
-
-#fit models to different patients
 """
+#fit models to different patients
+
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
 Subject_ID_vals_short = Subject_ID_vals[0:3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
@@ -392,14 +391,14 @@ for j in Subject_ID_vals:
         div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
         eff_day_list = df2_Subj_ID_sub_eff_sort['effective_day'].tolist()
 
-        print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
+        #print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
 
         #compute the actual virus amount (not the log)
         act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
         for i in range (len(div_vir_list_sum)):
             act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-        print('initial V value',act_div_vir_list_sum[0])
+        #print('initial V value',act_div_vir_list_sum[0])
 
         #extrapolation to find first data point
         # Get the indices of maximum element in eff_day_vals
@@ -456,7 +455,7 @@ for j in Subject_ID_vals:
         # display fitted statistics and append parameters to lists
         subj_IDs_over_5.append(j)
         report_fit(result)
-        print('result params',result.params)
+        #print('result params',result.params)
         for name, param in result.params.items():
             print(f'{name:7s} {param.value:11.5f} {param.stderr:11.5f}')
             if name == 'alpha':
@@ -491,9 +490,8 @@ print('alphas',alphas)
 print('betas',betas)
 print('gammas',gammas)
 print('deltas',deltas)
-print('subj_IDs_over_5',subj_IDs_over_5)
 
-#plot the distributions of alpha, beta, gamma and delta
+###################### plot the distributions of alpha, beta, gamma and delta
 plt.figure()
 plt.hist(alphas, density=False, bins=5,color = "skyblue")
 plt.ylabel('Number of patients')
@@ -512,7 +510,7 @@ plt.ylabel('Number of patients')
 plt.xlabel('Beta')
 plt.title('Histogram of beta values across individual patients')
 
-#plot the overall alpha (across all the patients) over the top
+#plot the overall beta (across all the patients) over the top
 y, x, _ = plt.hist(betas, density=False, bins=5,color = "skyblue")
 X = [overall_beta, overall_beta]
 Y = [0, y.max()]
@@ -524,7 +522,7 @@ plt.ylabel('Number of patients')
 plt.xlabel('Gamma')
 plt.title('Histogram of gamma values across individual patients')
 
-#plot the overall alpha (across all the patients) over the top
+#plot the overall gamma (across all the patients) over the top
 y, x, _ = plt.hist(gammas, density=False, bins=5,color = "skyblue")
 X = [overall_gamma, overall_gamma]
 Y = [0, y.max()]
@@ -536,11 +534,22 @@ plt.ylabel('Number of patients')
 plt.xlabel('Delta')
 plt.title('Histogram of delta values across individual patients')
 
-#plot the overall alpha (across all the patients) over the top
+#plot the overall delta (across all the patients) over the top
 y, x, _ = plt.hist(deltas, density=False, bins=5,color = "skyblue")
 X = [overall_delta, overall_delta]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red')
 """
+################ extrapolate back to find virus amounts on days -1, -2 and -3
+plt.figure()
+plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured qPCR V data', s=75)
+plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+plt.legend()
+plt.xlim([0, max(t_measured)])
+plt.ylim([0, 1.1 * 10**(-6)*max(V_measured)])
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre Concentration (million copies/mL)')
+plt.title('a)')
+
 plt.show()
 

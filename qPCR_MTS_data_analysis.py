@@ -257,8 +257,8 @@ y0 = [U0, V0, I0]
 # measured data
 t_measured = eff_day_vals
 V_measured = act_div_vir_list_sum
-np.save('MTS_qPCR_V_measured', V_measured)
-np.save('MTS_qPCR_t_measured',t_measured)
+#np.save('MTS_qPCR_V_measured', V_measured)
+#np.save('MTS_qPCR_t_measured',t_measured)
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -367,7 +367,7 @@ ax3.set_ylabel('Concentration (Log10 copies/mL)')
 ax3.set_title('c)')
 """
 #########################################################
-
+"""
 #fit models to different patients
 
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
@@ -547,7 +547,7 @@ y, x, _ = plt.hist(deltas, density=False, bins=5,color = "skyblue")
 X = [overall_delta, overall_delta]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red')
-
+"""
 plt.show()
 
 
