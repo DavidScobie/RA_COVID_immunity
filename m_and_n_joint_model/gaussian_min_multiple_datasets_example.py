@@ -37,19 +37,20 @@ np.random.seed(2021)  #this somehow keeps the measured data the exact same every
 x = np.linspace(-1, 2, 151) #x goes between -1 and 2, and has 151 points along the way
 data = []
 for _ in np.arange(5): #[0, 1, 2, 3, 4]
-    #here we are
-    params = Parameters()
+    #here we are making the datasets (meausred).
+    params = Parameters()  #this just gives us the 5 random values for amp, cen and sig of gaussians
     amp = 0.60 + 9.50*np.random.rand()
-    print('amp',amp)
     cen = -0.20 + 1.20*np.random.rand()
     sig = 0.25 + 0.03*np.random.rand()
-    dat = gauss(x, amp, cen, sig) + np.random.normal(size=x.size, scale=0.1)
+    dat = gauss(x, amp, cen, sig) + np.random.normal(size=x.size, scale=0.1)  #We have random amp, cen and sig and we add a bit of noise
     data.append(dat)
 data = np.array(data)
+#print('length data',len(data), 'data', data)
 
 fit_params = Parameters()
 for iy, y in enumerate(data):
     fit_params.add(f'amp_{iy+1}', value=0.5, min=0.0, max=200)
+    print('fit_params',fit_params,'iy',iy,'y',y)
     fit_params.add(f'cen_{iy+1}', value=0.4, min=-2.0, max=2.0)
     fit_params.add(f'sig_{iy+1}', value=0.3, min=0.01, max=3.0)
 

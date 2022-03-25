@@ -291,57 +291,13 @@ def residual(paras, t, data):
     V_n_model = model[:, 4]
 
     #want to find the residual between the log of the virus measured and fitted data for mouth and nose
-    log_V_model = np.log10(V_model)
+    log_V_m_model = np.log10(V_m_model)
     log_data = np.log10(data)
 
-    return (log_V_model - log_data).ravel()
+    return ( (log_V_m_model - log_data) + () ).ravel()
 
 
 # initial conditions
-"""
-#extrapolation to find initial conditions...
-def best_fit(X, Y):
-
-    xbar = sum(X)/len(X)
-    ybar = sum(Y)/len(Y)
-    n = len(X) # or len(Y)
-
-    numer = sum([xi*yi for xi,yi in zip(X, Y)]) - n * xbar * ybar
-    denum = sum([xi**2 for xi in X]) - n * xbar**2
-
-    b = numer / denum
-    a = ybar - b * xbar
-
-    print('best fit line:\ny = {:.2f} + {:.2f}x'.format(a, b))
-
-    return a, b
-
-# Get the indices of maximum element in eff_day_vals
-max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
-max_indic = int(max_indic_arr[0])
-
-a, b = best_fit(eff_day_vals[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
-
-print('10^a',10**a)
-
-plt.figure()
-plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
-yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
-print('yfit',yfit)
-plt.plot(eff_day_vals[:max_indic+1], yfit)
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (Log10 copies/mL)')
-plt.xlim(left=0)
-plt.ylim(bottom=0)
-
-#add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
-v1 = 0
-v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
-eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
-act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
-print('LENGTH OF act_div_vir_list_sum',len(act_div_vir_list_sum),act_div_vir_list_sum)
-print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
-"""
 
 #my optimised initial conditions
 U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
@@ -352,20 +308,22 @@ V_n0 = act_div_vir_list_sum_MTS[0]   #just taking the first measured value
 y0 = [U0, I_m0, I_n0, V_m0, V_n0]
 
 # measured data
-t_measured = eff_day_vals
-V_measured = act_div_vir_list_sum
-print('LENGTH V_measured',len(V_measured))
-np.save('TS_V_measured', V_measured)
+t_measured_TS = eff_day_vals_TS
+t_measured_MTS = eff_day_vals_MTS
+V_measured_TS = act_div_vir_list_sum_TS
+V_measured_MTS = act_div_vir_list_sum_MTS
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
-ax1.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured V data', s=75)
+ax1.scatter(t_measured_TS, 10**(-6)*V_measured_TS, marker='o', color='red', label='measured V_TS data', s=75)
 
 # set parameters including bounds; you can also fix parameters (use vary=False)
 params = Parameters()
 params.add('U0', value=U0, vary=False)
-params.add('V0', value=V0, vary=False)
-params.add('I0', value=I0, vary=False)
+params.add('I_m0', value=I_m0, vary=False)
+params.add('I_n0', value=I_n0, vary=False)
+params.add('V_m0', value=V_m0, vary=False)
+params.add('V_n0', value=V_n0, vary=False)
 
 # #parameters optimised on first 6 days of data
 # params.add('alpha', value=4.24*(10**(-7)), min=4.23*(10**(-7)), max=4.25*(10**(-7)))   #rate that viral particles infect susceptible cells
@@ -374,13 +332,14 @@ params.add('I0', value=I0, vary=False)
 # params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 
 #my optimised parameters
-params.add('alpha', value=6.63*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('alpha_m', value=6.63*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('alpha_n', value=6.63*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=56, min=0, max=75)    #Clearance rate of infected cells
 params.add('gamma', value=0.66, min=0, max=6)        #Infected cells release virus at rate gamma
 params.add('delta', value=0.51, min=0, max=100)     #clearance rate of virus particles
 
 # fit model
-result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+result = minimize(residual, params, args=(t_measured_TS, t_measured_MTS, V_measured_TS, V_measured_MTS), method='leastsq')  # leastsq nelder
 # check results of the fit
 data_fitted = g(t_measured, y0, result.params)
 
