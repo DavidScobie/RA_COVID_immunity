@@ -30,12 +30,25 @@ df2 = df2[df2['Virus Titre (Log10 FFU/mL)'].str.contains("N/A ") == False]
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 FFU/mL)'].str.len().sort_values().index
-df2_str_sorted = df2.reindex(s)
+df_str_sorted = df2.reindex(s)
 
 #get rid of the DETECTED AND NOT DETECTED
-df2_str_sorted['length'] = df2_str_sorted['Virus Titre (Log10 FFU/mL)'].str.len()
-df2_str_sorted = df2_str_sorted[df2_str_sorted.length < 7]
+df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 FFU/mL)'].str.len()
+#df2_str_sorted = df2_str_sorted[df2_str_sorted.length < 7]
+df_str_sorted1 = df_str_sorted
+df_str_sorted1 = df_str_sorted[df_str_sorted.length < 7]
+print('df_str_sorted1',df_str_sorted1['Virus Titre (Log10 FFU/mL)'].tolist(),'length',len(df_str_sorted1['Virus Titre (Log10 FFU/mL)'].tolist()))
 
+df_str_sorted2 = df_str_sorted
+df_str_sorted2 = df_str_sorted[df_str_sorted.length > 10]
+print('df_str_sorted2',df_str_sorted2['Virus Titre (Log10 FFU/mL)'].tolist(),'length',len(df_str_sorted2['Virus Titre (Log10 FFU/mL)'].tolist()))
+
+df2_str_sorted = pd.concat([df_str_sorted1, df_str_sorted2], axis=0)
+#print('df2_str_sorted',df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist())
+
+print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()))
+
+"""
 #convert the strings to numbers
 df2_str_sorted['Virus Titre (Log10 FFU/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 FFU/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
@@ -128,10 +141,10 @@ effective_day = df_over_4_len_ppl_less_thresh['eff_day'].tolist()
 print('effective_day',len(effective_day),'effective_day',effective_day)
 """
 #plot the virus against day
-plt.figure()
-plt.plot(effective_day,vir_list_Non_DET,'bx')
-plt.xlabel('Study Day')
-plt.ylabel('Virus Titre (Log10 FFU/mL)')
+# plt.figure()
+# plt.plot(effective_day,vir_list_Non_DET,'bx')
+# plt.xlabel('Study Day')
+# plt.ylabel('Virus Titre (Log10 FFU/mL)')
 """
 ##plot the means
 
@@ -184,15 +197,15 @@ plt.title('patients with at least 5 datapoints log scale')
 """
 #plot individual patients on different days
 #Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
-for j in Subject_ID_vals:
-    k+=1
-    #plt.figure()
-    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].astype(str).str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
-    df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
-    df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='line',xlim=[1,12],ylim=[1,5]) #plot the subject points as a line plot
-    plt.title('Subject ID=%i' %j)
-    plt.xlabel('Study Day')
-    plt.ylabel('Virus Titre (Log10 FFU/mL)')
+# for j in Subject_ID_vals:
+#     k+=1
+#     #plt.figure()
+#     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].astype(str).str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
+#     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
+#     df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='line',xlim=[1,12],ylim=[1,5]) #plot the subject points as a line plot
+#     plt.title('Subject ID=%i' %j)
+#     plt.xlabel('Study Day')
+#     plt.ylabel('Virus Titre (Log10 FFU/mL)')
 """
 
 #plot actual virus amount (instead of log10 of virus amount)
@@ -208,5 +221,5 @@ plt.title('patients with at least 5 datapoints linear scale')
 
 # np.save('FFA_TS_V_measured', act_div_vir_list_sum)
 # np.save('FFA_TS_t_measured', eff_day_vals)
-
+"""
 plt.show()
