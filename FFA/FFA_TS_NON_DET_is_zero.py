@@ -32,23 +32,19 @@ df2 = df2[df2['Virus Titre (Log10 FFU/mL)'].str.contains("N/A ") == False]
 s=df2['Virus Titre (Log10 FFU/mL)'].str.len().sort_values().index
 df_str_sorted = df2.reindex(s)
 
-#get rid of the DETECTED AND NOT DETECTED
+#get rid of the DETECTED and turn the NON DETECTED into zeros
 df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 FFU/mL)'].str.len()
-#df2_str_sorted = df2_str_sorted[df2_str_sorted.length < 7]
-df_str_sorted1 = df_str_sorted
-df_str_sorted1 = df_str_sorted[df_str_sorted.length < 7]
-print('df_str_sorted1',df_str_sorted1['Virus Titre (Log10 FFU/mL)'].tolist(),'length',len(df_str_sorted1['Virus Titre (Log10 FFU/mL)'].tolist()))
+df_str_sorted_just_nums = df_str_sorted
+df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
 
-df_str_sorted2 = df_str_sorted
-df_str_sorted2 = df_str_sorted[df_str_sorted.length > 10]
-print('df_str_sorted2',df_str_sorted2['Virus Titre (Log10 FFU/mL)'].tolist(),'length',len(df_str_sorted2['Virus Titre (Log10 FFU/mL)'].tolist()))
+df_str_sorted_NON_DET = df_str_sorted
+df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
+df_str_sorted_NON_DET['Virus Titre (Log10 FFU/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 FFU/mL)'].tolist()))
 
-df2_str_sorted = pd.concat([df_str_sorted1, df_str_sorted2], axis=0)
-#print('df2_str_sorted',df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist())
+df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
 
 print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist()))
 
-"""
 #convert the strings to numbers
 df2_str_sorted['Virus Titre (Log10 FFU/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 FFU/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
@@ -185,29 +181,33 @@ for j in effective_day:
 print('div_vir_list_sum',div_vir_list_sum,'length div_vir_list_sum',len(div_vir_list_sum))
 
 ######cut off the first 2 days and last day value of the arrays as the data here is well off due to different patients
-eff_day_vals = eff_day_vals[2:-1]
-div_vir_list_sum = div_vir_list_sum[2:-1]
+# eff_day_vals = eff_day_vals[2:-1]
+# div_vir_list_sum = div_vir_list_sum[2:-1]
+
+#if the mean value is zero, then discard it from the array
+print('div_vir_list_sum before',div_vir_list_sum)
+div_vir_list_sum_end_chopped = np.trim_zeros(div_vir_list_sum, trim='b')
+print('div_vir_list_sum after',div_vir_list_sum_end_chopped)
+
+#chop the zeros off the end of the days and virus arrays
+len_with_zeros = len(div_vir_list_sum)
+len_without_zeros = len(div_vir_list_sum_end_chopped)
+eff_day_vals_end_chopped = eff_day_vals[:-(len_with_zeros - len_without_zeros)]
+print('eff_day_vals_end_chopped',eff_day_vals_end_chopped,'length',len(eff_day_vals_end_chopped),'eff_day_vals',eff_day_vals,'length',len(eff_day_vals),'len with zeros',len_with_zeros,'len without zeros',len_without_zeros)
+
+#chop the zeros off the start of days and virus days
+div_vir_list_sum_front_chopped = np.trim_zeros(div_vir_list_sum_end_chopped, trim='f')
+difference =  len(div_vir_list_sum_end_chopped) - len(div_vir_list_sum_front_chopped)
+print('difference',difference)
+eff_day_vals_front_chopped = eff_day_vals_end_chopped[difference:]
+print('eff_day_vals_front_chopped',eff_day_vals_front_chopped)
 
 plt.figure()
-plt.plot(eff_day_vals,div_vir_list_sum,'-rx')  #something is going on with these indicies here, find out what
+plt.plot(eff_day_vals_front_chopped,div_vir_list_sum_front_chopped,'-rx')  #something is going on with these indicies here, find out what
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 plt.title('patients with at least 5 datapoints log scale')
-
 """
-#plot individual patients on different days
-#Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
-# for j in Subject_ID_vals:
-#     k+=1
-#     #plt.figure()
-#     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].astype(str).str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
-#     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
-#     df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 FFU/mL)',kind='line',xlim=[1,12],ylim=[1,5]) #plot the subject points as a line plot
-#     plt.title('Subject ID=%i' %j)
-#     plt.xlabel('Study Day')
-#     plt.ylabel('Virus Titre (Log10 FFU/mL)')
-"""
-
 #plot actual virus amount (instead of log10 of virus amount)
 act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
 for i in range (len(div_vir_list_sum)):
