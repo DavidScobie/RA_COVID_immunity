@@ -31,20 +31,17 @@ s=df2['Virus Titre (Log10 copies/mL)'].str.len().sort_values().index
 df_str_sorted = df2.reindex(s)
 
 #get rid of the DETECTED AND NOT DETECTED
-# df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
-# df_str_sorted_just_nums = df_str_sorted
-# df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
-
-# df_str_sorted_NON_DET = df_str_sorted
-# df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
-# df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
-
-# df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
-
-# print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
-
 df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
-df2_str_sorted = df_str_sorted[df_str_sorted.length < 7]
+df_str_sorted_just_nums = df_str_sorted
+df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
+
+df_str_sorted_NON_DET = df_str_sorted
+df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
+df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
+
+df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
+
+print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
 
 #convert the strings to numbers
 df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
@@ -244,14 +241,17 @@ def best_fit(X, Y):
 
     return a, b
 
-#GENERALISE THIS SO THAT IT FINDS INDICIE OF THE PEAK VALUE, DONT JUST HARDCODE AS 6
-a, b = best_fit(eff_day_vals[:6],np.log10(act_div_vir_list_sum)[:6])
+# Get the indices of maximum element in eff_day_vals
+max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
+max_indic = int(max_indic_arr[0])
+
+a, b = best_fit(eff_day_vals[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
 
 plt.figure()
-plt.scatter(eff_day_vals[:6], np.log10(act_div_vir_list_sum)[:6], marker='o', color='red', label='measured V data', s=75)
-yfit = [a + b * xi for xi in eff_day_vals[:6]]
+plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
+yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
 print('yfit',yfit)
-plt.plot(eff_day_vals[:6], yfit)
+plt.plot(eff_day_vals[:max_indic+1], yfit)
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (Log10 copies/mL)')
 plt.xlim(left=0)
@@ -270,19 +270,32 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-Id0 = act_div_vir_list_sum[0]   #just taking the first measured value
+U0 = 0.5*(10**(8))  #the number of cells in an adult is 4x10^8
+Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
-Is0 = 1*(10**(0))
+Is0 = act_div_vir_list_sum[0] / 2
 y0 = [U0, Id0, Is0]
 
-# measured data
-t_measured = eff_day_vals
-V_measured = act_div_vir_list_sum
+##cut off the datapoints after day 15 because these are just noise
+#only do this if the effective day goes up to 15
+exists = 15 in eff_day_vals
+if exists == True:
+    fifteenth_indic_arr = np.where(eff_day_vals == 15)
+    fifteenth_indic = int(fifteenth_indic_arr[0])
+    print('fifteenth_indic',fifteenth_indic)
+
+    # measured data
+    t_measured = eff_day_vals[:fifteenth_indic]
+    V_measured = act_div_vir_list_sum[:fifteenth_indic]
+
+else:
+    # measured data
+    t_measured = eff_day_vals
+    V_measured = act_div_vir_list_sum
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
-ax1.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured Id data', s=75)
+ax1.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured (Id+Is) data', s=75)
 
 # set parameters including bounds; you can also fix parameters (use vary=False)
 params = Parameters()
@@ -297,10 +310,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=9.3*(10**(-8)), min=2*(10**(-9)), max=7.3*(10**(-5)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=29, min=0, max=50)    #Clearance rate of infected cells
-params.add('gamma', value=0.9, min=0, max=1)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.45, min=0, max=2)     #clearance rate of virus particles
+params.add('alpha', value=4*(10**(-6)), min=7.99*(10**(-9)), max=8.01*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=190, min=0, max=210)    #Clearance rate of infected cells
+params.add('gamma', value=1, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.33, min=0.32, max=0.34)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -327,7 +340,7 @@ log_Id_fitted = np.log10(data_fitted[:, 1])
 log_Is_fitted = np.log10(data_fitted[:, 2])
 log_Id_Is_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
 #plt.figure()
-ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured Id data', s=75)
+ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured (Id+Is) data', s=75)
 ax2.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
 ax2.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
 ax2.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
