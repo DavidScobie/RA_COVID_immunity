@@ -270,7 +270,7 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 0.5*(10**(8))  #the number of cells in an adult is 4x10^8
+U0 = 0.35*(10**(8))  #the number of cells in an adult is 4x10^8
 Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
 Is0 = act_div_vir_list_sum[0] / 2
@@ -310,8 +310,8 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=4*(10**(-6)), min=7.99*(10**(-9)), max=8.01*(10**(-6)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=190, min=0, max=210)    #Clearance rate of infected cells
+params.add('alpha', value=4*(10**(-6)), min=7.99*(10**(-9)), max=8.01*(10**(-5)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=250, min=150, max=450)    #Clearance rate of infected cells
 params.add('gamma', value=1, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
 params.add('delta', value=0.33, min=0.32, max=0.34)     #clearance rate of virus particles
 
