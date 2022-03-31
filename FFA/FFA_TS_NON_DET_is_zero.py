@@ -9,7 +9,7 @@ from scipy.integrate import odeint
 
 #import the excel data
 
-df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_TS.xlsx')
+df = pd.read_excel('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_TS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
@@ -189,25 +189,25 @@ print('div_vir_list_sum before',div_vir_list_sum)
 div_vir_list_sum_end_chopped = np.trim_zeros(div_vir_list_sum, trim='b')
 print('div_vir_list_sum after',div_vir_list_sum_end_chopped)
 
-#chop the zeros off the end of the days and virus arrays
+#chop the zeros off the end of the days and virus arrays (as at the end we just have zeros from NON DETECTED)
 len_with_zeros = len(div_vir_list_sum)
 len_without_zeros = len(div_vir_list_sum_end_chopped)
 eff_day_vals_end_chopped = eff_day_vals[:-(len_with_zeros - len_without_zeros)]
 print('eff_day_vals_end_chopped',eff_day_vals_end_chopped,'length',len(eff_day_vals_end_chopped),'eff_day_vals',eff_day_vals,'length',len(eff_day_vals),'len with zeros',len_with_zeros,'len without zeros',len_without_zeros)
 
-#chop the zeros off the start of days and virus days
-div_vir_list_sum_front_chopped = np.trim_zeros(div_vir_list_sum_end_chopped, trim='f')
-difference =  len(div_vir_list_sum_end_chopped) - len(div_vir_list_sum_front_chopped)
+#chop the zeros off the start of days and virus days (as at the start we just have zeros from NON DETECTED)
+div_vir_list_sum_front_and_end_chopped = np.trim_zeros(div_vir_list_sum_end_chopped, trim='f')
+difference =  len(div_vir_list_sum_end_chopped) - len(div_vir_list_sum_front_and_end_chopped)
 print('difference',difference)
-eff_day_vals_front_chopped = eff_day_vals_end_chopped[difference:]
-print('eff_day_vals_front_chopped',eff_day_vals_front_chopped)
+eff_day_vals_front_and_end_chopped = eff_day_vals_end_chopped[difference:]
+print('eff_day_vals_front_and_end_chopped',eff_day_vals_front_and_end_chopped)
 
 plt.figure()
-plt.plot(eff_day_vals_front_chopped,div_vir_list_sum_front_chopped,'-rx')  #something is going on with these indicies here, find out what
+plt.plot(eff_day_vals_front_and_end_chopped,div_vir_list_sum_front_and_end_chopped,'-rx')  #something is going on with these indicies here, find out what
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (Log10 FFU/mL)')
 plt.title('patients with at least 5 datapoints log scale')
-"""
+
 #plot actual virus amount (instead of log10 of virus amount)
 act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
 for i in range (len(div_vir_list_sum)):
@@ -219,7 +219,7 @@ plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
 plt.title('patients with at least 5 datapoints linear scale')
 
-# np.save('FFA_TS_V_measured', act_div_vir_list_sum)
-# np.save('FFA_TS_t_measured', eff_day_vals)
-"""
+np.save('FFA_TS_V_measured_NON_DET_eq_zero', 10**div_vir_list_sum_front_and_end_chopped)
+np.save('FFA_TS_t_measured_NON_DET_eq_zero', eff_day_vals_front_and_end_chopped)
+
 plt.show()
