@@ -359,6 +359,8 @@ ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
 ax2.set_title('b)')
 
+print('virus val day minus 3: ',(-3*b)+a,'virus val day minus 2: ',(-2*b)+a,'virus val day minus 1: ',(-1*b)+a)
+
 #plot the measured data, along with the fitted model for V, I and U
 #plt.figure()
 Id_fitted = data_fitted[:, 1]
@@ -376,8 +378,22 @@ ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
 
-np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
-np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
+############## find area under the Is and Id curves
+plt.figure()
+plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
+# print('Id points',data_fitted[:, 1])
+plt.plot(t_measured, data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
+# print('Is points',data_fitted[:, 2])
+plt.legend()
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (copies/mL)')
+
+Is_area = np.trapz(data_fitted[:, 2], dx=0.5)
+Id_area = np.trapz(data_fitted[:, 1], dx=0.5)
+print('Is_area',Is_area,'Id_area',Id_area)
+
+#np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
+#np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
 
 plt.show()
 

@@ -14,8 +14,8 @@ plt.figure()
 plt.plot(FFA_effective_day, log_FFA_virus, marker='o', color='black', label='measured FFA V data')
 
 #plot the qPCR data
-log_qPCR_data = np.log10(np.load('qPCR_MTS_V_measured_NON_DET_eq_zero.npy'))
-qPCR_effective_day = np.load('qPCR_MTS_t_measured_NON_DET_eq_zero.npy')
+log_qPCR_data = np.log10(np.load('qPCR_MTS_V_measured_NON_DET_eq_zero.npy'))[:-2]
+qPCR_effective_day = np.load('qPCR_MTS_t_measured_NON_DET_eq_zero.npy')[:-2]
 print('len(log_qPCR_data)',len(log_qPCR_data),'len(qPCR_effective_day)',len(qPCR_effective_day))
 plt.plot(qPCR_effective_day, log_qPCR_data, marker='o', color='red', label='measured qPCR V data')
 plt.ylim([0, 1.1 *max(log_qPCR_data)])
