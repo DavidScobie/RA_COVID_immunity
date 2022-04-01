@@ -105,7 +105,11 @@ uni_sort_eff_day = np.unique(sort_eff_day)
 
 #find if difference between effective day values is greater than 0.5, if so then use this indicie as threshold for later steps
 diff_uni_sort_eff_day = np.diff(uni_sort_eff_day)
+
+
+
 not_zerop5 = np.where(diff_uni_sort_eff_day != 0.5)[0]
+print('not_zerop5',not_zerop5)
 
 #if difference is 0.5 between all the effective days then thresh is the last possible day. If not then choose day accordingly
 if len(not_zerop5) == 0: #case where we have data at every half day
