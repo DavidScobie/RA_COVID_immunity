@@ -118,7 +118,7 @@ print('not_zerop5',not_zerop5)
 
 count=0 #this is used to count if there is a gap greater than 0.5 in first 3rd so this is factored in if there is also a gap greater than 0.5 in the last 2 thirds in making the dataframe
 
-if len(not_zerop5) == 0: #case where we have data at every half day
+if len(not_zerop5[0]) == 0: #case where we have data at every half day
     thresh = uni_sort_eff_day[-1]
     #get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
     df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
@@ -132,7 +132,7 @@ elif not_zerop5[-1] < start_or_end_thresh: #if there is a gap greater than 0.5 i
     print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
 
 
-if len(not_zerop5) == 0: #case where we have data at every half day
+if len(not_zerop5[0]) == 0: #case where we have data at every half day
     thresh = uni_sort_eff_day[-1]
     #get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
     df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
