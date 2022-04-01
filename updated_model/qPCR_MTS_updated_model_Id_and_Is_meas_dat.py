@@ -7,7 +7,7 @@ from scipy.integrate import odeint
 
 #import the excel data
 
-df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_qPCR_TS.xlsx')
+df = pd.read_excel ('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_qPCR_MTS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
@@ -137,7 +137,7 @@ df2_str_sorted['effective_day'] = effective_day
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 
-seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
+#seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
 """
 plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
@@ -162,10 +162,10 @@ act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
 for i in range (len(div_vir_list_sum)):
     act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-plt.figure()
-plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
+# plt.figure()
+# plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (copies/mL)')
 
 #######################################################
 
@@ -247,15 +247,15 @@ max_indic = int(max_indic_arr[0])
 
 a, b = best_fit(eff_day_vals[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
 
-plt.figure()
-plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
-yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
-print('yfit',yfit)
-plt.plot(eff_day_vals[:max_indic+1], yfit)
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (Log10 copies/mL)')
-plt.xlim(left=0)
-plt.ylim(bottom=0)
+# plt.figure()
+# plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
+# yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
+# print('yfit',yfit)
+# plt.plot(eff_day_vals[:max_indic+1], yfit)
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (Log10 copies/mL)')
+# plt.xlim(left=0)
+# plt.ylim(bottom=0)
 
 #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
 v1 = 0
@@ -270,7 +270,7 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 0.35*(10**(8))  #the number of cells in an adult is 4x10^8
+U0 = 0.8*(10**(7))  #the number of cells in an adult is 4x10^8
 Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
 Is0 = act_div_vir_list_sum[0] / 2
@@ -310,10 +310,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=4*(10**(-6)), min=7.99*(10**(-9)), max=8.01*(10**(-5)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=250, min=150, max=450)    #Clearance rate of infected cells
+params.add('alpha', value=6.01*(10**(-6)), min=5*(10**(-6)), max=7*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=60, min=40, max=80)    #Clearance rate of infected cells
 params.add('gamma', value=1, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.33, min=0.32, max=0.34)     #clearance rate of virus particles
+params.add('delta', value=0.75, min=0.74, max=0.76)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -376,8 +376,8 @@ ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
 
-#np.save('qPCR_TS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
-#np.save('qPCR_TS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
+np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
+np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
 
 plt.show()
 

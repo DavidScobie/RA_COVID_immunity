@@ -9,7 +9,7 @@ from scipy.integrate import odeint
 
 #import the excel data
 
-df = pd.read_excel('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_TS.xlsx')
+df = pd.read_excel('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_MTS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
@@ -79,7 +79,7 @@ Subj_ID_list = [item for sublist in Subj_ID_list for item in sublist]
 print('vir_list_Non_DET',vir_list_Non_DET)
 print('day_list',day_list)
 print('Timepoint_list',Timepoint_list)
-print('Subj_ID_list',Subj_ID_list)
+print('Subj_ID_list',Subj_ID_list)  #fine up to here
 
 #create the 'effective study day' which takes AM and PM into account
 #create 'effective_day' list and add 0.5 to values of study day if it is PM, (keep same as study day if AM)
@@ -99,23 +99,64 @@ df_over_4_len_ppl = pd.DataFrame(list(zip(vir_list_Non_DET, Subj_ID_list,day_lis
 
 #sort effective day values into ascending order
 sort_eff_day = np.sort(effective_day)
+print('sort_eff_day',sort_eff_day) #this is fine
 
 #remove duplicates in the list of effective days
 uni_sort_eff_day = np.unique(sort_eff_day)
+print('uni_sort_eff_day',uni_sort_eff_day)
 
 #find if difference between effective day values is greater than 0.5, if so then use this indicie as threshold for later steps
 diff_uni_sort_eff_day = np.diff(uni_sort_eff_day)
+print('diff_uni_sort_eff_day',diff_uni_sort_eff_day,'len(diff_uni_sort_eff_day)',len(diff_uni_sort_eff_day))
+
+#find length of diff_uni_sort_eff_day and use it to work out whether gap greater than 0.5 happens at start or end of eff_day
+start_or_end_thresh = int(np.floor(len(diff_uni_sort_eff_day)/3)) #here we use 3 because peak is roughly a 3rd of the way into data through time
+print('start_or_end_thresh',start_or_end_thresh)
+
+#if there is a gap of greater than 0.5 in the first 3rd of the array then we need to cut the data off before this point
 not_zerop5 = np.where(diff_uni_sort_eff_day != 0.5)[0]
+print('not_zerop5',not_zerop5)
+
+
+#if there is a gap of greater than 0.5 in the last two thirds of the array then we need to cut the data off after this point
 
 #if difference is 0.5 between all the effective days then thresh is the last possible day. If not then choose day accordingly
+count=0
+
 if len(not_zerop5) == 0: #case where we have data at every half day
     thresh = uni_sort_eff_day[-1]
-else: #case where we dont have data at every half day
-    thresh = uni_sort_eff_day[int(not_zerop5[0])] + 0.5
+    #get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
+    df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
+    print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
 
-#get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
-df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
-print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
+elif not_zerop5[-1] < start_or_end_thresh:
+    count+=1
+    thresh = uni_sort_eff_day[int(not_zerop5[-1])] + 0.5 #need to index last value of array here
+    #get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
+    df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day >= thresh]
+    print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
+
+
+if len(not_zerop5) == 0: #case where we have data at every half day
+    thresh = uni_sort_eff_day[-1]
+    #get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
+    df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
+    print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
+
+elif not_zerop5[0] > start_or_end_thresh: #case where we dont have data at every half day
+        thresh = uni_sort_eff_day[int(not_zerop5[0])] + 0.5
+        if count == 0:
+            #get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
+            df_over_4_len_ppl_less_thresh = df_over_4_len_ppl[df_over_4_len_ppl.eff_day <= thresh]
+            print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
+        else:
+            #get rid of the rows of dataframe that have effective day above the effective day threshold (as above this day data is discontinuous so harder to plot etc..)
+            df_over_4_len_ppl_less_thresh = df_over_4_len_ppl_less_thresh[df_over_4_len_ppl_less_thresh.eff_day <= thresh]
+            print('df_over_4_len_ppl_less_thresh',df_over_4_len_ppl_less_thresh)
+
+
+print('thresh',thresh)
+
 
 ##plotting the patients in different colours
 

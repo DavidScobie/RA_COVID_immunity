@@ -6,38 +6,45 @@ from lmfit import minimize, Parameters, Parameter, report_fit
 from scipy.integrate import odeint
 
 #plot the FFA data
-FFA_virus = np.load('FFA_MTS_V_measured.npy')
+FFA_virus = np.load('FFA_MTS_V_measured_NON_DET_eq_zero.npy')
 print('FFA_virus',FFA_virus)
 log_FFA_virus = np.log10(FFA_virus)
-FFA_effective_day = np.load('FFA_MTS_t_measured.npy')
-print('FFA_effective_day',FFA_effective_day)
-print('len(log_FFA_virus)',len(log_FFA_virus),'len(FFA_effective_day)',len(FFA_effective_day))
+FFA_effective_day = np.load('FFA_MTS_t_measured_NON_DET_eq_zero.npy')
 plt.figure()
 plt.plot(FFA_effective_day, log_FFA_virus, marker='o', color='black', label='measured FFA V data')
 
-plt.legend()
-
 #plot the qPCR data
-qPCR_data = np.load('MTS_qPCR_V_measured.npy')
-log_qPCR_data = np.log10(qPCR_data)
-qPCR_effective_day = np.load('MTS_qPCR_t_measured.npy')
-print('qPCR_data',qPCR_data)
-print('qPCR_effective_day',qPCR_effective_day)
+log_qPCR_data = np.log10(np.load('qPCR_MTS_V_measured_NON_DET_eq_zero.npy'))
+qPCR_effective_day = np.load('qPCR_MTS_t_measured_NON_DET_eq_zero.npy')
 print('len(log_qPCR_data)',len(log_qPCR_data),'len(qPCR_effective_day)',len(qPCR_effective_day))
 plt.plot(qPCR_effective_day, log_qPCR_data, marker='o', color='red', label='measured qPCR V data')
 plt.ylim([0, 1.1 *max(log_qPCR_data)])
 plt.xlim([0, 20])
+plt.legend()
 
+print('FFA_effective_day',FFA_effective_day,'length',len(FFA_effective_day))
+print('log_FFA_virus',log_FFA_virus,'length',len(log_FFA_virus))
+print('qPCR_effective_day',qPCR_effective_day,'length',len(qPCR_effective_day))
+print('log_qPCR_data',log_qPCR_data,'length',len(log_qPCR_data))
+
+#qPCR data is longer than FFA data, so we need to cut qPCR data off at the right points
+qPCR_lower_bound = np.where(qPCR_effective_day == FFA_effective_day[0])
+qPCR_upper_bound = np.where(qPCR_effective_day == FFA_effective_day[-1])
+print('qPCR_lower_bound',int(qPCR_lower_bound[0]),'qPCR_upper_bound',int(qPCR_upper_bound[0]))
+print('qPCR_effective_day',qPCR_effective_day)
 
 #keep only the data for each type on the same days
-log_qPCR_data_short = log_qPCR_data[8:-12]
-qPCR_effective_day_short = qPCR_effective_day[8:-12]
+log_qPCR_data_short = log_qPCR_data[int(qPCR_lower_bound[0]):int(qPCR_upper_bound[0])+1] #have to add 1 because of how python does indexing
+qPCR_effective_day_short = qPCR_effective_day[int(qPCR_lower_bound[0]):int(qPCR_upper_bound[0])+1]
 print('qPCR_effective_day_short',qPCR_effective_day_short)
 
-fig, ax = plt.subplots()
-ax.scatter(log_FFA_virus, log_qPCR_data_short)
+print('log_FFA_virus',log_FFA_virus,'length',len(log_FFA_virus))
+print('log_qPCR_data_short',log_qPCR_data_short,'length',len(log_qPCR_data_short))
 
-for i, txt in enumerate(FFA_effective_day):
+fig, ax = plt.subplots()
+ax.scatter(log_FFA_virus, log_qPCR_data_short)  #this is the scatterplot of the points through which the line of best fit is drawn
+
+for i, txt in enumerate(FFA_effective_day):  #this is just labelling all the scatterpoints
     ax.annotate(txt, (log_FFA_virus[i], log_qPCR_data_short[i]))
 
 ax.set_xlim(left=0)
@@ -76,8 +83,6 @@ yfit = np.insert(yfit, 0, v2, axis=0)
 plt.plot(log_FFA_virus_inc0, yfit)
 plt.xlabel('log_FFA_virus')
 plt.ylabel('log_qPCR_data_short')
-plt.xlim(left=0)
-plt.ylim(bottom=5)
 
 ##########################
 new_FFA_log_virus = a + (b*log_FFA_virus)

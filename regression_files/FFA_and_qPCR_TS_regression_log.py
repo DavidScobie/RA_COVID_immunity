@@ -42,9 +42,9 @@ print('log_FFA_virus',log_FFA_virus,'length',len(log_FFA_virus))
 print('log_qPCR_data_short',log_qPCR_data_short,'length',len(log_qPCR_data_short))
 
 fig, ax = plt.subplots()
-ax.scatter(log_FFA_virus, log_qPCR_data_short)
+ax.scatter(log_FFA_virus, log_qPCR_data_short)  #this is the scatterplot of the points through which the line of best fit is drawn
 
-for i, txt in enumerate(FFA_effective_day):
+for i, txt in enumerate(FFA_effective_day):  #this is just labelling all the scatterpoints
     ax.annotate(txt, (log_FFA_virus[i], log_qPCR_data_short[i]))
 
 ax.set_xlim(left=0)
@@ -83,8 +83,6 @@ yfit = np.insert(yfit, 0, v2, axis=0)
 plt.plot(log_FFA_virus_inc0, yfit)
 plt.xlabel('log_FFA_virus')
 plt.ylabel('log_qPCR_data_short')
-plt.xlim(left=0)
-plt.ylim(bottom=5)
 
 ##########################
 new_FFA_log_virus = a + (b*log_FFA_virus)
