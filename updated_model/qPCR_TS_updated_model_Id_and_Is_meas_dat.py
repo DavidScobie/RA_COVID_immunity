@@ -295,7 +295,7 @@ else:
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
-ax1.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured (Id+Is) data', s=75)
+ax1.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', label='measured (Id+Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 
 # set parameters including bounds; you can also fix parameters (use vary=False)
 params = Parameters()
@@ -339,7 +339,7 @@ log_Id_fitted = np.log10(data_fitted[:, 1])
 log_Is_fitted = np.log10(data_fitted[:, 2])
 log_Id_Is_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
 #plt.figure()
-ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured (Id+Is) data', s=75)
+ax2.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured (Id+Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 ax2.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
 ax2.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
 ax2.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
@@ -363,7 +363,7 @@ print('virus val day minus 3: ',(-3*b)+a,'virus val day minus 2: ',(-2*b)+a,'vir
 #plot the measured data, along with the fitted model for V, I and U
 #plt.figure()
 Id_fitted = data_fitted[:, 1]
-ax3.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured V data', s=75)
+ax3.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', label='measured (Id + Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 ax3.plot(t_measured, 10**(-6)*Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
 U_fitted = data_fitted[:, 0]
 Is_fitted = data_fitted[:, 2]
