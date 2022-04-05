@@ -346,7 +346,7 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 8*(10**(6))  #the number of cells in an adult is 4x10^8
+U0 = 6.8*(10**(5))  #the number of cells in an adult is 4x10^8
 I20 = act_div_vir_list_sum_f_e_chop[0] / 2  #just taking the first measured value
 #I20 = 1
 I10 = act_div_vir_list_sum_f_e_chop[0] / 2
@@ -387,10 +387,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=6.01*(10**(-5)), min=5*(10**(-5)), max=7*(10**(-5)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1, min=0, max=100)    #Clearance rate of infected cells
-params.add('gamma', value=1, min=0, max=10)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.75, min=0, max=10)     #clearance rate of virus particles
+params.add('alpha', value=20*(10**(-5)), min=16.9*(10**(-5)), max=45.1*(10**(-5)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=50, min=49.9, max=50.1)    #Clearance rate of infected cells
+params.add('gamma', value=2.8, min=2.5, max=5.3)        #Infected cells release virus at rate gamma
+params.add('delta', value=5, min=4.9, max=5.1)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
