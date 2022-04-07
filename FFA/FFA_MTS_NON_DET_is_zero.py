@@ -240,15 +240,15 @@ plt.ylabel('Virus Titre (Log10 FFU/mL)')
 plt.title('patients with at least 5 datapoints log scale')
 
 #plot actual virus amount (instead of log10 of virus amount)
-act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
-for i in range (len(div_vir_list_sum)):
-    act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
+# act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
+# for i in range (len(div_vir_list_sum)):
+#     act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-plt.figure()
-plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
-plt.title('patients with at least 5 datapoints linear scale')
+# plt.figure()
+# plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (copies/mL)')
+# plt.title('patients with at least 5 datapoints linear scale')
 
 # np.save('FFA_MTS_V_measured_NON_DET_eq_zero', 10**div_vir_list_sum_front_and_end_chopped)
 # np.save('FFA_MTS_t_measured_NON_DET_eq_zero', eff_day_vals_front_and_end_chopped)
