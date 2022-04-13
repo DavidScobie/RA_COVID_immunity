@@ -4,6 +4,22 @@ import numpy as np
 import seaborn
 from lmfit import minimize, Parameters, Parameter, report_fit
 from scipy.integrate import odeint
+from numpy import arange
+from pandas import read_csv
+from scipy.optimize import curve_fit
+from sklearn.metrics import mean_squared_error
+
+######################
+
+#plot the FFA data
+FFA_virus = np.load('FFA_MTS_V_measured_NON_DET_eq_zero.npy')
+print('FFA_virus',FFA_virus)
+log_FFA_virus = np.log10(FFA_virus)
+FFA_effective_day = np.load('FFA_MTS_t_measured_NON_DET_eq_zero.npy')
+plt.figure()
+plt.plot(FFA_effective_day, log_FFA_virus, marker='o', color='black', label='measured FFA V data')
+
+######################
 
 #import the excel data
 
@@ -378,22 +394,76 @@ ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
 
-############## find area under the Is and Id curves
+########################
+#plot the FFA and the Is on the same graph
 plt.figure()
-plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
-# print('Id points',data_fitted[:, 1])
-plt.plot(t_measured, data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
-# print('Is points',data_fitted[:, 2])
-plt.legend()
+plt.plot(FFA_effective_day, log_FFA_virus, marker='o', color='black', label='measured FFA V data')
+plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured qPCR (Id+Is) data', s=75)
+plt.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
+plt.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
+plt.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
 plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
+plt.ylabel('Virus Titre Concentration (Log10 copies/mL)')
+plt.legend()
 
-Is_area = np.trapz(data_fitted[:, 2], dx=0.5)
-Id_area = np.trapz(data_fitted[:, 1], dx=0.5)
-print('Is_area',Is_area,'Id_area',Id_area)
+#######################
+#make scatterplot of log(FFA) measured data and log(Is) fitted data
+print('log_Is_fitted',log_Is_fitted,'length',len(log_Is_fitted))
+print('log_FFA_virus',log_FFA_virus,'length',len(log_FFA_virus))
+print('t_measured',t_measured,'length',len(t_measured))
+print('FFA_effective_day',FFA_effective_day,'length',len(FFA_effective_day))
 
-#np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
-#np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
+#Is data is longer than FFA data, so we need to cut Is data off at the right points
+log_Is_eff_day_lower_bound = np.where(t_measured == FFA_effective_day[0])
+log_Is_eff_day_upper_bound = np.where(t_measured == FFA_effective_day[-1])
+#print('log_Is_lower_bound',int(log_Is_lower_bound[0]),'log_Is_upper_bound',int(log_Is_upper_bound[0]))
+print('log_Is_eff_day_lower_bound',log_Is_eff_day_lower_bound,'log_Is_eff_day_upper_bound',log_Is_eff_day_upper_bound)
+
+#keep only the data for each type on the same days
+log_Is_data_short = log_Is_fitted[int(log_Is_eff_day_lower_bound[0]):int(log_Is_eff_day_upper_bound[0])+1] #have to add 1 because of how python does indexing
+log_Is_eff_day_short = t_measured[int(log_Is_eff_day_lower_bound[0]):int(log_Is_eff_day_upper_bound[0])+1]
+print('log_Is_eff_day_short',log_Is_eff_day_short)
+
+fig, ax = plt.subplots()
+ax.scatter(log_Is_data_short, log_FFA_virus)  #this is the scatterplot of the points through which the line of best fit is drawn
+
+for i, txt in enumerate(FFA_effective_day):  #this is just labelling all the scatterpoints
+    ax.annotate(txt, (log_Is_data_short[i], log_FFA_virus[i]))
+
+plt.xlabel('log(Is fitted)')
+plt.ylabel('log(FFA)')
+plt.title('MTS scatterplot of log(FFA) and log(Is)')
+
+print('RMSE between log(IS) and log(FFA): ',mean_squared_error(log_Is_data_short, log_FFA_virus, squared=False))
+
+#######################
+#make scatterplot of FFA measured data and Is fitted data
+print('Is_fitted',Is_fitted,'length',len(Is_fitted))
+print('FFA_virus',FFA_virus,'length',len(FFA_virus))
+print('t_measured',t_measured,'length',len(t_measured))
+print('FFA_effective_day',FFA_effective_day,'length',len(FFA_effective_day))
+
+#Is data is longer than FFA data, so we need to cut Is data off at the right points
+Is_eff_day_lower_bound = np.where(t_measured == FFA_effective_day[0])
+Is_eff_day_upper_bound = np.where(t_measured == FFA_effective_day[-1])
+#print('log_Is_lower_bound',int(log_Is_lower_bound[0]),'log_Is_upper_bound',int(log_Is_upper_bound[0]))
+print('log_Is_eff_day_lower_bound',log_Is_eff_day_lower_bound,'log_Is_eff_day_upper_bound',log_Is_eff_day_upper_bound)
+
+#keep only the data for each type on the same days
+Is_data_short = Is_fitted[int(Is_eff_day_lower_bound[0]):int(Is_eff_day_upper_bound[0])+1] #have to add 1 because of how python does indexing
+Is_eff_day_short = t_measured[int(Is_eff_day_lower_bound[0]):int(Is_eff_day_upper_bound[0])+1]
+print('Is_eff_day_short',Is_eff_day_short)
+
+fig, ax = plt.subplots()
+ax.scatter(Is_data_short, FFA_virus)  #this is the scatterplot of the points through which the line of best fit is drawn
+
+for i, txt in enumerate(FFA_effective_day):  #this is just labelling all the scatterpoints
+    ax.annotate(txt, (Is_data_short[i], FFA_virus[i]))
+
+plt.xlabel('Is fitted')
+plt.ylabel('FFA')
+plt.title('MTS scatterplot of FFA and Is')
+
+print('RMSE between IS and FFA: ',mean_squared_error(Is_data_short, FFA_virus, squared=False))
 
 plt.show()
-

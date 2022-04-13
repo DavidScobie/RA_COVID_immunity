@@ -137,27 +137,28 @@ plt.ylabel('qPCR_data_short')
 # fit a fifth degree polynomial to the data
 
 # define the true objective function
-def objective(x, a, b, c, d, e, f):
-	return (a * x) + (b * x**2) + (c * x**3) + (d * x**4) + (e * x**5) + f
+def objective(x, a, b, c, d):
+	return (a * x) + (b * x**2) + (c * x**3) + d
 
 # choose the input and output variables
 x, y = FFA_virus, qPCR_data_short
 # curve fit
 popt, _ = curve_fit(objective, x, y)
 # summarize the parameter values
-a, b, c, d, e, f = popt
-print('y = %.5f * x + %.5f * x^2 + %.5f * x^3 + %.5f * x^4 + %.5f * x^5 + %.5f' % (a, b, c, d, e, f))
+a, b, c, d = popt
+print('y = %.5f * x + %.5f * x^2 + %.5f * x^3 + %.5f' % (a, b, c, d))
 # plot input vs output
 plt.scatter(x, y)
 # define a sequence of inputs between the smallest and largest known inputs
 x_line = arange(min(x), max(x), 1)
 # calculate the output for the range
-y_line = objective(x_line, a, b, c, d, e, f)
+y_line = objective(x_line, a, b, c, d)
 # create a line plot for the mapping function
-plt.plot(x_line, y_line, '--', color='red')
+plt.plot(x_line, y_line, '--', color='red', label='Polynomial best fit curve. Equation: y = %.5f * x + %.5f * x^2 + %.5f * x^3 + %.5f' % (a, b, c, d))
 
 #### plot the log proportionality that we though the relationship was previously
 y_log_fit = 10**(a1)*((x_line**b1))
-plt.plot(x_line, y_log_fit, '--', color='blue')
+plt.plot(x_line, y_log_fit, '--', color='blue', label='Logarithmic best fit curve. Equation: y = (10^(%.5f))(FFA^(%.5f))'% (a1, b1))
+plt.legend()
 
 plt.show()
