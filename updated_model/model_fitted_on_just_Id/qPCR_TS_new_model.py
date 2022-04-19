@@ -137,10 +137,10 @@ df2_str_sorted['effective_day'] = effective_day
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 
-seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
+# seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
 
-plt.figure()
-seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
+# plt.figure()
+# seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
 
 #plot individual patients on different days
 Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
@@ -162,10 +162,10 @@ act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
 for i in range (len(div_vir_list_sum)):
     act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-plt.figure()
-plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
+# plt.figure()
+# plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (copies/mL)')
 
 #######################################################
 
@@ -243,15 +243,15 @@ def best_fit(X, Y):
 #GENERALISE THIS SO THAT IT FINDS INDICIE OF THE PEAK VALUE, DONT JUST HARDCODE AS 6
 a, b = best_fit(eff_day_vals[:6],np.log10(act_div_vir_list_sum)[:6])
 
-plt.figure()
-plt.scatter(eff_day_vals[:6], np.log10(act_div_vir_list_sum)[:6], marker='o', color='red', label='measured V data', s=75)
-yfit = [a + b * xi for xi in eff_day_vals[:6]]
-print('yfit',yfit)
-plt.plot(eff_day_vals[:6], yfit)
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (Log10 copies/mL)')
-plt.xlim(left=0)
-plt.ylim(bottom=0)
+# plt.figure()
+# plt.scatter(eff_day_vals[:6], np.log10(act_div_vir_list_sum)[:6], marker='o', color='red', label='measured V data', s=75)
+# yfit = [a + b * xi for xi in eff_day_vals[:6]]
+# print('yfit',yfit)
+# plt.plot(eff_day_vals[:6], yfit)
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (Log10 copies/mL)')
+# plt.xlim(left=0)
+# plt.ylim(bottom=0)
 
 #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
 v1 = 0
@@ -266,15 +266,15 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+U0 = 3*(10**(8))  #the number of cells in an adult is 4x10^8
 Id0 = act_div_vir_list_sum[0]   #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
 Is0 = 1*(10**(0))
 y0 = [U0, Id0, Is0]
 
 # measured data
-t_measured = eff_day_vals
-Id_measured = act_div_vir_list_sum
+t_measured = eff_day_vals[:-4] #the last 4 points are anomalies so we get rid of these
+Id_measured = act_div_vir_list_sum[:-4] #the last 4 points are anomalies so we get rid of these
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -293,10 +293,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=9.2*(10**(-8)), min=7.1*(10**(-9)), max=7.3*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=30, min=0, max=154)    #Clearance rate of infected cells
-params.add('gamma', value=0.9, min=0, max=1)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.45, min=0, max=1)     #clearance rate of virus particles
+params.add('alpha', value=1*(10**(-8)), min=0.9*(10**(-8)), max=1.1*(10**(-8)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=0.0000001, min=0, max=0.0000002)    #Clearance rate of infected cells
+params.add('gamma', value=1, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.6, min=0.59, max=0.61)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, Id_measured), method='leastsq')  # leastsq nelder
