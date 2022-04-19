@@ -30,7 +30,7 @@ df2 = df2[df2['Virus Titre (Log10 copies/mL)'].str.contains("N/A ") == False]
 s=df2['Virus Titre (Log10 copies/mL)'].str.len().sort_values().index
 df_str_sorted = df2.reindex(s)
 
-#get rid of the DETECTED AND NOT DETECTED
+#get rid of the DETECTED AND make NOT DETECTED = 0
 df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
 df_str_sorted_just_nums = df_str_sorted
 df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
@@ -272,7 +272,7 @@ I0 = 0   #Should be zero
 """
 #my optimised initial conditions
 U0 = 4*(10**(10))  #the number of cells in an adult is 4x10^8
-Is0 = act_div_vir_list_sum[0]  #just taking the first measured value
+Is0 = 1  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
 Id0 = 0
 y0 = [U0, Id0, Is0]
@@ -311,9 +311,9 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=4*(10**(-8)), min=7.99*(10**(-9)), max=8.01*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=2, min=0, max=5)    #Clearance rate of infected cells
-params.add('gamma', value=1, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
+params.add('alpha', value=1.3*(10**(-8)), min=7.99*(10**(-9)), max=8.01*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1.8, min=0, max=5)    #Clearance rate of infected cells
+params.add('gamma', value=0.99, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
 params.add('delta', value=0.33, min=0.32, max=0.34)     #clearance rate of virus particles
 params.add('kappa', value=0.0000000000001, min=0, max=0.0000000000002)     #clearance rate of virus particles
 

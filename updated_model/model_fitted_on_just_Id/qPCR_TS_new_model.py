@@ -7,7 +7,7 @@ from scipy.integrate import odeint
 
 #import the excel data
 
-df = pd.read_excel ('C:\Research_Assistant\work\data\FW__Human_challenge_studies\COVHIC001_qPCR_MTS.xlsx')
+df = pd.read_excel ('C:\Research_Assistant\work\data\FW__Human_challenge_studies\COVHIC001_qPCR_TS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
@@ -28,15 +28,15 @@ df2 = df2[df2['Virus Titre (Log10 copies/mL)'].str.contains("N/A ") == False]
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 copies/mL)'].str.len().sort_values().index
-df_str_sorted = df2.reindex(s)
+df2_str_sorted = df2.reindex(s)
 
 #get rid of the DETECTED and make NOT DETECTED = 0
-df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
-df_str_sorted_just_nums = df_str_sorted
-df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
+df2_str_sorted['length'] = df2_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
+df_str_sorted_just_nums = df2_str_sorted
+df_str_sorted_just_nums = df2_str_sorted[df2_str_sorted.length < 7]
 
-df_str_sorted_NON_DET = df_str_sorted
-df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
+df_str_sorted_NON_DET = df2_str_sorted
+df_str_sorted_NON_DET = df2_str_sorted[df2_str_sorted.length > 10]
 df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
 
 df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
@@ -137,8 +137,8 @@ df2_str_sorted['effective_day'] = effective_day
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 
-#seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
-"""
+seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
+
 plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
 
@@ -149,12 +149,12 @@ for j in Subject_ID_vals:
     #plt.figure()
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
-    df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
+    # df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
 
-    plt.title('Subject ID=%i' %j)
-    plt.xlabel('Study Day')
-    plt.ylabel('Virus Titre (Log10 copies/mL)')
-"""
+    # plt.title('Subject ID=%i' %j)
+    # plt.xlabel('Study Day')
+    # plt.ylabel('Virus Titre (Log10 copies/mL)')
+
 
 
 #plot actual virus amount (instead of log10 of virus amount)
@@ -162,10 +162,10 @@ act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
 for i in range (len(div_vir_list_sum)):
     act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-# plt.figure()
-# plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Virus Titre (copies/mL)')
+plt.figure()
+plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (copies/mL)')
 
 #######################################################
 
@@ -211,15 +211,14 @@ def residual(paras, t, data):
     x0 = paras['U0'].value, paras['Id0'].value, paras['Is0'].value
     model = g(t, x0, paras)
 
-    # we now have data for the sum of Id and Is
-    Id_Is_model = model[:, 1] + model[:, 2]
+    # you only have data for one of your variables
+    Id_model = model[:, 1]
 
     #want to find the residual between the log of the virus measured and fitted data
-    log_Id_IS_model = np.log10(Id_Is_model)
+    log_Id_model = np.log10(Id_model)
     log_data = np.log10(data)
 
-    #so we are now minimising the residual between the data and the sum of Is and Id
-    return (log_Id_IS_model - log_data).ravel()
+    return (log_Id_model - log_data).ravel()
 
 
 # initial conditions
@@ -241,21 +240,18 @@ def best_fit(X, Y):
 
     return a, b
 
-# Get the indices of maximum element in eff_day_vals
-max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
-max_indic = int(max_indic_arr[0])
+#GENERALISE THIS SO THAT IT FINDS INDICIE OF THE PEAK VALUE, DONT JUST HARDCODE AS 6
+a, b = best_fit(eff_day_vals[:6],np.log10(act_div_vir_list_sum)[:6])
 
-a, b = best_fit(eff_day_vals[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
-
-# plt.figure()
-# plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
-# yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
-# print('yfit',yfit)
-# plt.plot(eff_day_vals[:max_indic+1], yfit)
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Virus Titre (Log10 copies/mL)')
-# plt.xlim(left=0)
-# plt.ylim(bottom=0)
+plt.figure()
+plt.scatter(eff_day_vals[:6], np.log10(act_div_vir_list_sum)[:6], marker='o', color='red', label='measured V data', s=75)
+yfit = [a + b * xi for xi in eff_day_vals[:6]]
+print('yfit',yfit)
+plt.plot(eff_day_vals[:6], yfit)
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre (Log10 copies/mL)')
+plt.xlim(left=0)
+plt.ylim(bottom=0)
 
 #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
 v1 = 0
@@ -270,32 +266,19 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 0.8*(10**(7))  #the number of cells in an adult is 4x10^8
-Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+Id0 = act_div_vir_list_sum[0]   #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
-Is0 = act_div_vir_list_sum[0] / 2
+Is0 = 1*(10**(0))
 y0 = [U0, Id0, Is0]
 
-##cut off the datapoints after day 15 because these are just noise
-#only do this if the effective day goes up to 15
-exists = 15 in eff_day_vals
-if exists == True:
-    fifteenth_indic_arr = np.where(eff_day_vals == 15)
-    fifteenth_indic = int(fifteenth_indic_arr[0])
-    print('fifteenth_indic',fifteenth_indic)
-
-    # measured data
-    t_measured = eff_day_vals[:fifteenth_indic]
-    V_measured = act_div_vir_list_sum[:fifteenth_indic]
-
-else:
-    # measured data
-    t_measured = eff_day_vals
-    V_measured = act_div_vir_list_sum
+# measured data
+t_measured = eff_day_vals
+Id_measured = act_div_vir_list_sum
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
-ax1.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', label='measured (Id+Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+ax1.scatter(t_measured, 10**(-6)*Id_measured, marker='o', color='red', label='measured Id data', s=75)
 
 # set parameters including bounds; you can also fix parameters (use vary=False)
 params = Parameters()
@@ -310,24 +293,22 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=6.01*(10**(-6)), min=5*(10**(-6)), max=7*(10**(-6)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=60, min=40, max=80)    #Clearance rate of infected cells
-params.add('gamma', value=1, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.75, min=0.74, max=0.76)     #clearance rate of virus particles
+params.add('alpha', value=9.2*(10**(-8)), min=7.1*(10**(-9)), max=7.3*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=30, min=0, max=154)    #Clearance rate of infected cells
+params.add('gamma', value=0.9, min=0, max=1)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.45, min=0, max=1)     #clearance rate of virus particles
 
 # fit model
-result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+result = minimize(residual, params, args=(t_measured, Id_measured), method='leastsq')  # leastsq nelder
 # check results of the fit
 data_fitted = g(t_measured, y0, result.params)
 
 # plot fitted data
 #plt.figure()
-ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
-ax1.plot(t_measured, 10**(-6)*data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
-ax1.plot(t_measured, (10**(-6)*data_fitted[:, 2]) + (10**(-6)*data_fitted[:, 1]), '-', linewidth=2, color='red', label='fitted (Is + Id) data')
+ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted Id data')
 ax1.legend()
 ax1.set_xlim([0, max(t_measured)])
-#ax1.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
+ax1.set_ylim([0, 1.1 * 10**(-6)*max(Id_measured)])
 ax1.set_xlabel('Days Post Infection')
 ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
@@ -335,40 +316,25 @@ ax1.set_title('a)')
 report_fit(result)
 
 #plot the fitted data and the model for log(virus) against day
-log_V_measured = np.log10(V_measured)
+log_Id_measured = np.log10(Id_measured)
 log_Id_fitted = np.log10(data_fitted[:, 1])
-log_Is_fitted = np.log10(data_fitted[:, 2])
-log_Id_Is_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
+Id_fitted = data_fitted[:, 1]
 #plt.figure()
-ax2.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured (Id+Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-ax2.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
-ax2.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
-ax2.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
-
-#plotting curve from day -3
-first_vir_vals = np.array([(-3*b)+a,a])
-
-first_eff_day_vals = np.array([-3,0])
-
-print('first_vir_vals',first_vir_vals,'first_eff_day_vals',first_eff_day_vals)
-
-ax2.plot(first_eff_day_vals, first_vir_vals, '-', linewidth=2, color='red')
-ax2.set_xlim(left=-3)
+ax2.scatter(t_measured, log_Id_measured, marker='o', color='red', label='measured Id data', s=75)
+ax2.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='red', label='fitted Id data')
+ax2.set_xlim(left=0)
 ax2.legend()
 ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
-ax2.set_title('b)')
-
-print('virus val day minus 3: ',(-3*b)+a,'virus val day minus 2: ',(-2*b)+a,'virus val day minus 1: ',(-1*b)+a)
+ax2.set_title('a)')
 
 #plot the measured data, along with the fitted model for V, I and U
 #plt.figure()
-Id_fitted = data_fitted[:, 1]
-ax3.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', label='measured (Id + Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-ax3.plot(t_measured, 10**(-6)*Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
+ax3.scatter(t_measured, 10**(-6)*Id_measured, marker='o', color='red', label='measured Id data', s=75)
+ax3.plot(t_measured, 10**(-6)*Id_fitted, '-', linewidth=2, color='red', label='fitted Id data')
 U_fitted = data_fitted[:, 0]
 Is_fitted = data_fitted[:, 2]
-ax3.plot(t_measured, 10**(-6)*U_fitted, '-', linewidth=2, color='black', label='fitted U data')
+ax3.plot(t_measured, 10**(-6)*U_fitted, '-', linewidth=2, color='green', label='fitted U data')
 ax3.plot(t_measured, 10**(-6)*Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
 #plt.ylim(bottom=0.9 * min(log_V_measured))
 ax3.set_xlim(left=0)
@@ -377,23 +343,107 @@ ax3.legend()
 ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
+"""
+ax3.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+ax3.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+log_U_fitted = np.log10(data_fitted[:, 0])
+log_I_fitted = np.log10(data_fitted[:, 2])
+ax3.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+ax3.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+#plt.ylim(bottom=0.9 * min(log_V_measured))
+ax3.set_xlim(left=0)
+ax3.legend()
+ax3.set_xlabel('Days Post Infection')
+ax3.set_ylabel('Concentration (Log10 copies/mL)')
+ax3.set_title('c)')
+"""
+#########################################################
 
-############## find area under the Is and Id curves
-plt.figure()
-plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
-# print('Id points',data_fitted[:, 1])
-plt.plot(t_measured, data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
-# print('Is points',data_fitted[:, 2])
-plt.legend()
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
+#fit models to different patients
+"""
+#just start with trying to plot the first 2 subjects (to minimise the number of figures made)
+Subject_ID_vals_short = Subject_ID_vals[0:3]
+print('Subject_ID_vals_short',Subject_ID_vals_short)
 
-Is_area = np.trapz(data_fitted[:, 2], dx=0.5)
-Id_area = np.trapz(data_fitted[:, 1], dx=0.5)
-print('Is_area',Is_area,'Id_area',Id_area)
+for j in Subject_ID_vals_short:
 
-#np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
-#np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
+    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
+    df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
 
+    #only use the subjects with more than 5 data points
+    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5:
+        k+=1
+        #convert the virus and the effective day values to a list
+        div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
+        eff_day_list = df2_Subj_ID_sub_eff_sort['effective_day'].tolist()
+
+        print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
+
+        #compute the actual virus amount (not the log)
+        act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
+        for i in range (len(div_vir_list_sum)):
+            act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
+
+        print('initial V value',act_div_vir_list_sum[0])
+
+        # initial conditions
+        U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+        V0 = act_div_vir_list_sum[0]   #just taking the first measured value
+        I0 = 0   #Should be zero
+        y0 = [U0, V0, I0]
+
+        # measured data
+        t_measured = eff_day_list
+        V_measured = act_div_vir_list_sum
+
+        plt.figure()
+        plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
+
+        # set parameters including bounds; you can also fix parameters (use vary=False)
+        params = Parameters()
+        params.add('U0', value=U0, vary=False)
+        params.add('V0', value=V0, vary=False)
+        params.add('I0', value=I0, vary=False)
+
+        #my optimised parameters
+        params.add('alpha', value=9*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
+        params.add('beta', value=50, min=0, max=75)    #Clearance rate of infected cells
+        params.add('gamma', value=0.7, min=0, max=6)        #Infected cells release virus at rate gamma
+        params.add('delta', value=0.5, min=0, max=100)     #clearance rate of virus particles
+
+        # fit model
+        result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+        # check results of the fit
+        data_fitted = g(t_measured, y0, result.params)
+
+        plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
+        plt.legend()
+        plt.xlim([0, max(t_measured)])
+        plt.ylim([0, 1.1 * max(V_measured)])
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Virus Titre (Log10 copies/mL)')
+        plt.title('Subject ID=%i' %j)
+        # display fitted statistics
+        report_fit(result)
+
+        log_V_measured = np.log10(V_measured)
+        log_V_fitted = np.log10(data_fitted[:, 1])
+        plt.figure()
+        plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+        plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+        log_U_fitted = np.log10(data_fitted[:, 0])
+        log_I_fitted = np.log10(data_fitted[:, 2])
+        plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+        plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+        #plt.ylim(bottom=0.9 * min(log_V_measured))
+        plt.xlim(left=0)
+        plt.legend()
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Concentration (Log10 copies/mL)')
+        plt.title('Subject ID=%i' %j)
+
+#need to somehow sift out the poor datasets
+#maybe get rid of datasets with less than 5 points?
+"""
 plt.show()
 
