@@ -38,49 +38,57 @@ Subject_ID_vals = list(set(Subject_ID))
 k=0 #counter for the subject ID's
 m=0 #counter for the subjects who have less than 15 NON DETs
 
-
 Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
-for j in Subject_ID_vals_short:
-    print('j',str(j))
+for j in Subject_ID_vals:
+
+    #print('j',str(j))
     k+=1
     df2_Subj_ID_sorted = df2_str_sorted.loc[df2_str_sorted['Subject ID'] == j] #make a subset of the dataframe based on the subject ID
-    print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
+    #print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
 
+    #get rid of the DETECTED
+    df2_Subj_ID_sorted = df2_Subj_ID_sorted.assign(length = df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len())
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted #make a copy of dataframe to be filled with just numbers
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted[df2_Subj_ID_sorted.length < 7] #DETECTED is 8 characters so we remove DETECTED here
+
+    #make NON DETECTED = 0
     df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted  #initialise the dataframe yet to be filled with NON DET values
     df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted[df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len() > 10] #the only lengths greater than 10 are the ones which say 'NON DETECTED'
-    df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))  #make zeros for NON DETECTED
-    number_NON_DETs = len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist())
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.assign(temp = np.zeros(len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist())))  #make zeros for NON DETECTED
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.drop('Virus Titre (Log10 copies/mL)', 1)#remove the column of virus
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.rename(columns={"temp": "Virus Titre (Log10 copies/mL)"}) #rename back to original name
+    number_NON_DETs = len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].values.tolist())
 
-    print('Subject ID',j,'number of NON DETs',number_NON_DETs)
-    print('df2_Subj_ID_sorted_NON_DET',df2_Subj_ID_sorted_NON_DET)
+    # print('df2_Subj_ID_sorted_NON_DET',df2_Subj_ID_sorted_NON_DET)
+    # print('df2_Subj_ID_sorted_just_nums',df2_Subj_ID_sorted_just_nums)
+
+    df2_Subj_ID_sorted_comb = pd.concat([df2_Subj_ID_sorted_just_nums, df2_Subj_ID_sorted_NON_DET], axis=0) #combine the virus numbers and the NON DET zeros into datframe
+    #print('df2_Subj_ID_sorted_comb',df2_Subj_ID_sorted_comb)
+
+    print('Subject ID',j,'number of NON DETs',number_NON_DETs,'num time points',df2_Subj_ID_sorted_comb.shape[0])
+    #print('df2_Subj_ID_sorted_NON_DET',df2_Subj_ID_sorted_NON_DET)
 
     #if number of NON DETs less than 15, then cut this out from the bunch
     if number_NON_DETs < 15: #the case where I want to keep the data
         print('LESS THAN 15 NON DETs')
         m+=1
-        print('m',m)
+        #print('m',m)
         if m == 1: #the first time through this loop we just create the dataframe
             print('THE BEGINNING')
-            df2_cut_out_many = df2_Subj_ID_sorted
+            df2_cut_out_many = df2_Subj_ID_sorted_comb
         else: #for all of the subsequent patients with few NON DETs, we append their data to the dataframe
             print('APPENDING')
-            print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
-            print('original df2_cut_out_many',df2_cut_out_many)
-            df2_cut_out_many = df2_cut_out_many.append(df2_Subj_ID_sorted)
+            df2_cut_out_many = df2_cut_out_many.append(df2_Subj_ID_sorted_comb)
     else:
         print('MORE THAN 15 NON DETs')
-    print('df2_cut_out_many',df2_cut_out_many)
 
 print('df2_cut_out_many end',df2_cut_out_many)
 
-df = pd.DataFrame([[1, 2], [3, 4]], columns=list('AB'), index=['x', 'y'])
-print('df',df)
-df2 = pd.DataFrame([[5, 6], [7, 8]], columns=list('AB'), index=['x', 'y'])
-print('df2',df2)
-df = df.append(df2, ignore_index=True)
-print('df',df)
-
 ###########
+
+# """
+
+# #The old code
 
 # #get rid of the DETECTED
 # df2_str_sorted['length'] = df2_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
@@ -96,6 +104,8 @@ print('df',df)
 
 # print('length df_str_sorted_just_nums',len(df_str_sorted_just_nums),'length df_str_sorted_NON_DET',len(df_str_sorted_NON_DET))
 # print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
+
+# """
 
 # #convert the strings to numbers
 # df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
