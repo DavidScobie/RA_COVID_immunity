@@ -79,33 +79,12 @@ for j in Subject_ID_vals:
 
 print('df2_cut_out_many end',df2_cut_out_many)
 
-###########
-
-"""
-
-#The old code
-
-#get rid of the DETECTED
-df2_str_sorted['length'] = df2_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
-df_str_sorted_just_nums = df2_str_sorted
-df_str_sorted_just_nums = df2_str_sorted[df2_str_sorted.length < 7]
-
-#make NOT DETECTED = 0
-df_str_sorted_NON_DET = df2_str_sorted
-df_str_sorted_NON_DET = df2_str_sorted[df2_str_sorted.length > 10]
-df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
-
-df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
-
-print('length df_str_sorted_just_nums',len(df_str_sorted_just_nums),'length df_str_sorted_NON_DET',len(df_str_sorted_NON_DET))
-print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
-
-"""
-
 #convert the strings to numbers
 df2_str_sorted = df2_cut_out_many
 df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
+
+###########
 
 ##create the 'effective study day' which takes AM and PM into account
 

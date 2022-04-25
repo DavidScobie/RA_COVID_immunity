@@ -28,30 +28,63 @@ df2 = df2[df2['Virus Titre (Log10 copies/mL)'].str.contains("N/A ") == False]
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 copies/mL)'].str.len().sort_values().index
-df_str_sorted = df2.reindex(s)
+df2_str_sorted = df2.reindex(s)
 
-#get rid of the DETECTED AND NOT DETECTED
-df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
-df_str_sorted_just_nums = df_str_sorted
-df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
+############ only keep patients who have more than 15 virus values which arent NON DETECTED
 
-df_str_sorted_NON_DET = df_str_sorted
-df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
-df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
+#find all the possible subject IDs
+Subject_ID = df2_str_sorted['Subject ID'].tolist()
+Subject_ID_vals = list(set(Subject_ID))
+k=0 #counter for the subject ID's
+m=0 #counter for the subjects who have less than 15 NON DETs
 
-df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
+Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
+for j in Subject_ID_vals:
 
-print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
+    #print('j',str(j))
+    k+=1
+    df2_Subj_ID_sorted = df2_str_sorted.loc[df2_str_sorted['Subject ID'] == j] #make a subset of the dataframe based on the subject ID
+    #print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
+
+    #get rid of the DETECTED
+    df2_Subj_ID_sorted = df2_Subj_ID_sorted.assign(length = df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len())
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted #make a copy of dataframe to be filled with just numbers
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted[df2_Subj_ID_sorted.length < 7] #DETECTED is 8 characters so we remove DETECTED here
+
+    #make NON DETECTED = 0
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted  #initialise the dataframe yet to be filled with NON DET values
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted[df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len() > 10] #the only lengths greater than 10 are the ones which say 'NON DETECTED'
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.assign(temp = np.zeros(len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist())))  #make zeros for NON DETECTED
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.drop('Virus Titre (Log10 copies/mL)', 1)#remove the column of virus
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.rename(columns={"temp": "Virus Titre (Log10 copies/mL)"}) #rename back to original name
+    number_NON_DETs = len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].values.tolist())
+
+    df2_Subj_ID_sorted_comb = pd.concat([df2_Subj_ID_sorted_just_nums, df2_Subj_ID_sorted_NON_DET], axis=0) #combine the virus numbers and the NON DET zeros into datframe
+
+    print('Subject ID',j,'number of NON DETs',number_NON_DETs,'num time points',df2_Subj_ID_sorted_comb.shape[0])
+
+    #if number of NON DETs less than 15, then cut this out from the bunch
+    if number_NON_DETs < 15: #the case where I want to keep the data
+        print('LESS THAN 15 NON DETs')
+        m+=1
+        #print('m',m)
+        if m == 1: #the first time through this loop we just create the dataframe
+            print('THE BEGINNING')
+            df2_cut_out_many = df2_Subj_ID_sorted_comb
+        else: #for all of the subsequent patients with few NON DETs, we append their data to the dataframe
+            print('APPENDING')
+            df2_cut_out_many = df2_cut_out_many.append(df2_Subj_ID_sorted_comb)
+    else:
+        print('MORE THAN 15 NON DETs')
+
+print('df2_cut_out_many end',df2_cut_out_many)
 
 #convert the strings to numbers
+df2_str_sorted = df2_cut_out_many
 df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
 
-#print all the virus titre to 2dp
-vir_list = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
-round_to_tenths = [round(num, 2) for num in vir_list]
-round_to_tenths.sort()
-#print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
+###########
 
 ##create the 'effective study day' which takes AM and PM into account
 
@@ -278,7 +311,7 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 4*(10**(6))  #the number of cells in an adult is 4x10^8
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
 #I10 = act_div_vir_list_sum_f_e_chop[0] / 2
 I10 = 0
 #I20 = act_div_vir_list_sum_f_e_chop[0] / 2  #just taking the first measured value
@@ -326,14 +359,14 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=7.6*(10**(-4)), min=7.5*(10**(-4)), max=7.7*(10**(-4)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=0.47, min=0.46, max=0.48)    #Clearance rate of infected cells
-params.add('gamma', value=0.17, min=0.16, max=0.18)        #Infected cells release virus at rate gamma
-params.add('delta', value=2.6, min=2.5, max=2.7)     #clearance rate of virus particles
-params.add('mu', value=10, min=9, max=11)
-params.add('s', value=1, min=0.9, max=1.1)
+params.add('alpha', value=3.2*(10**(-7)), min=7.5*(10**(-8)), max=7.7*(10**(-3)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=0.86, min=0, max=30)    #Clearance rate of infected cells
+params.add('gamma', value=8.15, min=0, max=1*(10**(5)))        #Infected cells release virus at rate gamma
+params.add('delta', value=4.9, min=0, max=10)     #clearance rate of virus particles
+params.add('mu', value=7, min=6, max=11)
+params.add('s', value=1, min=0.999, max=1.001)
 params.add('epsilon', value=0.93, min=0.92, max=0.94)
-params.add('tau', value=0.5, min=0.49, max=0.51)
+params.add('tau', value=0.5, min=0.499, max=0.501)
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder

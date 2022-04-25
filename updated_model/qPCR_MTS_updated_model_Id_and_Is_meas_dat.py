@@ -28,30 +28,82 @@ df2 = df2[df2['Virus Titre (Log10 copies/mL)'].str.contains("N/A ") == False]
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 copies/mL)'].str.len().sort_values().index
-df_str_sorted = df2.reindex(s)
+df2_str_sorted = df2.reindex(s)
 
-#get rid of the DETECTED and make NOT DETECTED = 0
-df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
-df_str_sorted_just_nums = df_str_sorted
-df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
+# #get rid of the DETECTED and make NOT DETECTED = 0
+# df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
+# df_str_sorted_just_nums = df_str_sorted
+# df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
 
-df_str_sorted_NON_DET = df_str_sorted
-df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
-df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
+# df_str_sorted_NON_DET = df_str_sorted
+# df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
+# df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
 
-df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
+# df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
 
-print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
+# print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
+
+# #convert the strings to numbers
+# df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
+# df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
+
+###################
+
+############ only keep patients who have more than 15 virus values which arent NON DETECTED
+
+#find all the possible subject IDs
+Subject_ID = df2_str_sorted['Subject ID'].tolist()
+Subject_ID_vals = list(set(Subject_ID))
+k=0 #counter for the subject ID's
+m=0 #counter for the subjects who have less than 15 NON DETs
+
+Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
+for j in Subject_ID_vals:
+
+    #print('j',str(j))
+    k+=1
+    df2_Subj_ID_sorted = df2_str_sorted.loc[df2_str_sorted['Subject ID'] == j] #make a subset of the dataframe based on the subject ID
+    #print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
+
+    #get rid of the DETECTED
+    df2_Subj_ID_sorted = df2_Subj_ID_sorted.assign(length = df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len())
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted #make a copy of dataframe to be filled with just numbers
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted[df2_Subj_ID_sorted.length < 7] #DETECTED is 8 characters so we remove DETECTED here
+
+    #make NON DETECTED = 0
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted  #initialise the dataframe yet to be filled with NON DET values
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted[df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len() > 10] #the only lengths greater than 10 are the ones which say 'NON DETECTED'
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.assign(temp = np.zeros(len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist())))  #make zeros for NON DETECTED
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.drop('Virus Titre (Log10 copies/mL)', 1)#remove the column of virus
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.rename(columns={"temp": "Virus Titre (Log10 copies/mL)"}) #rename back to original name
+    number_NON_DETs = len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].values.tolist())
+
+    df2_Subj_ID_sorted_comb = pd.concat([df2_Subj_ID_sorted_just_nums, df2_Subj_ID_sorted_NON_DET], axis=0) #combine the virus numbers and the NON DET zeros into datframe
+
+    print('Subject ID',j,'number of NON DETs',number_NON_DETs,'num time points',df2_Subj_ID_sorted_comb.shape[0])
+
+    #if number of NON DETs less than 15, then cut this out from the bunch
+    if number_NON_DETs < 15: #the case where I want to keep the data
+        print('LESS THAN 15 NON DETs')
+        m+=1
+        #print('m',m)
+        if m == 1: #the first time through this loop we just create the dataframe
+            print('THE BEGINNING')
+            df2_cut_out_many = df2_Subj_ID_sorted_comb
+        else: #for all of the subsequent patients with few NON DETs, we append their data to the dataframe
+            print('APPENDING')
+            df2_cut_out_many = df2_cut_out_many.append(df2_Subj_ID_sorted_comb)
+    else:
+        print('MORE THAN 15 NON DETs')
+
+print('df2_cut_out_many end',df2_cut_out_many)
 
 #convert the strings to numbers
+df2_str_sorted = df2_cut_out_many
 df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
 
-#print all the virus titre to 2dp
-vir_list = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
-round_to_tenths = [round(num, 2) for num in vir_list]
-round_to_tenths.sort()
-#print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
+###################
 
 ##create the 'effective study day' which takes AM and PM into account
 
@@ -270,7 +322,7 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 0.8*(10**(7))  #the number of cells in an adult is 4x10^8
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
 Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
 Is0 = act_div_vir_list_sum[0] / 2
@@ -310,10 +362,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=6.01*(10**(-6)), min=5*(10**(-6)), max=7*(10**(-6)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=60, min=40, max=80)    #Clearance rate of infected cells
-params.add('gamma', value=1, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.75, min=0.74, max=0.76)     #clearance rate of virus particles
+params.add('alpha', value=8*(10**(-8)), min=1*(10**(-8)), max=3*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+params.add('gamma', value=1.78, min=0, max=400)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.59, min=0, max=100)  #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -379,14 +431,14 @@ ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
 
 ############## find area under the Is and Id curves
-plt.figure()
-plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
-# print('Id points',data_fitted[:, 1])
-plt.plot(t_measured, data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
-# print('Is points',data_fitted[:, 2])
-plt.legend()
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
+# plt.figure()
+# plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
+# # print('Id points',data_fitted[:, 1])
+# plt.plot(t_measured, data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
+# # print('Is points',data_fitted[:, 2])
+# plt.legend()
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (copies/mL)')
 
 Is_area = np.trapz(data_fitted[:, 2], dx=0.5)
 Id_area = np.trapz(data_fitted[:, 1], dx=0.5)
