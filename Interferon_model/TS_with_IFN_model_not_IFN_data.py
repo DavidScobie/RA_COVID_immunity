@@ -28,30 +28,63 @@ df2 = df2[df2['Virus Titre (Log10 copies/mL)'].str.contains("N/A ") == False]
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 copies/mL)'].str.len().sort_values().index
-df_str_sorted = df2.reindex(s)
+df2_str_sorted = df2.reindex(s)
 
-#get rid of the DETECTED AND make NOT DETECTED = 0
-df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 copies/mL)'].str.len()
-df_str_sorted_just_nums = df_str_sorted
-df_str_sorted_just_nums = df_str_sorted[df_str_sorted.length < 7]
+############ only keep patients who have more than 15 virus values which arent NON DETECTED
 
-df_str_sorted_NON_DET = df_str_sorted
-df_str_sorted_NON_DET = df_str_sorted[df_str_sorted.length > 10]
-df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'] = np.zeros(len(df_str_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist()))
+#find all the possible subject IDs
+Subject_ID = df2_str_sorted['Subject ID'].tolist()
+Subject_ID_vals = list(set(Subject_ID))
+k=0 #counter for the subject ID's
+m=0 #counter for the subjects who have less than 15 NON DETs
 
-df2_str_sorted = pd.concat([df_str_sorted_just_nums, df_str_sorted_NON_DET], axis=0)
+Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
+for j in Subject_ID_vals:
 
-print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist(),'length virus',len(df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()))
+    #print('j',str(j))
+    k+=1
+    df2_Subj_ID_sorted = df2_str_sorted.loc[df2_str_sorted['Subject ID'] == j] #make a subset of the dataframe based on the subject ID
+    #print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
+
+    #get rid of the DETECTED
+    df2_Subj_ID_sorted = df2_Subj_ID_sorted.assign(length = df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len())
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted #make a copy of dataframe to be filled with just numbers
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted[df2_Subj_ID_sorted.length < 7] #DETECTED is 8 characters so we remove DETECTED here
+
+    #make NON DETECTED = 0
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted  #initialise the dataframe yet to be filled with NON DET values
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted[df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len() > 10] #the only lengths greater than 10 are the ones which say 'NON DETECTED'
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.assign(temp = np.zeros(len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].tolist())))  #make zeros for NON DETECTED
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.drop('Virus Titre (Log10 copies/mL)', 1)#remove the column of virus
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.rename(columns={"temp": "Virus Titre (Log10 copies/mL)"}) #rename back to original name
+    number_NON_DETs = len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 copies/mL)'].values.tolist())
+
+    df2_Subj_ID_sorted_comb = pd.concat([df2_Subj_ID_sorted_just_nums, df2_Subj_ID_sorted_NON_DET], axis=0) #combine the virus numbers and the NON DET zeros into datframe
+
+    print('Subject ID',j,'number of NON DETs',number_NON_DETs,'num time points',df2_Subj_ID_sorted_comb.shape[0])
+
+    #if number of NON DETs less than 15, then cut this out from the bunch
+    if number_NON_DETs < 15: #the case where I want to keep the data
+        print('LESS THAN 15 NON DETs')
+        m+=1
+        #print('m',m)
+        if m == 1: #the first time through this loop we just create the dataframe
+            print('THE BEGINNING')
+            df2_cut_out_many = df2_Subj_ID_sorted_comb
+        else: #for all of the subsequent patients with few NON DETs, we append their data to the dataframe
+            print('APPENDING')
+            df2_cut_out_many = df2_cut_out_many.append(df2_Subj_ID_sorted_comb)
+    else:
+        print('MORE THAN 15 NON DETs')
+
+print('df2_cut_out_many end',df2_cut_out_many)
 
 #convert the strings to numbers
+df2_str_sorted = df2_cut_out_many
 df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
 
-#print all the virus titre to 2dp
-vir_list = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
-round_to_tenths = [round(num, 2) for num in vir_list]
-round_to_tenths.sort()
-#print('length vir_list',len(vir_list),'vir_list',round_to_tenths)
+###########
 
 ##create the 'effective study day' which takes AM and PM into account
 
@@ -212,15 +245,15 @@ def residual(paras, t, data):
     x0 = paras['U0'].value, paras['Is0'].value, paras['Id0'].value
     model = g(t, x0, paras)
 
-    # we have data for Is (this is proportional to virus)
-    Is_model = model[:, 1]
+    # we now have data for the sum of Id and Is
+    Id_Is_model = model[:, 2] + model[:, 1]
 
     #want to find the residual between the log of the virus measured and fitted data
-    log_Is_model = np.log10(Is_model)
+    log_Id_IS_model = np.log10(Id_Is_model)
     log_data = np.log10(data)
 
-    #so we are minimising the residual between the data and Is
-    return (log_Is_model - log_data).ravel()
+    #so we are now minimising the residual between the data and the sum of Is and Id
+    return (log_Id_IS_model - log_data).ravel()
 
 
 # initial conditions
@@ -271,28 +304,15 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 4*(10**(10))  #the number of cells in an adult is 4x10^8
-Is0 = 1  #just taking the first measured value
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
-Id0 = 0
+Is0 = act_div_vir_list_sum[0] / 2
 y0 = [U0, Id0, Is0]
 
-##cut off the datapoints after day 15 because these are just noise
-#only do this if the effective day goes up to 15
-exists = 15 in eff_day_vals
-if exists == True:
-    fifteenth_indic_arr = np.where(eff_day_vals == 15)
-    fifteenth_indic = int(fifteenth_indic_arr[0])
-    print('fifteenth_indic',fifteenth_indic)
-
-    # measured data
-    t_measured = eff_day_vals[:fifteenth_indic]
-    V_measured = act_div_vir_list_sum[:fifteenth_indic]
-
-else:
-    # measured data
-    t_measured = eff_day_vals
-    V_measured = act_div_vir_list_sum
+#assign t and V
+t_measured = eff_day_vals
+V_measured = act_div_vir_list_sum
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -311,11 +331,11 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=1.3*(10**(-8)), min=7.99*(10**(-9)), max=8.01*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1.8, min=0, max=5)    #Clearance rate of infected cells
-params.add('gamma', value=0.99, min=0.99, max=1.01)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.33, min=0.32, max=0.34)     #clearance rate of virus particles
-params.add('kappa', value=0.0000000000001, min=0, max=0.0000000000002)     #clearance rate of virus particles
+params.add('alpha', value=6.2*(10**(-7)), min=6.1*(10**(-8)), max=6.3*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+params.add('gamma', value=243, min=242, max=243)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.84, min=0.83, max=0.85)     #clearance rate of virus particles
+params.add('kappa', value=1*(10**-8), min=1*(10**-9), max=1*(10**-7))     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -323,8 +343,9 @@ result = minimize(residual, params, args=(t_measured, V_measured), method='least
 data_fitted = g(t_measured, y0, result.params)
 
 # plot fitted data
-ax1.plot(t_measured, 10**(-6)*data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
-ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
+ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='blue', label='fitted Is data')
+ax1.plot(t_measured, 10**(-6)*data_fitted[:, 2], '-', linewidth=2, color='green', label='fitted Id data')
+ax1.plot(t_measured, (10**(-6)*data_fitted[:, 2]) + (10**(-6)*data_fitted[:, 1]), '-', linewidth=2, color='red', label='fitted (Is + Id) data')
 ax1.legend()
 ax1.set_xlim([0, max(t_measured)])
 #ax1.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
@@ -338,11 +359,13 @@ report_fit(result)
 log_V_measured = np.log10(V_measured)
 log_Is_fitted = np.log10(data_fitted[:, 1])
 log_Id_fitted = np.log10(data_fitted[:, 2])
+log_Id_Is_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
 
 #plt.figure()
 ax2.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured Virus data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 ax2.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
 ax2.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
+ax2.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
 
 #plotting curve from day -3
 first_vir_vals = np.array([(-3*b)+a,a])

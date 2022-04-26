@@ -327,10 +327,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=1.6*(10**(-8)), min=0.9*(10**(-8)), max=1.1*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('alpha', value=1.6*(10**(-8)), min=7*(10**(-9)), max=8*(10**(-6)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-params.add('gamma', value=0.93, min=0, max=5)        #Infected cells release virus at rate gamma
-params.add('delta', value=19, min=0, max=1000)     #clearance rate of virus particles
+params.add('gamma', value=0.78, min=0, max=400)        #Infected cells release virus at rate gamma
+params.add('delta', value=32, min=0, max=1000)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, Id_measured), method='leastsq')  # leastsq nelder
@@ -348,6 +348,11 @@ ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
+
+#find the variance
+#compute the variance
+overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
+print('overall_variance',overall_variance)
 
 #plot the fitted data and the model for log(virus) against day
 log_Id_measured = np.log10(Id_measured)
@@ -405,11 +410,24 @@ ax3.set_title('c)')
 """
 #########################################################
 
-#fit models to different patients
-"""
+#############fit models to different patients
+
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
 Subject_ID_vals_short = Subject_ID_vals[0:3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
+
+#initialise arrays of patient parameters
+alphas=[]
+betas=[]
+gammas=[]
+deltas=[]
+red_chi_squs = []
+residuals = []
+sum_residuals_squs = []
+chi_squs = []
+ndatas = []
+variances = []
+subj_IDs_over_5=[]
 
 for j in Subject_ID_vals_short:
 
@@ -423,54 +441,90 @@ for j in Subject_ID_vals_short:
         div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
         eff_day_list = df2_Subj_ID_sub_eff_sort['effective_day'].tolist()
 
-        print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
+        #print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
+
+        print('SUBJECT ID ',j)
 
         #compute the actual virus amount (not the log)
         act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
         for i in range (len(div_vir_list_sum)):
             act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-        print('initial V value',act_div_vir_list_sum[0])
+        #print('initial V value',act_div_vir_list_sum[0])
 
-        # initial conditions
+        #extrapolation to find first data point
+        # Get the indices of maximum element in eff_day_vals
+        max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
+        max_indic = int(max_indic_arr[0])
+
+        a, b = best_fit(eff_day_list[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
+
+        #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
+        v1 = 0
+        v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
+        eff_day_list = np.insert(eff_day_list, 0, v1, axis=0)
+        act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
+
+        #my optimised initial conditions
         U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-        V0 = act_div_vir_list_sum[0]   #just taking the first measured value
-        I0 = 0   #Should be zero
-        y0 = [U0, V0, I0]
+        Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
+        #V0 = 43652 #an estimate of good start point
+        Is0 = act_div_vir_list_sum[0] / 2
+        y0 = [U0, Id0, Is0]
 
         # measured data
         t_measured = eff_day_list
         V_measured = act_div_vir_list_sum
 
-        plt.figure()
-        plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
+        # plt.figure()
+        # plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
 
         # set parameters including bounds; you can also fix parameters (use vary=False)
         params = Parameters()
         params.add('U0', value=U0, vary=False)
-        params.add('V0', value=V0, vary=False)
-        params.add('I0', value=I0, vary=False)
+        params.add('Id0', value=Id0, vary=False)
+        params.add('Is0', value=Is0, vary=False)
 
         #my optimised parameters
-        params.add('alpha', value=9*(10**(-7)), min=1*(10**(-8)), max=9*(10**(-6)))   #rate that viral particles infect susceptible cells
-        params.add('beta', value=50, min=0, max=75)    #Clearance rate of infected cells
-        params.add('gamma', value=0.7, min=0, max=6)        #Infected cells release virus at rate gamma
-        params.add('delta', value=0.5, min=0, max=100)     #clearance rate of virus particles
+        params.add('alpha', value=1.6*(10**(-8)), min=7*(10**(-9)), max=8*(10**(-6)))   #rate that viral particles infect susceptible cells
+        params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+        params.add('gamma', value=0.78, min=0, max=400)        #Infected cells release virus at rate gamma
+        params.add('delta', value=32, min=0, max=1000)     #clearance rate of virus particles
 
         # fit model
         result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
         # check results of the fit
         data_fitted = g(t_measured, y0, result.params)
 
-        plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
-        plt.legend()
-        plt.xlim([0, max(t_measured)])
-        plt.ylim([0, 1.1 * max(V_measured)])
-        plt.xlabel('Days Post Infection')
-        plt.ylabel('Virus Titre (Log10 copies/mL)')
-        plt.title('Subject ID=%i' %j)
-        # display fitted statistics
+        #plot absolute values
+        # plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
+        # plt.legend()
+        # plt.xlim([0, max(t_measured)])
+        # plt.ylim([0, 1.1 * max(V_measured)])
+        # plt.xlabel('Days Post Infection')
+        # plt.ylabel('Virus Titre (Log10 copies/mL)')
+        # plt.title('Subject ID=%i' %j)
+
+        # display fitted statistics and append parameters to lists
+        subj_IDs_over_5.append(j)
         report_fit(result)
+        #print('result params',result.params)
+        for name, param in result.params.items():
+            #print(f'{name:7s} {param.value:11.5f} {param.stderr:11.5f}')
+            if name == 'alpha':
+                alphas.append(param.value)
+            if name == 'beta':
+                betas.append(param.value)
+            if name == 'gamma':
+                gammas.append(param.value)
+            if name == 'delta':
+                deltas.append(param.value)
+
+        red_chi_squs.append(result.redchi)
+        residuals.append(result.residual)
+        sum_residuals_squs.append(sum(((result.residual)**2)))
+        chi_squs.append(result.chisqr)
+        ndatas.append(result.ndata)
 
         log_V_measured = np.log10(V_measured)
         log_V_fitted = np.log10(data_fitted[:, 1])
@@ -479,8 +533,8 @@ for j in Subject_ID_vals_short:
         plt.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted V data')
         log_U_fitted = np.log10(data_fitted[:, 0])
         log_I_fitted = np.log10(data_fitted[:, 2])
-        plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
-        plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+        #plt.plot(t_measured, log_U_fitted, '-', linewidth=2, color='green', label='fitted U data')
+        #plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
         #plt.ylim(bottom=0.9 * min(log_V_measured))
         plt.xlim(left=0)
         plt.legend()
@@ -488,8 +542,20 @@ for j in Subject_ID_vals_short:
         plt.ylabel('Concentration (Log10 copies/mL)')
         plt.title('Subject ID=%i' %j)
 
-#need to somehow sift out the poor datasets
-#maybe get rid of datasets with less than 5 points?
-"""
+        #append the 4 parameter values to arrays
+        #alphas.append(alpha)
+
+print('alphas',alphas)
+print('betas',betas)
+print('gammas',gammas)
+print('deltas',deltas)
+print('red_chi_squs',red_chi_squs,'average red_chi_squ',sum(red_chi_squs)/len(red_chi_squs))
+print('residuals',residuals)
+print('sum_residuals_squs',sum_residuals_squs)
+print('chi_squs',chi_squs)
+print('ndatas',ndatas)
+variances = np.array(sum_residuals_squs) / np.array(ndatas)
+print('variances',variances)
+
 plt.show()
 

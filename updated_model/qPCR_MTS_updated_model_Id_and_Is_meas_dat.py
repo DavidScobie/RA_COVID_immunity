@@ -327,7 +327,7 @@ Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
 Is0 = act_div_vir_list_sum[0] / 2
 y0 = [U0, Id0, Is0]
-
+"""
 ##cut off the datapoints after day 15 because these are just noise
 #only do this if the effective day goes up to 15
 exists = 15 in eff_day_vals
@@ -344,6 +344,10 @@ else:
     # measured data
     t_measured = eff_day_vals
     V_measured = act_div_vir_list_sum
+"""
+# measured data
+t_measured = eff_day_vals
+V_measured = act_div_vir_list_sum
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -362,10 +366,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=8*(10**(-8)), min=1*(10**(-8)), max=3*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('alpha', value=3*(10**(-8)), min=1*(10**(-8)), max=3*(10**(-7)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-params.add('gamma', value=1.78, min=0, max=400)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.59, min=0, max=100)  #clearance rate of virus particles
+params.add('gamma', value=8, min=0, max=400)        #Infected cells release virus at rate gamma
+params.add('delta', value=1.3, min=0, max=100)  #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -385,6 +389,10 @@ ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
+
+#compute the variance
+overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
+print('overall_variance',overall_variance)
 
 #plot the fitted data and the model for log(virus) against day
 log_V_measured = np.log10(V_measured)

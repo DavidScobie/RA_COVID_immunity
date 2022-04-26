@@ -173,6 +173,7 @@ df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
 
+"""
 #plot individual patients on different days
 Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
 for j in Subject_ID_vals:
@@ -185,7 +186,7 @@ for j in Subject_ID_vals:
     plt.title('Subject ID=%i' %j)
     plt.xlabel('Study Day')
     plt.ylabel('Virus Titre (Log10 copies/mL)')
-
+"""
 
 
 #plot actual virus amount (instead of log10 of virus amount)
@@ -313,6 +314,7 @@ Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
 Is0 = act_div_vir_list_sum[0] / 2
 y0 = [U0, Id0, Is0]
 
+"""
 ##cut off the datapoints after day 15 because these are just noise
 #only do this if the effective day goes up to 15
 exists = 15 in eff_day_vals
@@ -329,6 +331,9 @@ else:
     # measured data
     t_measured = eff_day_vals
     V_measured = act_div_vir_list_sum
+"""
+t_measured = eff_day_vals
+V_measured = act_div_vir_list_sum
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -347,10 +352,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=3*(10**(-7)), min=7.99*(10**(-8)), max=8.01*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('alpha', value=5.5*(10**(-7)), min=7.99*(10**(-8)), max=8.01*(10**(-7)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-params.add('gamma', value=1.78, min=0, max=400)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.59, min=0, max=100)     #clearance rate of virus particles
+params.add('gamma', value=214, min=0, max=400)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.86, min=0, max=100)     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -369,6 +374,12 @@ ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
+
+#compute the variance
+print('chisqr',result.chisqr)
+print('ndata',result.ndata)
+overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
+print('overall_variance',overall_variance)
 
 #plot the fitted data and the model for log(virus) against day
 log_V_measured = np.log10(V_measured)
@@ -427,7 +438,7 @@ plt.ylabel('Virus Titre (copies/mL)')
 Is_area = np.trapz(data_fitted[:, 2], dx=0.5)
 Id_area = np.trapz(data_fitted[:, 1], dx=0.5)
 print('Is_area',Is_area,'Id_area',Id_area)
-
+"""
 #############fit models to different patients
 
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
@@ -558,8 +569,8 @@ print('alphas',alphas)
 print('betas',betas)
 print('gammas',gammas)
 print('deltas',deltas)
-print('red_chi_squs',red_chi_squs)
-
+print('red_chi_squs',red_chi_squs,'average red_chi_squ',sum(red_chi_squs)/len(red_chi_squs))
+"""
 #np.save('qPCR_TS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
 #np.save('qPCR_TS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
 

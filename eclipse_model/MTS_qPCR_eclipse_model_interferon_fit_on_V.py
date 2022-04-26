@@ -319,7 +319,7 @@ I20 = 0
 V0 = act_div_vir_list_sum[0]
 F0 = 0
 y0 = [U0, I10, I20, V0, F0]
-
+"""
 ##cut off the datapoints after day 15 because these are just noise
 #only do this if the effective day goes up to 15
 exists = 15 in eff_day_vals
@@ -339,6 +339,9 @@ else:
     # measured data
     t_measured = eff_day_vals
     V_measured = act_div_vir_list_sum
+"""
+t_measured = eff_day_vals
+V_measured = act_div_vir_list_sum
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -359,11 +362,11 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=3.2*(10**(-7)), min=7.5*(10**(-8)), max=7.7*(10**(-3)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=0.86, min=0, max=30)    #Clearance rate of infected cells
-params.add('gamma', value=8.15, min=0, max=1*(10**(5)))        #Infected cells release virus at rate gamma
-params.add('delta', value=4.9, min=0, max=10)     #clearance rate of virus particles
-params.add('mu', value=7, min=6, max=11)
+params.add('alpha', value=6*(10**(-7)), min=7.5*(10**(-8)), max=7.7*(10**(-3)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1.13, min=0, max=30)    #Clearance rate of infected cells
+params.add('gamma', value=2.8, min=0, max=1*(10**(5)))        #Infected cells release virus at rate gamma
+params.add('delta', value=1.1, min=0, max=10)     #clearance rate of virus particles
+params.add('mu', value=10.8, min=6, max=11)
 params.add('s', value=1, min=0.999, max=1.001)
 params.add('epsilon', value=0.93, min=0.92, max=0.94)
 params.add('tau', value=0.5, min=0.499, max=0.501)
@@ -387,6 +390,10 @@ ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
+
+#compute the variance
+overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
+print('overall_variance',overall_variance)
 
 #plot the fitted data and the model for log(virus) against day
 log_V_measured = np.log10(V_measured)
