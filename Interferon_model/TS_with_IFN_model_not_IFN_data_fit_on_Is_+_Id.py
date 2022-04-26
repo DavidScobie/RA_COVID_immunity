@@ -355,6 +355,10 @@ ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
 
+#compute the variance
+overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
+print('overall_variance',overall_variance)
+
 #plot the fitted data and the model for log(virus) against day
 log_V_measured = np.log10(V_measured)
 log_Is_fitted = np.log10(data_fitted[:, 1])
