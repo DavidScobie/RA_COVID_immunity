@@ -153,9 +153,9 @@ for j in effective_day:
             div_vir_list_sum[int(2*(i-min(eff_day_vals)))]+=div_vir_list[int(k)]
             k+=1
 #print('div_vir_list_sum',div_vir_list_sum)
-"""
+
 plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
-"""
+
 
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
 
@@ -332,9 +332,9 @@ params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus
 #my optimised parameters
 params.add('alpha', value=6.2*(10**(-7)), min=6.1*(10**(-8)), max=6.3*(10**(-6)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-params.add('gamma', value=243, min=242, max=243)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.84, min=0.83, max=0.85)     #clearance rate of virus particles
-params.add('kappa', value=1*(10**-8), min=1*(10**-9), max=1*(10**-7))     #clearance rate of virus particles
+params.add('gamma', value=2, min=0, max=500)        #Infected cells release virus at rate gamma
+params.add('delta', value=0.84, min=0, max=10)     #clearance rate of virus particles
+params.add('kappa', value=2*(10**-11), min=1*(10**-11), max=3*(10**-11))     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
