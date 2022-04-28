@@ -330,10 +330,10 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=6.2*(10**(-7)), min=6.1*(10**(-8)), max=6.3*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('alpha', value=6.2*(10**(-5)), min=6.1*(10**(-8)), max=6.3*(10**(-4)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-params.add('gamma', value=2, min=0, max=500)        #Infected cells release virus at rate gamma
-params.add('delta', value=0.84, min=0, max=10)     #clearance rate of virus particles
+params.add('gamma', value=0.87, min=0, max=500)        #Infected cells release virus at rate gamma
+params.add('delta', value=2.36, min=0, max=10)     #clearance rate of virus particles
 params.add('kappa', value=2*(10**-11), min=1*(10**-11), max=3*(10**-11))     #clearance rate of virus particles
 
 # fit model

@@ -140,7 +140,7 @@ plt.ylabel('IFN-α + IFN-β')
 
 #plot the log of the sum of (IFN alpha + IFN beta)
 plt.figure()
-plt.plot(eff_day_vals,np.log10(div_IFN_beta_list_sum + div_IFN_alpha_list_sum),'-rx')
+plt.plot(eff_day_vals,np.log10(div_IFN_beta_list_sum + div_IFN_alpha_list_sum),'-bx')
 plt.xlabel('Time/days')
 plt.ylabel('log(IFN-α + IFN-β)')
 
