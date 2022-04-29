@@ -309,9 +309,10 @@ I0 = 0   #Should be zero
 """
 #my optimised initial conditions
 U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
-#V0 = 43652 #an estimate of good start point
-Is0 = act_div_vir_list_sum[0] / 2
+#Is0 = act_div_vir_list_sum[0] / 2
+Is0 = act_div_vir_list_sum[0]
+#Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
+Id0 = 0
 y0 = [U0, Id0, Is0]
 
 """
