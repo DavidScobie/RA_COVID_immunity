@@ -439,7 +439,7 @@ plt.ylabel('Virus Titre (copies/mL)')
 Is_area = np.trapz(data_fitted[:, 2], dx=0.5)
 Id_area = np.trapz(data_fitted[:, 1], dx=0.5)
 print('Is_area',Is_area,'Id_area',Id_area)
-"""
+
 #############fit models to different patients
 
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
@@ -452,6 +452,8 @@ betas=[]
 gammas=[]
 deltas=[]
 red_chi_squs = []
+sum_residuals_squs = []
+ndatas = []
 subj_IDs_over_5=[]
 
 for j in Subject_ID_vals:
@@ -545,7 +547,8 @@ for j in Subject_ID_vals:
             if name == 'delta':
                 deltas.append(param.value)
 
-        red_chi_squs.append(result.redchi)
+        sum_residuals_squs.append(sum(((result.residual)**2)))
+        ndatas.append(result.ndata)
 
         log_V_measured = np.log10(V_measured)
         log_V_fitted = np.log10(data_fitted[:, 1])
@@ -570,8 +573,10 @@ print('alphas',alphas)
 print('betas',betas)
 print('gammas',gammas)
 print('deltas',deltas)
-print('red_chi_squs',red_chi_squs,'average red_chi_squ',sum(red_chi_squs)/len(red_chi_squs))
-"""
+print('sum_residuals_squs',sum_residuals_squs)
+variances = np.array(sum_residuals_squs) / np.array(ndatas)
+print('variances',variances,'average variance',sum(variances)/len(variances))
+
 #np.save('qPCR_TS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
 #np.save('qPCR_TS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
 

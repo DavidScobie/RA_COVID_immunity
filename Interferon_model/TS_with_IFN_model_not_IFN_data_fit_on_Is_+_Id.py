@@ -409,7 +409,7 @@ ax3.set_title('c)')
 #########################################################
 
 #############fit models to different patients
-
+"""
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
 Subject_ID_vals_short = Subject_ID_vals[0:3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
@@ -434,7 +434,8 @@ for j in Subject_ID_vals:
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
 
     #only use the subjects with more than 5 data points
-    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5 and j != 635331:
+    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5 and j != 635331:  #excluding the challenging patient
+    #if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5:
         k+=1
         #convert the virus and the effective day values to a list
         div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
@@ -491,21 +492,21 @@ for j in Subject_ID_vals:
         params.add('gamma', value=117, min=0, max=200)        #Infected cells release virus at rate gamma
         params.add('delta', value=0.94, min=0, max=200)     #clearance rate of virus particles
         params.add('kappa', value=3*(10**-9), min=1*(10**-9), max=3*(10**-6))     #clearance rate of virus particles
-        """
-        #my optimised parameters - optimised with medium kappa
-        params.add('alpha', value=1.1*(10**(-7)), min=2.9*(10**(-8)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
-        params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-        params.add('gamma', value=40, min=0, max=200)        #Infected cells release virus at rate gamma
-        params.add('delta', value=4.9, min=0, max=200)     #clearance rate of virus particles
-        params.add('kappa', value=1.5*(10**-8), min=1*(10**-9), max=3*(10**-6))     #clearance rate of virus particles
 
-        #optimised with high kappa
-        params.add('alpha', value=5.9*(10**(-8)), min=2.9*(10**(-8)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
-        params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-        params.add('gamma', value=18, min=0, max=200)        #Infected cells release virus at rate gamma
-        params.add('delta', value=48, min=0, max=200)     #clearance rate of virus particles
-        params.add('kappa', value=2.1*(10**-7), min=1*(10**-9), max=3*(10**-6))     #clearance rate of virus particles
-        """
+        # #my optimised parameters - optimised with medium kappa
+        # params.add('alpha', value=1.1*(10**(-7)), min=2.9*(10**(-8)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
+        # params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+        # params.add('gamma', value=40, min=0, max=200)        #Infected cells release virus at rate gamma
+        # params.add('delta', value=4.9, min=0, max=200)     #clearance rate of virus particles
+        # params.add('kappa', value=1.5*(10**-8), min=1*(10**-9), max=3*(10**-6))     #clearance rate of virus particles
+
+        # #optimised with high kappa
+        # params.add('alpha', value=5.9*(10**(-8)), min=2.9*(10**(-8)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
+        # params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+        # params.add('gamma', value=18, min=0, max=200)        #Infected cells release virus at rate gamma
+        # params.add('delta', value=48, min=0, max=200)     #clearance rate of virus particles
+        # params.add('kappa', value=2.1*(10**-7), min=1*(10**-9), max=3*(10**-6))     #clearance rate of virus particles
+
         # fit model
         result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
         # check results of the fit
@@ -574,5 +575,6 @@ print('sum_residuals_squs',sum_residuals_squs)
 print('ndatas',ndatas)
 variances = np.array(sum_residuals_squs) / np.array(ndatas)
 print('variances',variances)
-
+print('average variance',sum(variances)/len(variances))
+"""
 plt.show()

@@ -9,7 +9,7 @@ from scipy.integrate import odeint
 
 #import the excel data
 
-df = pd.read_excel('C:\Research_Assistant\work\FW__Human_challenge_studies\COVHIC001_FFA_TS.xlsx')
+df = pd.read_excel('C:\Research_Assistant\work\data\FW__Human_challenge_studies\COVHIC001_FFA_TS.xlsx')
 
 #print the column headers
 print('colummn headers',list(df.columns.values))
@@ -30,7 +30,65 @@ df2 = df2[df2['Virus Titre (Log10 FFU/mL)'].str.contains("N/A ") == False]
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 FFU/mL)'].str.len().sort_values().index
-df_str_sorted = df2.reindex(s)
+df2_str_sorted = df2.reindex(s)
+
+############ only keep patients who have more than 15 virus values which arent NON DETECTED
+
+#find all the possible subject IDs
+Subject_ID = df2_str_sorted['Subject ID'].tolist()
+Subject_ID_vals = list(set(Subject_ID))
+k=0 #counter for the subject ID's
+m=0 #counter for the subjects who have less than 15 NON DETs
+
+Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
+for j in Subject_ID_vals:
+
+    #print('j',str(j))
+    k+=1
+    df2_Subj_ID_sorted = df2_str_sorted.loc[df2_str_sorted['Subject ID'] == j] #make a subset of the dataframe based on the subject ID
+    #print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
+
+    #get rid of the DETECTED
+    df2_Subj_ID_sorted = df2_Subj_ID_sorted.assign(length = df2_Subj_ID_sorted['Virus Titre (Log10 FFU/mL)'].str.len())
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted #make a copy of dataframe to be filled with just numbers
+    df2_Subj_ID_sorted_just_nums = df2_Subj_ID_sorted[df2_Subj_ID_sorted.length < 7] #DETECTED is 8 characters so we remove DETECTED here
+
+    #make NON DETECTED = 0
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted  #initialise the dataframe yet to be filled with NON DET values
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted[df2_Subj_ID_sorted['Virus Titre (Log10 FFU/mL)'].str.len() > 10] #the only lengths greater than 10 are the ones which say 'NON DETECTED'
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.assign(temp = np.zeros(len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 FFU/mL)'].tolist())))  #make zeros for NON DETECTED
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.drop('Virus Titre (Log10 FFU/mL)', 1)#remove the column of virus
+    df2_Subj_ID_sorted_NON_DET = df2_Subj_ID_sorted_NON_DET.rename(columns={"temp": "Virus Titre (Log10 FFU/mL)"}) #rename back to original name
+    number_NON_DETs = len(df2_Subj_ID_sorted_NON_DET['Virus Titre (Log10 FFU/mL)'].values.tolist())
+
+    df2_Subj_ID_sorted_comb = pd.concat([df2_Subj_ID_sorted_just_nums, df2_Subj_ID_sorted_NON_DET], axis=0) #combine the virus numbers and the NON DET zeros into datframe
+
+    print('Subject ID',j,'number of NON DETs',number_NON_DETs,'num time points',df2_Subj_ID_sorted_comb.shape[0])
+
+    #if number of NON DETs less than 15, then cut this out from the bunch
+    if number_NON_DETs < 15: #the case where I want to keep the data
+        print('LESS THAN 15 NON DETs')
+        m+=1
+        #print('m',m)
+        if m == 1: #the first time through this loop we just create the dataframe
+            print('THE BEGINNING')
+            df2_cut_out_many = df2_Subj_ID_sorted_comb
+        else: #for all of the subsequent patients with few NON DETs, we append their data to the dataframe
+            print('APPENDING')
+            df2_cut_out_many = df2_cut_out_many.append(df2_Subj_ID_sorted_comb)
+    else:
+        print('MORE THAN 15 NON DETs')
+
+print('df2_cut_out_many end',df2_cut_out_many)
+
+#convert the strings to numbers
+df2_str_sorted = df2_cut_out_many
+df2_str_sorted['Virus Titre (Log10 FFU/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 FFU/mL)'], downcast="float")
+df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
+
+###########
+
+"""
 
 #get rid of the DETECTED and turn the NON DETECTED into zeros
 df_str_sorted['length'] = df_str_sorted['Virus Titre (Log10 FFU/mL)'].str.len()
@@ -48,6 +106,8 @@ print('df2_str_sorted virus',df2_str_sorted['Virus Titre (Log10 FFU/mL)'].tolist
 #convert the strings to numbers
 df2_str_sorted['Virus Titre (Log10 FFU/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 FFU/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
+
+"""
 
 #################################################################   #Only considering patients with more than 4 datapoints
 
@@ -248,7 +308,7 @@ plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
 plt.title('patients with at least 5 datapoints linear scale')
 
-#np.save('FFA_TS_V_measured_NON_DET_eq_zero', 10**div_vir_list_sum_front_and_end_chopped)
-#np.save('FFA_TS_t_measured_NON_DET_eq_zero', eff_day_vals_front_and_end_chopped)
+np.save('FFA_TS_V_measured_NON_DET_eq_zero_sick_only', 10**div_vir_list_sum_front_and_end_chopped)
+np.save('FFA_TS_t_measured_NON_DET_eq_zero_sick_only', eff_day_vals_front_and_end_chopped)
 
 plt.show()

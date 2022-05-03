@@ -38,10 +38,10 @@ Subject_ID_vals = list(set(Subject_ID))
 k=0 #counter for the subject ID's
 m=0 #counter for the subjects who have less than 15 NON DETs
 
-Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
+#Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
 for j in Subject_ID_vals:
 
-    #print('j',str(j))
+    print('j',str(j))
     k+=1
     df2_Subj_ID_sorted = df2_str_sorted.loc[df2_str_sorted['Subject ID'] == j] #make a subset of the dataframe based on the subject ID
     #print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
@@ -176,7 +176,7 @@ df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 # seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
 
 #plot individual patients on different days
-Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
+#Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
 for j in Subject_ID_vals:
     k+=1
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
@@ -412,8 +412,8 @@ ax3.set_title('c)')
 #############fit models to different patients
 
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
-Subject_ID_vals_short = Subject_ID_vals[0:3]
-print('Subject_ID_vals_short',Subject_ID_vals_short)
+#Subject_ID_vals_short = Subject_ID_vals[0:3]
+#print('Subject_ID_vals_short',Subject_ID_vals_short)
 
 #initialise arrays of patient parameters
 alphas=[]
@@ -428,7 +428,7 @@ ndatas = []
 variances = []
 subj_IDs_over_5=[]
 
-for j in Subject_ID_vals_short:
+for j in Subject_ID_vals:
 
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
@@ -554,7 +554,7 @@ print('sum_residuals_squs',sum_residuals_squs)
 print('chi_squs',chi_squs)
 print('ndatas',ndatas)
 variances = np.array(sum_residuals_squs) / np.array(ndatas)
-print('variances',variances)
+print('variances',variances,'average variance',sum(variances)/len(variances))
 
 plt.show()
 

@@ -12,10 +12,10 @@ from sklearn.metrics import mean_squared_error
 ######################
 
 #plot the FFA data
-FFA_virus = np.load('FFA_TS_V_measured_NON_DET_eq_zero.npy')
+FFA_virus = np.load(r'C:\Research_Assistant\work\RA_COVID_immunity\regression_files\FFA_TS_V_measured_NON_DET_eq_zero.npy')
 print('FFA_virus',FFA_virus)
 log_FFA_virus = np.log10(FFA_virus)
-FFA_effective_day = np.load('FFA_TS_t_measured_NON_DET_eq_zero.npy')
+FFA_effective_day = np.load(r'C:\Research_Assistant\work\RA_COVID_immunity\regression_files\FFA_TS_t_measured_NON_DET_eq_zero.npy')
 plt.figure()
 plt.plot(FFA_effective_day, log_FFA_virus, marker='o', color='black', label='measured FFA V data')
 
