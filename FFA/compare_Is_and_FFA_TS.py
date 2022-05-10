@@ -319,10 +319,10 @@ V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work 
 I0 = 0   #Should be zero
 """
 #my optimised initial conditions
-U0 = 0.35*(10**(8))  #the number of cells in an adult is 4x10^8
-Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
+U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+Id0 = 0  #just taking the first measured value
 #V0 = 43652 #an estimate of good start point
-Is0 = act_div_vir_list_sum[0] / 2
+Is0 = act_div_vir_list_sum[0]
 y0 = [U0, Id0, Is0]
 
 ##cut off the datapoints after day 15 because these are just noise
@@ -360,8 +360,8 @@ params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus
 """
 #my optimised parameters
 params.add('alpha', value=5.7*(10**(-7)), min=5.6*(10**(-8)), max=5.8*(10**(-4)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1, min=0, max=200)    #Clearance rate of infected cells
-params.add('gamma', value=0.025, min=0, max=30)        #Infected cells release virus at rate gamma
+params.add('beta', value=0.001, min=0, max=0.0001)    #Clearance rate of infected cells
+params.add('gamma', value=225, min=0, max=500)        #Infected cells release virus at rate gamma
 params.add('delta', value=0.87, min=0, max=10)     #clearance rate of virus particles
 
 # fit model
@@ -481,7 +481,7 @@ plt.xlabel('log(Is fitted)')
 plt.ylabel('log(FFA)')
 plt.title('TS scatterplot of log(FFA) and log(Is)')
 
-#print('RMSE between log(IS) and log(FFA): ',mean_squared_error(log_Is_data_short, log_FFA_virus, squared=False))
+print('RMSE between log(IS) and log(FFA): ',mean_squared_error(log_Is_data_short, log_FFA_virus, squared=False))
 
 #######################
 #make scatterplot of FFA measured data and Is fitted data

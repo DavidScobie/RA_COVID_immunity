@@ -172,21 +172,21 @@ df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 
 #seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
 
-plt.figure()
-#seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
+# plt.figure()
+# #seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
 
-#plot individual patients on different days
-Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
-for j in Subject_ID_vals_short:
-    k+=1
-    #plt.figure()
-    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
-    df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
-    df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
+# #plot individual patients on different days
+# Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patient as a check up
+# for j in Subject_ID_vals_short:
+#     k+=1
+#     #plt.figure()
+#     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
+#     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
+#     df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
 
-    plt.title('Subject ID=%i' %j)
-    plt.xlabel('Study Day')
-    plt.ylabel('Virus Titre (Log10 copies/mL)')
+#     plt.title('Subject ID=%i' %j)
+#     plt.xlabel('Study Day')
+#     plt.ylabel('Virus Titre (Log10 copies/mL)')
 
 
 #plot actual virus amount (instead of log10 of virus amount)
@@ -331,11 +331,11 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=6.6*(10**(-8)), min=2.9*(10**(-8)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-params.add('gamma', value=21, min=0, max=200)        #Infected cells release virus at rate gamma
-params.add('delta', value=60, min=0, max=200)     #clearance rate of virus particles
-params.add('kappa', value=2*(10**-7), min=1*(10**-7), max=3*(10**-7))     #clearance rate of virus particles
+params.add('alpha', value=4.3*(10**(-8)), min=4.2*(10**(-8)), max=4.4*(10**(-8)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1*(10**(-13)), min=0, max=2*(10**(-13)))    #Clearance rate of infected cells
+params.add('gamma', value=11.5, min=11, max=12)        #Infected cells release virus at rate gamma
+params.add('delta', value=2.3*(10**4), min=2.2*(10**4), max=2.4*(10**4))     #clearance rate of virus particles
+params.add('kappa', value=1.1*(10**-4), min=1.0*(10**-4), max=1.2*(10**-4))     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder

@@ -154,7 +154,7 @@ for j in effective_day:
             k+=1
 #print('div_vir_list_sum',div_vir_list_sum)
 
-plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
+#plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
 
 
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
@@ -170,7 +170,7 @@ df2_str_sorted['effective_day'] = effective_day
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 
-seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
+#seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
 """
 plt.figure()
 seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
@@ -195,10 +195,10 @@ act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
 for i in range (len(div_vir_list_sum)):
     act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-plt.figure()
-plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (copies/mL)')
+# plt.figure()
+# plt.plot(eff_day_vals,act_div_vir_list_sum,'-rx')
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (copies/mL)')
 
 #######################################################
 
@@ -281,15 +281,15 @@ max_indic = int(max_indic_arr[0])
 
 a, b = best_fit(eff_day_vals[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
 
-plt.figure()
-plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
-yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
-print('yfit',yfit)
-plt.plot(eff_day_vals[:max_indic+1], yfit)
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre (Log10 copies/mL)')
-plt.xlim(left=0)
-plt.ylim(bottom=0)
+# plt.figure()
+# plt.scatter(eff_day_vals[:max_indic+1], np.log10(act_div_vir_list_sum)[:max_indic+1], marker='o', color='red', label='measured V data', s=75)
+# yfit = [a + b * xi for xi in eff_day_vals[:max_indic+1]]
+# print('yfit',yfit)
+# plt.plot(eff_day_vals[:max_indic+1], yfit)
+# plt.xlabel('Days Post Infection')
+# plt.ylabel('Virus Titre (Log10 copies/mL)')
+# plt.xlim(left=0)
+# plt.ylim(bottom=0)
 
 #add the point at time=0, virus=extrap val to the eff_day_vals and act_div_vir_list_sum arrays
 v1 = 0
@@ -330,11 +330,11 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=6.2*(10**(-5)), min=6.1*(10**(-8)), max=6.3*(10**(-4)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-params.add('gamma', value=0.87, min=0, max=500)        #Infected cells release virus at rate gamma
-params.add('delta', value=2.36, min=0, max=10)     #clearance rate of virus particles
-params.add('kappa', value=2*(10**-11), min=1*(10**-11), max=3*(10**-11))     #clearance rate of virus particles
+params.add('alpha', value=5.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1*(10**(-13)), min=0, max=2*(10**(-13)))    #Clearance rate of infected cells
+params.add('gamma', value=18, min=0, max=100)        #Infected cells release virus at rate gamma
+params.add('delta', value=48, min=0, max=100)     #clearance rate of virus particles
+params.add('kappa', value=2.1*(10**-7), min=2*(10**-7), max=2.2*(10**-7))     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
