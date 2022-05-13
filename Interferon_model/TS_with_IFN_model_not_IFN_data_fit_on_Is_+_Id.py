@@ -330,12 +330,12 @@ params.add('beta', value=61.2, min=61.1, max=61.3)    #Clearance rate of infecte
 params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells release virus at rate gamma
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
-#my optimised parameters
-params.add('alpha', value=4.3*(10**(-8)), min=4.2*(10**(-8)), max=4.4*(10**(-8)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1*(10**(-13)), min=0, max=2*(10**(-13)))    #Clearance rate of infected cells
-params.add('gamma', value=11.5, min=11, max=12)        #Infected cells release virus at rate gamma
-params.add('delta', value=2.3*(10**4), min=2.2*(10**4), max=2.4*(10**4))     #clearance rate of virus particles
-params.add('kappa', value=1.1*(10**-4), min=1.0*(10**-4), max=1.2*(10**-4))     #clearance rate of virus particles
+#my optimised parameters - optimised with low kappa
+params.add('alpha', value=5.9*(10**(-8)), min=2.9*(10**(-9)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+params.add('gamma', value=18, min=0, max=200)        #Infected cells release virus at rate gamma
+params.add('delta', value=48, min=0, max=200)     #clearance rate of virus particles
+params.add('kappa', value=2.1*(10**-7), min=1*(10**-9), max=3*(10**-4))     #clearance rate of virus particles
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -354,6 +354,24 @@ ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
+
+#collect the parameters from the overall model
+overall_alpha=[]
+overall_beta=[]
+overall_gamma=[]
+overall_delta=[]
+overall_kappa=[]
+for name, param in result.params.items():
+    if name == 'alpha':
+        overall_alpha.append(param.value)
+    if name == 'beta':
+        overall_beta.append(param.value)
+    if name == 'gamma':
+        overall_gamma.append(param.value)
+    if name == 'delta':
+        overall_delta.append(param.value)
+    if name == 'kappa':
+        overall_kappa.append(param.value)
 
 #compute the variance
 overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
@@ -409,7 +427,7 @@ ax3.set_title('c)')
 #########################################################
 
 #############fit models to different patients
-"""
+
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
 Subject_ID_vals_short = Subject_ID_vals[0:3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
@@ -434,7 +452,7 @@ for j in Subject_ID_vals:
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
 
     #only use the subjects with more than 5 data points
-    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5 and j != 635331:  #excluding the challenging patient
+    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5 and j != 676586 and j != 635331:  #excluding the challenging patient
     #if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5:
         k+=1
         #convert the virus and the effective day values to a list
@@ -487,11 +505,11 @@ for j in Subject_ID_vals:
         params.add('Is0', value=Is0, vary=False)
 
         #my optimised parameters - optimised with low kappa
-        params.add('alpha', value=3*(10**(-7)), min=2.9*(10**(-8)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
+        params.add('alpha', value=5.9*(10**(-8)), min=2.9*(10**(-9)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
         params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-        params.add('gamma', value=117, min=0, max=200)        #Infected cells release virus at rate gamma
-        params.add('delta', value=0.94, min=0, max=200)     #clearance rate of virus particles
-        params.add('kappa', value=3*(10**-9), min=1*(10**-9), max=3*(10**-6))     #clearance rate of virus particles
+        params.add('gamma', value=18, min=0, max=200)        #Infected cells release virus at rate gamma
+        params.add('delta', value=48, min=0, max=200)     #clearance rate of virus particles
+        params.add('kappa', value=2.1*(10**-7), min=1*(10**-9), max=3*(10**-4))     #clearance rate of virus particles
 
         # #my optimised parameters - optimised with medium kappa
         # params.add('alpha', value=1.1*(10**(-7)), min=2.9*(10**(-8)), max=3.1*(10**(-6)))   #rate that viral particles infect susceptible cells
@@ -550,17 +568,17 @@ for j in Subject_ID_vals:
         log_Id_fitted = np.log10(data_fitted[:, 2])
         log_Id_Is_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
 
-        plt.figure()
-        plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
-        plt.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
-        plt.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
-        plt.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
-        #plt.ylim(bottom=0.9 * min(log_V_measured))
-        #plt.xlim(left=0)
-        plt.legend()
-        plt.xlabel('Days Post Infection')
-        plt.ylabel('Concentration (Log10 copies/mL)')
-        plt.title('Subject ID=%i' %j)
+        # plt.figure()
+        # plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured V data', s=75)
+        # plt.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
+        # plt.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
+        # plt.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
+        # #plt.ylim(bottom=0.9 * min(log_V_measured))
+        # #plt.xlim(left=0)
+        # plt.legend()
+        # plt.xlabel('Days Post Infection')
+        # plt.ylabel('Concentration (Log10 copies/mL)')
+        # plt.title('Subject ID=%i' %j)
 
         #append the 4 parameter values to arrays
         #alphas.append(alpha)
@@ -576,5 +594,67 @@ print('ndatas',ndatas)
 variances = np.array(sum_residuals_squs) / np.array(ndatas)
 print('variances',variances)
 print('average variance',sum(variances)/len(variances))
-"""
+
+
+############################ plot the distributions of alpha, beta, gamma and delta
+plt.figure()
+plt.hist(alphas, density=False, bins=10,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Alpha')
+plt.title('Histogram of alpha values across individual patients')
+
+#plot the overall alpha (across all the patients) over the top
+y, x, _ = plt.hist(alphas, density=False, bins=10,color = "skyblue")
+X = [overall_alpha, overall_alpha]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
+plt.figure()
+plt.hist(betas, density=False, bins=10,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Beta')
+plt.title('Histogram of beta values across individual patients')
+
+#plot the overall beta (across all the patients) over the top
+y, x, _ = plt.hist(betas, density=False, bins=10,color = "skyblue")
+X = [overall_beta, overall_beta]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
+plt.figure()
+plt.hist(gammas, density=False, bins=10,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Gamma')
+plt.title('Histogram of gamma values across individual patients')
+
+#plot the overall gamma (across all the patients) over the top
+y, x, _ = plt.hist(gammas, density=False, bins=10,color = "skyblue")
+X = [overall_gamma, overall_gamma]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
+plt.figure()
+plt.hist(deltas, density=False, bins=10,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Delta')
+plt.title('Histogram of delta values across individual patients')
+
+#plot the overall delta (across all the patients) over the top
+y, x, _ = plt.hist(deltas, density=False, bins=10,color = "skyblue")
+X = [overall_delta, overall_delta]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
+plt.figure()
+plt.hist(kappas, density=False, bins=10,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Kappa')
+plt.title('Histogram of kappa values across individual patients')
+
+#plot the overall kappa (across all the patients) over the top
+y, x, _ = plt.hist(kappas, density=False, bins=10,color = "skyblue")
+X = [overall_kappa, overall_kappa]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
 plt.show()
