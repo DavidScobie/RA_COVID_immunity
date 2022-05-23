@@ -27,3 +27,9 @@ pat_439679_day_14_alpha_prod <- subset(pat_439679_day_14_alpha, subset = product
 pat_439679_day_0_alpha_prod$present_in_day_7 <- as.integer(pat_439679_day_0_alpha_prod$junction_aa %in% pat_439679_day_7_alpha_prod$junction_aa)
 pat_439679_day_0_alpha_prod$present_in_day_14 <- as.integer(pat_439679_day_0_alpha_prod$junction_aa %in% pat_439679_day_14_alpha_prod$junction_aa)
 
+###if there is a zero in the present_in_day_7 column want to inflate the day 7 data frame with a row of that juntion_aa but a 0 as duplicate count
+N_TCRs <- nrow(pat_439679_day_0_alpha_prod) #find the number of rows for the first patient
+k<-1
+for (k in 1:N_TCRs){
+  if pat_439679_day_0_alpha_prod$present_in_day_7[k] == 0{
+    #create a new row in the data frame with that TCR but abundance zero
