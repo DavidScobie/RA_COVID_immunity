@@ -40,6 +40,10 @@ pat_439679_day_14_alpha_prod$day <- 14
 #     #create a new row in the data frame with that TCR but abundance zero
 
 #combine the 3 data frames for patient 439679 into 1 big data frame (to get the long format)
-pat_439679_alpha_prod = bind_rows(pat_439679_day_0_alpha_prod, pat_439679_day_7_alpha_prod, pat_439679_day_14_alpha_prod)
+pat_439679_alpha_prod <- bind_rows(pat_439679_day_0_alpha_prod, pat_439679_day_7_alpha_prod, pat_439679_day_14_alpha_prod)
 
 #make the data frame wide
+pat_439679_alpha_prod_wide <- reshape(pat_439679_alpha_prod, idvar = "junction_aa", timevar = "day", direction = "wide")
+
+#count how many ones there are in duplicate_count
+day_0_over_1 <- nrow(pat_439679_alpha_prod_wide[pat_439679_alpha_prod_wide$duplicate_count.0>1, ])
