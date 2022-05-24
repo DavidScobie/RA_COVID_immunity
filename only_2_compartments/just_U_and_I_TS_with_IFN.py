@@ -4,6 +4,10 @@ import numpy as np
 import seaborn
 from lmfit import minimize, Parameters, Parameter, report_fit
 from scipy.integrate import odeint
+from scipy.stats import norm
+import matplotlib.mlab as mlab
+import scipy.stats as stats
+import statistics
 
 #import the excel data
 
@@ -170,7 +174,7 @@ df2_str_sorted['effective_day'] = effective_day
 #plot the subjects in different colours
 df2_str_sorted['Subject ID'] = df2_str_sorted['Subject ID'].astype(str)
 
-#seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
+seaborn.relplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID')
 
 # plt.figure()
 # seaborn.pointplot(data=df2_str_sorted, x='effective_day', y='Virus Titre (Log10 copies/mL)', hue='Subject ID', ci=None)
@@ -303,29 +307,16 @@ I0 = 0   #Should be zero
 U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
 #Is0 = act_div_vir_list_sum[0] / 2
 I0 = act_div_vir_list_sum[0]
-#Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
+I0_init = act_div_vir_list_sum[0]
 y0 = [U0, I0]
-"""
-##cut off the datapoints after day 15 because these are just noise
-#only do this if the effective day goes up to 15
-exists = 15 in eff_day_vals
-if exists == True:
-    fifteenth_indic_arr = np.where(eff_day_vals == 15)
-    fifteenth_indic = int(fifteenth_indic_arr[0])
-    print('fifteenth_indic',fifteenth_indic)
+y0_init = [U0, I0]
 
-    # measured data
-    t_measured = eff_day_vals[:fifteenth_indic]
-    V_measured = act_div_vir_list_sum[:fifteenth_indic]
-
-else:
-    # measured data
-    t_measured = eff_day_vals
-    V_measured = act_div_vir_list_sum
-"""
 # measured data
 t_measured = eff_day_vals
+t_measured_init = t_measured
 V_measured = act_div_vir_list_sum
+
+print('t_measured',t_measured,'V_measured',V_measured)
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -343,9 +334,9 @@ params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells relea
 params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
 """
 #my optimised parameters
-params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=1.2*(10**(0)), min=0, max=1.1*(10**(2)))
-params.add('kappa', value=2.1*(10**-8), min=1*(10**-9), max=3*(10**-7))
+params.add('alpha', value=4.3*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=11.4*(10**(0)), min=0, max=1.1*(10**(2)))
+params.add('kappa', value=5.4*(10**-8), min=1*(10**-11), max=3*(10**-7))
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -364,12 +355,25 @@ ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
 
+#collect the parameters from the overall model
+overall_alpha=[]
+overall_beta=[]
+overall_kappa=[]
+for name, param in result.params.items():
+    if name == 'alpha':
+        overall_alpha.append(param.value)
+    if name == 'beta':
+        overall_beta.append(param.value)
+    if name == 'kappa':
+        overall_kappa.append(param.value)
+
 #compute the variance
 overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
 print('overall_variance',overall_variance)
 
 #plot the fitted data and the model for log(virus) against day
 log_V_measured = np.log10(V_measured)
+log_V_measured_init = np.log10(V_measured)
 log_I_fitted = np.log10(data_fitted[:, 1])
 
 #plt.figure()
@@ -427,7 +431,7 @@ print('I_area',I_area,'I_area',I_area)
 #fit models to different patients
 
 #just start with trying to plot the first 2 subjects (to minimise the number of figures made)
-Subject_ID_vals_short = Subject_ID_vals[0:3]
+Subject_ID_vals_short = Subject_ID_vals[0:-3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
 
 #initialise arrays of patient parameters
@@ -442,7 +446,7 @@ ndatas = []
 variances = []
 subj_IDs_over_5=[]
 
-for j in Subject_ID_vals:
+for j in Subject_ID_vals_short:
 
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
@@ -560,6 +564,141 @@ print('ndatas',ndatas)
 variances = np.array(sum_residuals_squs) / np.array(ndatas)
 print('variances',variances)
 print('average variance',sum(variances)/len(variances))
+
+#only include patients who have variance less than 2
+refined_alphas = []
+refined_betas = []
+refined_kappas = []
+
+for i in range (len(variances)):
+    if variances[i]<=10:
+        refined_alphas.append(alphas[i])
+        refined_betas.append(betas[i])
+        refined_kappas.append(kappas[i])
+
+########################### plot histograms of alpha, beta and kappa
+
+n_bins = 50
+
+plt.figure()
+plt.hist(refined_alphas, density=False, bins=n_bins,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Alpha')
+plt.title('Histogram of alpha values across individual patients')
+
+#plot the overall alpha (across all the patients) over the top
+y, x, _ = plt.hist(refined_alphas, density=False, bins=n_bins,color = "skyblue")
+X = [overall_alpha, overall_alpha]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
+# fit a histogram to the alpha data
+
+# best fit of data
+(mu_alpha, sigma_alpha) = norm.fit(refined_alphas)
+print('alpha mu',mu_alpha,'alpha sigma',sigma_alpha)
+
+x = np.linspace(mu_alpha - 3*sigma_alpha, mu_alpha + 3*sigma_alpha, 100)
+plt.plot(x, (10**(-6))*stats.norm.pdf(x, mu_alpha, sigma_alpha))
+
+#plot the median of the alpha values
+median_alpha = statistics.median(refined_alphas)
+print('median_alpha',median_alpha)
+
+#plot the median alpha (across all the patients) over the top
+X = [median_alpha, median_alpha]
+Y = [0, y.max()]
+plt.plot(X,Y,color='green')
+
+plt.figure()
+plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Beta')
+plt.title('Histogram of beta values across individual patients')
+
+#plot the overall beta (across all the patients) over the top
+y, x, _ = plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue")
+X = [overall_beta, overall_beta]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
+# fit a histogram to the beta data
+
+# best fit of data
+(mu_beta, sigma_beta) = norm.fit(refined_betas)
+print('beta mu',mu_beta,'beta sigma',sigma_beta)
+
+x = np.linspace(mu_beta - 3*sigma_beta, mu_beta + 3*sigma_beta, 100)
+plt.plot(x, (70**(1))*stats.norm.pdf(x, mu_beta, sigma_beta))
+
+#plot the median of the beta values
+median_beta = statistics.median(refined_betas)
+print('median_beta',median_beta)
+
+#plot the median beta (across all the patients) over the top
+X = [median_beta, median_beta]
+Y = [0, y.max()]
+plt.plot(X,Y,color='green')
+
+plt.figure()
+plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue")
+plt.ylabel('Number of patients')
+plt.xlabel('Kappa')
+plt.title('Histogram of kappa values across individual patients')
+
+#plot the overall kappa (across all the patients) over the top
+y, x, _ = plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue")
+X = [overall_kappa, overall_kappa]
+Y = [0, y.max()]
+plt.plot(X,Y,color='red')
+
+# fit a histogram to the beta data
+
+# best fit of data
+(mu_kappa, sigma_kappa) = norm.fit(refined_kappas)
+print('kappa mu',mu_kappa,'kappa sigma',sigma_kappa)
+
+x = np.linspace(mu_kappa - 3*sigma_kappa, mu_kappa + 3*sigma_kappa, 100)
+plt.plot(x, (10**(-6))*stats.norm.pdf(x, mu_kappa, sigma_kappa))
+
+#plot the median of the alpha values
+median_kappa = statistics.median(refined_kappas)
+print('median_kappa',median_kappa)
+
+#plot the median alpha (across all the patients) over the top
+X = [median_kappa, median_kappa]
+Y = [0, y.max()]
+plt.plot(X,Y,color='green')
+
+##############################
+#compute the likelihood for patient 16
+
+#firstly have at the optimal model
+params = Parameters()
+params.add('U0', value=U0, vary=False)
+params.add('I0', value=I0, vary=False)
+
+#my optimised parameters
+params.add('alpha', value=median_alpha, min=median_alpha - 10**(-11), max=median_alpha + 10**(-11))   #rate that viral particles infect susceptible cells
+params.add('beta', value=median_beta, min=median_beta - 10**(-11), max=median_beta + 10**(-11))
+params.add('kappa', value=median_kappa, min=median_kappa - 10**(-11), max=median_kappa + 10**(-11))
+
+# fit model
+result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+report_fit(result)
+data_fitted = g(t_measured, y0_init, result.params)
+log_I_fitted = np.log10(data_fitted[:, 1])
+
+#plotting the model fit (found by taking the peak of the gaussian distribution of params for all patients)
+plt.figure()
+plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+
+#plot this with the scatterplot of the mean of the data for all patients
+plt.scatter(t_measured_init[1:], log_V_measured_init[1:], marker='o', color='red', label='mean V data for all patients', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+
+# g_Ftrue =
+# g_Ftrue_min_Dn =
+# L = -0.5*()
 
 plt.show()
 
