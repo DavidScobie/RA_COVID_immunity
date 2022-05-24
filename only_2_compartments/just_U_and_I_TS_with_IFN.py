@@ -678,11 +678,16 @@ params = Parameters()
 params.add('U0', value=U0, vary=False)
 params.add('I0', value=I0, vary=False)
 
-#my optimised parameters
+#use the mean values
+params.add('alpha', value=mu_alpha, min=mu_alpha - 10**(-11), max=mu_alpha + 10**(-11))   #rate that viral particles infect susceptible cells
+params.add('beta', value=mu_beta, min=mu_beta - 10**(-11), max=mu_beta + 10**(-11))
+params.add('kappa', value=mu_kappa, min=mu_kappa - 10**(-11), max=mu_kappa + 10**(-11))
+"""
+#use the median values
 params.add('alpha', value=median_alpha, min=median_alpha - 10**(-11), max=median_alpha + 10**(-11))   #rate that viral particles infect susceptible cells
 params.add('beta', value=median_beta, min=median_beta - 10**(-11), max=median_beta + 10**(-11))
 params.add('kappa', value=median_kappa, min=median_kappa - 10**(-11), max=median_kappa + 10**(-11))
-
+"""
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
 report_fit(result)
