@@ -58,11 +58,11 @@ subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>%
 
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
-plot(subset_pat_439679_alpha_prod_wide$duplicate_count.0, subset_pat_439679_alpha_prod_wide$duplicate_count.7, main = "TCR amount day 0 to day 7",
-     xlab = "TCR per million day 0", ylab = "TCR per million day 7",asp = 1,
-     xlim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), max(subset_pat_439679_alpha_prod_wide$duplicate_count.0), max(subset_pat_439679_alpha_prod_wide$duplicate_count.7))),
-     ylim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), max(subset_pat_439679_alpha_prod_wide$duplicate_count.0), max(subset_pat_439679_alpha_prod_wide$duplicate_count.7))), 
-     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0_deal_with_zeros == 1,'red','green'))
+plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.0), log(subset_pat_439679_alpha_prod_wide$duplicate_count.7), main = "log TCR amount day 0 to day 7",
+     xlab = "log(TCR per million day 0)", ylab = "log(TCR per million day 7)",asp = 1,
+     xlim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)))),
+     ylim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)))), 
+     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0_deal_with_zeros == 1,'red','blue'))
 abline(a=0,b=1)
 
 #######day 7 to day 14 significance
@@ -76,11 +76,11 @@ subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>%
   mutate(sig_day_14_from_day_7_deal_with_zeros = if_else(duplicate_count.7 == 0 & duplicate_count.14 == 1, 0, sig_day_14_from_day_7))
 
 #make graph of TCR change over time
-plot(subset_pat_439679_alpha_prod_wide$duplicate_count.7, subset_pat_439679_alpha_prod_wide$duplicate_count.14, main = "TCR amount day 7 to day 14",
-     xlab = "TCR per million day 7", ylab = "TCR per million day 14",asp = 1,
-     xlim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), max(subset_pat_439679_alpha_prod_wide$duplicate_count.14))),
-     ylim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), max(subset_pat_439679_alpha_prod_wide$duplicate_count.14))), 
-     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_14_from_day_7_deal_with_zeros == 1,'red','green'))
+plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.7), log(subset_pat_439679_alpha_prod_wide$duplicate_count.14), main = "log TCR amount day 7 to day 14",
+     xlab = "log(TCR per million day 7)", ylab = "log(TCR per million day 14)",asp = 1,
+     xlim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.14)))),
+     ylim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.14)))), 
+     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_14_from_day_7_deal_with_zeros == 1,'red','blue'))
 abline(a=0,b=1)
 
 #######day 0 to day 14 significance
@@ -94,10 +94,10 @@ subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>%
   mutate(sig_day_14_from_day_0_deal_with_zeros = if_else(duplicate_count.0 == 0 & duplicate_count.14 == 1, 0, sig_day_14_from_day_0))
 
 #make graph of TCR change over time
-plot(subset_pat_439679_alpha_prod_wide$duplicate_count.0, subset_pat_439679_alpha_prod_wide$duplicate_count.14, main = "TCR amount day 0 to day 14",
-     xlab = "TCR per million day 0", ylab = "TCR per million day 14",asp = 1,
-     xlim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), max(subset_pat_439679_alpha_prod_wide$duplicate_count.0), max(subset_pat_439679_alpha_prod_wide$duplicate_count.14))),
-     ylim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), max(subset_pat_439679_alpha_prod_wide$duplicate_count.0), max(subset_pat_439679_alpha_prod_wide$duplicate_count.14))), 
-     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_14_from_day_0_deal_with_zeros == 1,'red','green'))
+plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.0), log(subset_pat_439679_alpha_prod_wide$duplicate_count.14), main = "log TCR amount day 0 to day 14",
+     xlab = "log(TCR per million day 0)", ylab = "log(TCR per million day 14)",asp = 1,
+     xlim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.14)))),
+     ylim = c(0, if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.14)))), 
+     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_14_from_day_0_deal_with_zeros == 1,'red','blue'))
 abline(a=0,b=1)
 
