@@ -394,6 +394,18 @@ ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
 ax2.set_title('b)')
 
+"""
+############### plot the fit bigger
+plt.figure()
+plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+plt.plot(first_eff_day_vals, first_vir_vals, '-', linewidth=2, color='red')
+plt.xlim(left=-3)
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre Concentration (Log10 copies/mL)')
+plt.legend()
+"""
+
 print('virus val day minus 3: ',(-3*b)+a,'virus val day minus 2: ',(-2*b)+a,'virus val day minus 1: ',(-1*b)+a)
 
 #plot the measured data, along with the fitted model for V, I and U
@@ -430,7 +442,7 @@ print('I_area',I_area,'I_area',I_area)
 ##########################################
 #fit models to different patients
 
-#just start with trying to plot the first 2 subjects (to minimise the number of figures made)
+#only want to model the first 15 patients as these are the training dat set
 Subject_ID_vals_short = Subject_ID_vals[0:-3]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
 
@@ -581,7 +593,7 @@ for i in range (len(variances)):
 n_bins = 50
 
 plt.figure()
-plt.hist(refined_alphas, density=False, bins=n_bins,color = "skyblue")
+plt.hist(refined_alphas, density=False, bins=n_bins,color = "skyblue",label="individual patient alpha values")
 plt.ylabel('Number of patients')
 plt.xlabel('Alpha')
 plt.title('Histogram of alpha values across individual patients')
@@ -590,7 +602,7 @@ plt.title('Histogram of alpha values across individual patients')
 y, x, _ = plt.hist(refined_alphas, density=False, bins=n_bins,color = "skyblue")
 X = [overall_alpha, overall_alpha]
 Y = [0, y.max()]
-plt.plot(X,Y,color='red')
+plt.plot(X,Y,color='red',label="alpha value from model fit on average of patients")
 
 # fit a histogram to the alpha data
 
@@ -599,7 +611,7 @@ plt.plot(X,Y,color='red')
 print('alpha mu',mu_alpha,'alpha sigma',sigma_alpha)
 
 x = np.linspace(mu_alpha - 3*sigma_alpha, mu_alpha + 3*sigma_alpha, 100)
-plt.plot(x, (10**(-6))*stats.norm.pdf(x, mu_alpha, sigma_alpha))
+plt.plot(x, (10**(-6))*stats.norm.pdf(x, mu_alpha, sigma_alpha),color="black",label="gaussian of individual patient alpha values")
 
 #plot the median of the alpha values
 median_alpha = statistics.median(refined_alphas)
@@ -608,10 +620,11 @@ print('median_alpha',median_alpha)
 #plot the median alpha (across all the patients) over the top
 X = [median_alpha, median_alpha]
 Y = [0, y.max()]
-plt.plot(X,Y,color='green')
+plt.plot(X,Y,color='green',label="median alpha value from histogram")
+plt.legend()
 
 plt.figure()
-plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue")
+plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue",label="individual patient beta values")
 plt.ylabel('Number of patients')
 plt.xlabel('Beta')
 plt.title('Histogram of beta values across individual patients')
@@ -620,7 +633,7 @@ plt.title('Histogram of beta values across individual patients')
 y, x, _ = plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue")
 X = [overall_beta, overall_beta]
 Y = [0, y.max()]
-plt.plot(X,Y,color='red')
+plt.plot(X,Y,color='red',label="beta value from model fit on average of patients")
 
 # fit a histogram to the beta data
 
@@ -629,7 +642,7 @@ plt.plot(X,Y,color='red')
 print('beta mu',mu_beta,'beta sigma',sigma_beta)
 
 x = np.linspace(mu_beta - 3*sigma_beta, mu_beta + 3*sigma_beta, 100)
-plt.plot(x, (70**(1))*stats.norm.pdf(x, mu_beta, sigma_beta))
+plt.plot(x, (70**(1))*stats.norm.pdf(x, mu_beta, sigma_beta),color="black",label="gaussian of individual patient beta values")
 
 #plot the median of the beta values
 median_beta = statistics.median(refined_betas)
@@ -638,10 +651,11 @@ print('median_beta',median_beta)
 #plot the median beta (across all the patients) over the top
 X = [median_beta, median_beta]
 Y = [0, y.max()]
-plt.plot(X,Y,color='green')
+plt.plot(X,Y,color='green',label="median beta value from histogram")
+plt.legend()
 
 plt.figure()
-plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue")
+plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue",label="individual patient kappa values")
 plt.ylabel('Number of patients')
 plt.xlabel('Kappa')
 plt.title('Histogram of kappa values across individual patients')
@@ -650,7 +664,7 @@ plt.title('Histogram of kappa values across individual patients')
 y, x, _ = plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue")
 X = [overall_kappa, overall_kappa]
 Y = [0, y.max()]
-plt.plot(X,Y,color='red')
+plt.plot(X,Y,color='red',label="kappa value from model fit on average of patients")
 
 # fit a histogram to the beta data
 
@@ -659,7 +673,7 @@ plt.plot(X,Y,color='red')
 print('kappa mu',mu_kappa,'kappa sigma',sigma_kappa)
 
 x = np.linspace(mu_kappa - 3*sigma_kappa, mu_kappa + 3*sigma_kappa, 100)
-plt.plot(x, (10**(-6))*stats.norm.pdf(x, mu_kappa, sigma_kappa))
+plt.plot(x, (10**(-6))*stats.norm.pdf(x, mu_kappa, sigma_kappa),color="black",label="gaussian of individual patient kappa values")
 
 #plot the median of the alpha values
 median_kappa = statistics.median(refined_kappas)
@@ -668,7 +682,8 @@ print('median_kappa',median_kappa)
 #plot the median alpha (across all the patients) over the top
 X = [median_kappa, median_kappa]
 Y = [0, y.max()]
-plt.plot(X,Y,color='green')
+plt.plot(X,Y,color='green',label="median kappa value from histogram")
+plt.legend()
 
 ##############################
 #compute the likelihood for patient 16
@@ -696,10 +711,14 @@ log_I_fitted = np.log10(data_fitted[:, 1])
 
 #plotting the model fit (found by taking the peak of the gaussian distribution of params for all patients)
 plt.figure()
-plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data. Parameters taken from the means of the gaussians.')
 
 #plot this with the scatterplot of the mean of the data for all patients
 plt.scatter(t_measured_init[1:], log_V_measured_init[1:], marker='o', color='red', label='mean V data for all patients', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+plt.xlabel('Days Post Infection')
+plt.ylabel('Virus Titre Concentration (Log10 copies/mL)')
+plt.title('Scatterplot of average patient data with model fit from means of the gaussians')
+plt.legend()
 
 # g_Ftrue =
 # g_Ftrue_min_Dn =
