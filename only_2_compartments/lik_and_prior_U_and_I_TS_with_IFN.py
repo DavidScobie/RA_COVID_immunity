@@ -592,6 +592,9 @@ for i in range (len(variances)):
 
 n_bins = 50
 
+##############alphas
+
+#plot the histogram of data
 plt.figure()
 plt.hist(refined_alphas, density=False, bins=n_bins,color = "skyblue",label="individual patient alpha values")
 plt.ylabel('Density of patients')
@@ -600,29 +603,21 @@ plt.title('Histogram of alpha values across individual patients')
 
 #plot the overall alpha (across all the patients) over the top
 y, x, _ = plt.hist(refined_alphas, density=True, bins=n_bins,color = "skyblue")
-print('histogram values','y',y, 'x',x,'len(x)',len(x))
 X = [overall_alpha, overall_alpha]
 Y = [0, y.max()]
-#plt.figure()
 plt.plot(X,Y,color='red',label="alpha value from model fit on average of patients")
 
-# fit a histogram to the alpha data
-
-# best fit of data
-print('refined_alphas',refined_alphas)
-print('lognorm fit of alpha',lognorm.fit(refined_alphas))
-#(mu_alpha, sigma_alpha) = norm.fit(refined_alphas)
+# fit a lognormal distribution to the data
 s, loc, scale = lognorm.fit(refined_alphas)
+print('s',s,'loc',loc,'scale',scale)
 mu_alpha = loc
 sigma_alpha = scale
-print('alpha mu',mu_alpha,'alpha sigma',sigma_alpha)
-print('stats.lognorm.pdf(x, s, loc, scale)',stats.lognorm.pdf(x, s, loc, scale),'len(stats.lognorm.pdf(x, s, loc, scale))',len(stats.lognorm.pdf(x, s, loc, scale)))
+print('mu_alpha',mu_alpha,'sigma_alpha',sigma_alpha)
 
-x = np.linspace(mu_alpha - 3*sigma_alpha, mu_alpha + 3*sigma_alpha, 100)
-plt.plot(x, stats.lognorm.pdf(x, s, loc, scale),color="black",label="log normal of individual patient alpha values")
-
-plt.figure()
-plt.plot(x, stats.lognorm.pdf(x, s, loc, scale),color="black",label="log normal of individual patient alpha values",marker='x')
+#plot this lognormal distribution over the range of values I require
+x=np.linspace(0,np.amax(refined_alphas),10000)
+solu=lognorm.pdf(x, s, loc, scale)
+plt.plot(x, solu,color="black",label="log normal of individual patient alpha values")
 
 #plot the median of the alpha values
 median_alpha = statistics.median(refined_alphas)
@@ -634,16 +629,14 @@ Y = [0, y.max()]
 plt.plot(X,Y,color='green',label="median alpha value from histogram")
 plt.legend()
 
-plt.figure()
-MEAN = mu_alpha
-rv = lognorm(MEAN)
-plt.plot(x, rv.pdf(x), 'k-', lw=2, label='frozen pdf')
-#https://python-forum.io/thread-10414.html
-#https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.lognorm.html
+#plot with labels on the points
+fig, ax = plt.subplots()
+ax.scatter(x,solu)
+for i, txt in enumerate(x):
+    ax.annotate(txt, (x[i], solu[i]))
+#print('x',x,'len(x)',len(x),'solu',solu,'len(solu)',len(solu))
 
-
-
-"""
+###########betas
 plt.figure()
 plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue",label="individual patient beta values")
 plt.ylabel('Number of patients')
@@ -651,7 +644,7 @@ plt.xlabel('Beta')
 plt.title('Histogram of beta values across individual patients')
 
 #plot the overall beta (across all the patients) over the top
-y, x, _ = plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue")
+y, x, _ = plt.hist(refined_betas, density=True, bins=n_bins,color = "skyblue")
 X = [overall_beta, overall_beta]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red',label="beta value from model fit on average of patients")
@@ -659,11 +652,12 @@ plt.plot(X,Y,color='red',label="beta value from model fit on average of patients
 # fit a histogram to the beta data
 
 # best fit of data
-(mu_beta, sigma_beta) = norm.fit(refined_betas)
-print('beta mu',mu_beta,'beta sigma',sigma_beta)
+s, loc, scale = lognorm.fit(refined_betas)
+mu_beta = loc
+sigma_beta = scale
 
-x = np.linspace(mu_beta - 3*sigma_beta, mu_beta + 3*sigma_beta, 100)
-plt.plot(x, (70**(1))*stats.norm.pdf(x, mu_beta, sigma_beta),color="black",label="gaussian of individual patient beta values")
+x=np.linspace(0,np.amax(refined_betas),200)
+plt.plot(x, 4*stats.lognorm.pdf(x, s, loc, scale),color="black",label="log normal of individual patient beta values")
 
 #plot the median of the beta values
 median_beta = statistics.median(refined_betas)
@@ -675,6 +669,7 @@ Y = [0, y.max()]
 plt.plot(X,Y,color='green',label="median beta value from histogram")
 plt.legend()
 
+############kappas
 plt.figure()
 plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue",label="individual patient kappa values")
 plt.ylabel('Number of patients')
@@ -682,7 +677,7 @@ plt.xlabel('Kappa')
 plt.title('Histogram of kappa values across individual patients')
 
 #plot the overall kappa (across all the patients) over the top
-y, x, _ = plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue")
+y, x, _ = plt.hist(refined_kappas, density=True, bins=n_bins,color = "skyblue")
 X = [overall_kappa, overall_kappa]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red',label="kappa value from model fit on average of patients")
@@ -690,11 +685,12 @@ plt.plot(X,Y,color='red',label="kappa value from model fit on average of patient
 # fit a histogram to the beta data
 
 # best fit of data
-(mu_kappa, sigma_kappa) = norm.fit(refined_kappas)
-print('kappa mu',mu_kappa,'kappa sigma',sigma_kappa)
+s, loc, scale = lognorm.fit(refined_kappas)
+mu_kappa = loc
+sigma_kappa = scale
 
-x = np.linspace(mu_kappa - 3*sigma_kappa, mu_kappa + 3*sigma_kappa, 100)
-plt.plot(x, (10**(-6))*stats.norm.pdf(x, mu_kappa, sigma_kappa),color="black",label="gaussian of individual patient kappa values")
+x=np.linspace(0,np.amax(refined_kappas),200)
+plt.plot(x, 10**(1)*stats.lognorm.pdf(x, s, loc, scale),color="black",label="log normal of individual patient kappa values")
 
 #plot the median of the alpha values
 median_kappa = statistics.median(refined_kappas)
@@ -744,6 +740,6 @@ plt.legend()
 # g_Ftrue =
 # g_Ftrue_min_Dn =
 # L = -0.5*()
-"""
+
 plt.show()
 
