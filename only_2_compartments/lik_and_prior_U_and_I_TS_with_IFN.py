@@ -313,8 +313,9 @@ y0_init = [U0, I0]
 
 # measured data
 t_measured = eff_day_vals
-t_measured_init = t_measured
+t_measured_init = t_measured #this is the timepoints for the average of the data across all patients
 V_measured = act_div_vir_list_sum
+V_measured_init = V_measured
 
 print('t_measured',t_measured,'V_measured',V_measured)
 
@@ -725,14 +726,14 @@ params.add('kappa', value=mu_kappa, min=mu_kappa - 10**(-11), max=mu_kappa + 10*
 # params.add('kappa', value=median_kappa, min=median_kappa - 10**(-11), max=median_kappa + 10**(-11))
 """
 # fit model
-result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # we put in the mean over all patients time and V_measured vals
 report_fit(result)
-data_fitted = g(t_measured, y0_init, result.params)
+data_fitted = g(t_measured_init, y0_init, result.params)
 gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
 #plotting the model fit (found by taking the peak of the gaussian distribution of params for all patients)
 plt.figure()
-plt.plot(t_measured, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data. Parameters taken from the means of the lognormal distributions.')
+plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data. Parameters taken from the means of the lognormal distributions.')
 
 #plot this with the scatterplot of the mean of the data for all patients
 plt.scatter(t_measured_init[1:], log_V_measured_init[1:], marker='o', color='red', label='mean V data for all patients', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
@@ -749,7 +750,7 @@ sn = 1 #for now. Compute better estimate later
 ######
 #fit models to validation set of patients
 
-#only want to model the first 15 patients as these are the training data set
+##only want to model the first 15 patients as these are the training data set
 Subject_ID_vals_short = Subject_ID_vals[-3:]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
 
@@ -875,14 +876,37 @@ for j in Subject_ID_vals_short:
 
         #######compute first term of loss function
 
-        print('subject ID',j,'time points',t_measured[1:],'len(time points)',len(t_measured[1:]),'len(gn_Ftrue_log_I_fitted)',len(gn_Ftrue_log_I_fitted))
+        print('subject ID',j,'t_measured[1:]',t_measured[1:],'len(t_measured[1:])',len(t_measured[1:]),'log_V_measured[1:]',log_V_measured[1:],'len(log_V_measured[1:])',len(log_V_measured[1:]))
+        print('time points average over everyone',t_measured_init,'length',len(t_measured_init),'len(gn_Ftrue_log_I_fitted)',len(gn_Ftrue_log_I_fitted))
 
-        #find whether GnFtrue or the array of points for that patient is bigger
-        if len(gn_Ftrue_log_I_fitted) > len(log_V_measured[1:]):
-            n_dat_points = len(log_V_measured[1:])
+        # #find whether array of timepoints for all patients or array of points for that patient is bigger
+        # if len(t_measured_init) > len(log_V_measured[1:]):
+        #     n_dat_points = len(log_V_measured[1:])
 
-        # for i in range (n_dat_points): #length of GnFtrue
-        #     #take GnFtrue away from patient 16 data
+        indices = np.where(np.in1d(t_measured_init, t_measured[1:]))[0]
+        print('indices',indices)
+
+        #find differences between the gnFtrue virus amount and the virus amount for this patient
+        diff = []
+        for k in range (len(t_measured_init)):
+            for m in range (len(t_measured[1:])):
+                if t_measured[1:][m] == t_measured_init[k]:
+                    diff.append(log_V_measured[1:][m] - gn_Ftrue_log_I_fitted[k])
+        print('diff',diff)
+
+        #plot line plot of gnFtrue against t_measured_init in blue, and scatterplot of log_V_measured[1:] against t_measured[1:] in red, title of patient ID
+        plt.figure()
+        plt.title('Subject ID=%i' %j)
+        plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='patient V data', s=75)
+        plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='blue', label='Gn_Ftrue')
+        plt.legend()
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Concentration (Log10 copies/mL)')
+
+        #get the same time points for GnFtrue and
+
+        #for i in range (n_dat_points): #length of GnFtrue
+            #take GnFtrue away from patient 16 data
 
 # g_Ftrue =
 # g_Ftrue_min_Dn =
