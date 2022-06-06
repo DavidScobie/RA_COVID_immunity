@@ -609,13 +609,13 @@ plt.plot(X,Y,color='red',label="alpha value from model fit on average of patient
 
 # fit a lognormal distribution to the data
 s, loc, scale = lognorm.fit(refined_alphas)
-print('s',s,'loc',loc,'scale',scale)
+print('alpha s',s,'loc',loc,'scale',scale)
 mu_alpha = loc
 sigma_alpha = scale
 print('mu_alpha',mu_alpha,'sigma_alpha',sigma_alpha)
 
 #plot this lognormal distribution over the range of values I require
-x=np.linspace(0,np.amax(refined_alphas),10000)
+x=np.linspace(0,np.amax(refined_alphas),500)
 solu=lognorm.pdf(x, s, loc, scale)
 plt.plot(x, solu,color="black",label="log normal of individual patient alpha values")
 
@@ -653,11 +653,13 @@ plt.plot(X,Y,color='red',label="beta value from model fit on average of patients
 
 # best fit of data
 s, loc, scale = lognorm.fit(refined_betas)
+print('beta s',s,'loc',loc,'scale',scale)
 mu_beta = loc
 sigma_beta = scale
 
-x=np.linspace(0,np.amax(refined_betas),200)
-plt.plot(x, 4*stats.lognorm.pdf(x, s, loc, scale),color="black",label="log normal of individual patient beta values")
+x=np.linspace(0,np.amax(refined_betas),500)
+solu=lognorm.pdf(x, s, loc, scale)
+plt.plot(x, 4*solu,color="black",label="log normal of individual patient beta values")
 
 #plot the median of the beta values
 median_beta = statistics.median(refined_betas)
@@ -682,15 +684,17 @@ X = [overall_kappa, overall_kappa]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red',label="kappa value from model fit on average of patients")
 
-# fit a histogram to the beta data
+# fit a histogram to the kappa data
 
 # best fit of data
 s, loc, scale = lognorm.fit(refined_kappas)
+print('kappa s',s,'loc',loc,'scale',scale)
 mu_kappa = loc
 sigma_kappa = scale
 
-x=np.linspace(0,np.amax(refined_kappas),200)
-plt.plot(x, 10**(1)*stats.lognorm.pdf(x, s, loc, scale),color="black",label="log normal of individual patient kappa values")
+x=np.linspace(0,np.amax(refined_kappas),500)
+solu=lognorm.pdf(x, s, loc, scale)
+plt.plot(x, 10**(1)*solu,color="black",label="log normal of individual patient kappa values")
 
 #plot the median of the alpha values
 median_kappa = statistics.median(refined_kappas)
@@ -703,7 +707,7 @@ plt.plot(X,Y,color='green',label="median kappa value from histogram")
 plt.legend()
 
 ##############################
-#compute the likelihood for patient 16
+#Compare gn(Ftrue) to the mean of all the patients
 
 #firstly have at the optimal model
 params = Parameters()
@@ -724,18 +728,161 @@ params.add('kappa', value=mu_kappa, min=mu_kappa - 10**(-11), max=mu_kappa + 10*
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
 report_fit(result)
 data_fitted = g(t_measured, y0_init, result.params)
-log_I_fitted = np.log10(data_fitted[:, 1])
+gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
 #plotting the model fit (found by taking the peak of the gaussian distribution of params for all patients)
 plt.figure()
-plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data. Parameters taken from the means of the gaussians.')
+plt.plot(t_measured, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='blue', label='fitted I data. Parameters taken from the means of the lognormal distributions.')
 
 #plot this with the scatterplot of the mean of the data for all patients
 plt.scatter(t_measured_init[1:], log_V_measured_init[1:], marker='o', color='red', label='mean V data for all patients', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre Concentration (Log10 copies/mL)')
-plt.title('Scatterplot of average patient data with model fit from means of the gaussians')
+plt.title('Scatterplot of average patient data with model fit from means of the lognormal distributions')
 plt.legend()
+
+###################################
+#compute the likelihood for patient 16
+
+sn = 1 #for now. Compute better estimate later
+
+######
+#fit models to validation set of patients
+
+#only want to model the first 15 patients as these are the training data set
+Subject_ID_vals_short = Subject_ID_vals[-3:]
+print('Subject_ID_vals_short',Subject_ID_vals_short)
+
+#initialise arrays of patient parameters
+alphas=[]
+betas=[]
+kappas = []
+red_chi_squs = []
+residuals = []
+sum_residuals_squs = []
+chi_squs = []
+ndatas = []
+variances = []
+subj_IDs_over_5=[]
+
+for j in Subject_ID_vals_short:
+
+    df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
+    df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
+
+    #only use the subjects with more than 5 data points
+    #if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5 and j != 635331 and j != 673353 and j != 647785 and j != 634105 and j != 666427:  #excluding the challenging patients
+    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5:
+        k+=1
+        #convert the virus and the effective day values to a list
+        div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
+        eff_day_list = df2_Subj_ID_sub_eff_sort['effective_day'].tolist()
+
+        #print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
+
+        print('SUBJECT ID ',j)
+
+        #compute the actual virus amount (not the log)
+        act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
+        for i in range (len(div_vir_list_sum)):
+            act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
+
+        #print('initial V value',act_div_vir_list_sum[0])
+
+        #extrapolation to find first data point
+        # Get the indices of maximum element in eff_day_vals
+        max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
+        max_indic = int(max_indic_arr[0])
+
+        a, b = best_fit(eff_day_list[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
+
+        #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
+        v1 = 0
+        v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
+        eff_day_list = np.insert(eff_day_list, 0, v1, axis=0)
+        act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
+
+        #my optimised initial conditions
+        U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
+        #Is0 = act_div_vir_list_sum[0] / 2
+        I0 = act_div_vir_list_sum[0]
+        #Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
+        y0 = [U0, I0]
+
+        # measured data
+        t_measured = eff_day_list
+        V_measured = act_div_vir_list_sum
+
+        # plt.figure()
+        # plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
+
+        # set parameters including bounds; you can also fix parameters (use vary=False)
+        params = Parameters()
+        params.add('U0', value=U0, vary=False)
+        params.add('I0', value=I0, vary=False)
+
+        #my optimised parameters - optimised with low kappa
+        params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
+        params.add('beta', value=1.2*(10**(0)), min=0, max=1.1*(10**(2)))
+        params.add('kappa', value=2.1*(10**-11), min=1*(10**-11), max=3*(10**-7))
+
+        # fit model
+        result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
+        # check results of the fit
+        data_fitted = g(t_measured, y0, result.params)
+
+        #plot absolute values
+        # plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
+        # plt.legend()
+        # plt.xlim([0, max(t_measured)])
+        # plt.ylim([0, 1.1 * max(V_measured)])
+        # plt.xlabel('Days Post Infection')
+        # plt.ylabel('Virus Titre (Log10 copies/mL)')
+        # plt.title('Subject ID=%i' %j)
+
+        # display fitted statistics and append parameters to lists
+        subj_IDs_over_5.append(j)
+        report_fit(result)
+        #print('result params',result.params)
+        for name, param in result.params.items():
+            #print(f'{name:7s} {param.value:11.5f} {param.stderr:11.5f}')
+            if name == 'alpha':
+                alphas.append(param.value)
+            if name == 'beta':
+                betas.append(param.value)
+            if name == 'kappa':
+                kappas.append(param.value)
+
+        red_chi_squs.append(result.redchi)
+        residuals.append(result.residual)
+        sum_residuals_squs.append(sum(((result.residual)**2)))
+        chi_squs.append(result.chisqr)
+        ndatas.append(result.ndata)
+
+        #plot the fitted data and the model for log(virus) against day
+        log_V_measured = np.log10(V_measured)
+        log_I_fitted = np.log10(data_fitted[:, 1])
+
+        plt.figure()
+        plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+        plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+        #plt.ylim(bottom=0.9 * min(log_V_measured))
+        #plt.xlim(left=0)
+        plt.legend()
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Concentration (Log10 copies/mL)')
+        plt.title('Subject ID=%i' %j)
+
+        #######compute first term of loss function
+
+        print('subject ID',j,'time points',t_measured[1:],'len(time points)',len(t_measured[1:]),'len(gn_Ftrue_log_I_fitted)',len(gn_Ftrue_log_I_fitted))
+
+        #find whether GnFtrue or the array of points for that patient is bigger
+        if len(gn_Ftrue_log_I_fitted) > len(log_V_measured[1:]):
+            n_dat_points = len(log_V_measured[1:])
+
+        # for i in range (n_dat_points): #length of GnFtrue
+        #     #take GnFtrue away from patient 16 data
 
 # g_Ftrue =
 # g_Ftrue_min_Dn =
