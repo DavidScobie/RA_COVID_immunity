@@ -610,10 +610,9 @@ plt.plot(X,Y,color='red',label="alpha value from model fit on average of patient
 
 # fit a lognormal distribution to the data
 s, loc, scale = lognorm.fit(refined_alphas)
-print('alpha s',s,'loc',loc,'scale',scale)
 mu_alpha = loc
-sigma_alpha = scale
-print('mu_alpha',mu_alpha,'sigma_alpha',sigma_alpha)
+sigma_alpha = lognorm.std(s, loc=loc, scale=scale)
+print('alpha s',s,'loc',loc,'scale',scale,'sigma_alpha',sigma_alpha)
 
 #plot this lognormal distribution over the range of values I require
 x=np.linspace(0,np.amax(refined_alphas),500)
@@ -654,9 +653,9 @@ plt.plot(X,Y,color='red',label="beta value from model fit on average of patients
 
 # best fit of data
 s, loc, scale = lognorm.fit(refined_betas)
-print('beta s',s,'loc',loc,'scale',scale)
 mu_beta = loc
-sigma_beta = scale
+sigma_beta = lognorm.std(s, loc=loc, scale=scale)
+print('beta s',s,'loc',loc,'scale',scale,'sigma_beta',sigma_beta)
 
 x=np.linspace(0,np.amax(refined_betas),500)
 solu=lognorm.pdf(x, s, loc, scale)
@@ -689,9 +688,9 @@ plt.plot(X,Y,color='red',label="kappa value from model fit on average of patient
 
 # best fit of data
 s, loc, scale = lognorm.fit(refined_kappas)
-print('kappa s',s,'loc',loc,'scale',scale)
 mu_kappa = loc
-sigma_kappa = scale
+sigma_kappa = lognorm.std(s, loc=loc, scale=scale)
+print('kappa s',s,'loc',loc,'scale',scale,'sigma_kappa',sigma_kappa)
 
 x=np.linspace(0,np.amax(refined_kappas),500)
 solu=lognorm.pdf(x, s, loc, scale)
@@ -743,7 +742,7 @@ plt.title('Scatterplot of average patient data with model fit from means of the 
 plt.legend()
 
 ###################################
-#compute the likelihood for patient 16
+#compute the posterior for validation patients
 
 sn = 1 #for now. Compute better estimate later
 
@@ -754,17 +753,7 @@ sn = 1 #for now. Compute better estimate later
 Subject_ID_vals_short = Subject_ID_vals[-3:]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
 
-#initialise arrays of patient parameters
-alphas=[]
-betas=[]
-kappas = []
-red_chi_squs = []
-residuals = []
-sum_residuals_squs = []
-chi_squs = []
-ndatas = []
-variances = []
-subj_IDs_over_5=[]
+posteriors =[]
 
 for j in Subject_ID_vals_short:
 
@@ -803,85 +792,17 @@ for j in Subject_ID_vals_short:
         eff_day_list = np.insert(eff_day_list, 0, v1, axis=0)
         act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
 
-        #my optimised initial conditions
-        U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-        #Is0 = act_div_vir_list_sum[0] / 2
-        I0 = act_div_vir_list_sum[0]
-        #Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
-        y0 = [U0, I0]
-
         # measured data
         t_measured = eff_day_list
         V_measured = act_div_vir_list_sum
 
-        # plt.figure()
-        # plt.scatter(t_measured, V_measured, marker='o', color='red', label='measured V data', s=75)
-
-        # set parameters including bounds; you can also fix parameters (use vary=False)
-        params = Parameters()
-        params.add('U0', value=U0, vary=False)
-        params.add('I0', value=I0, vary=False)
-
-        #my optimised parameters - optimised with low kappa
-        params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
-        params.add('beta', value=1.2*(10**(0)), min=0, max=1.1*(10**(2)))
-        params.add('kappa', value=2.1*(10**-11), min=1*(10**-11), max=3*(10**-7))
-
-        # fit model
-        result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
-        # check results of the fit
-        data_fitted = g(t_measured, y0, result.params)
-
-        #plot absolute values
-        # plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
-        # plt.legend()
-        # plt.xlim([0, max(t_measured)])
-        # plt.ylim([0, 1.1 * max(V_measured)])
-        # plt.xlabel('Days Post Infection')
-        # plt.ylabel('Virus Titre (Log10 copies/mL)')
-        # plt.title('Subject ID=%i' %j)
-
-        # display fitted statistics and append parameters to lists
-        subj_IDs_over_5.append(j)
-        report_fit(result)
-        #print('result params',result.params)
-        for name, param in result.params.items():
-            #print(f'{name:7s} {param.value:11.5f} {param.stderr:11.5f}')
-            if name == 'alpha':
-                alphas.append(param.value)
-            if name == 'beta':
-                betas.append(param.value)
-            if name == 'kappa':
-                kappas.append(param.value)
-
-        red_chi_squs.append(result.redchi)
-        residuals.append(result.residual)
-        sum_residuals_squs.append(sum(((result.residual)**2)))
-        chi_squs.append(result.chisqr)
-        ndatas.append(result.ndata)
-
         #plot the fitted data and the model for log(virus) against day
         log_V_measured = np.log10(V_measured)
-        log_I_fitted = np.log10(data_fitted[:, 1])
-
-        plt.figure()
-        plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-        plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-        #plt.ylim(bottom=0.9 * min(log_V_measured))
-        #plt.xlim(left=0)
-        plt.legend()
-        plt.xlabel('Days Post Infection')
-        plt.ylabel('Concentration (Log10 copies/mL)')
-        plt.title('Subject ID=%i' %j)
 
         #######compute first term of loss function
 
         print('subject ID',j,'t_measured[1:]',t_measured[1:],'len(t_measured[1:])',len(t_measured[1:]),'log_V_measured[1:]',log_V_measured[1:],'len(log_V_measured[1:])',len(log_V_measured[1:]))
         print('time points average over everyone',t_measured_init,'length',len(t_measured_init),'len(gn_Ftrue_log_I_fitted)',len(gn_Ftrue_log_I_fitted))
-
-        # #find whether array of timepoints for all patients or array of points for that patient is bigger
-        # if len(t_measured_init) > len(log_V_measured[1:]):
-        #     n_dat_points = len(log_V_measured[1:])
 
         indices = np.where(np.in1d(t_measured_init, t_measured[1:]))[0]
         print('indices',indices)
@@ -903,14 +824,37 @@ for j in Subject_ID_vals_short:
         plt.xlabel('Days Post Infection')
         plt.ylabel('Concentration (Log10 copies/mL)')
 
-        #get the same time points for GnFtrue and
+        ####################compute the likelihood term
+        lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
+        print('lik_term',lik_term)
 
-        #for i in range (n_dat_points): #length of GnFtrue
-            #take GnFtrue away from patient 16 data
+        ##################compute the prior term
+        alpha_first_bit = 1/(((2*np.pi)**0.5)*(sigma_alpha**2))
+        alpha_exponent = -((mu_alpha - overall_alpha)**2)/(2*(sigma_alpha**2))
+        alpha_second_bit = np.exp(alpha_exponent)
+        alpha_term = alpha_first_bit * alpha_second_bit
 
-# g_Ftrue =
-# g_Ftrue_min_Dn =
-# L = -0.5*()
+        beta_first_bit = 1/(((2*np.pi)**0.5)*(sigma_beta**2))
+        beta_exponent = -((mu_beta - overall_beta)**2)/(2*(sigma_beta**2))
+        beta_second_bit = np.exp(beta_exponent)
+        beta_term = beta_first_bit * beta_second_bit
+
+        kappa_first_bit = 1/(((2*np.pi)**0.5)*(sigma_kappa**2))
+        kappa_exponent = -((mu_kappa - overall_kappa)**2)/(2*(sigma_kappa**2))
+        kappa_second_bit = np.exp(kappa_exponent)
+        kappa_term = kappa_first_bit * kappa_second_bit
+
+        prior = np.log(alpha_term * beta_term * kappa_term)
+        print('prior',prior)
+
+        ####################compute the posterior
+        posterior = lik_term + prior
+        posteriors.append(posterior)
+        print('posterior',posterior)
+
+print('posteriors',posteriors)
+avg_posterior = np.sum(posteriors)/len(posteriors)
+print('avg_posterior',avg_posterior)
 
 plt.show()
 
