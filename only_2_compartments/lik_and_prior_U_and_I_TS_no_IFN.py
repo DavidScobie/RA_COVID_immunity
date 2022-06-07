@@ -179,18 +179,17 @@ def f(y, t, paras):
     U = y[0]
     I = y[1]
 
-    #the parameters alpha, beta, kappa
+    #the parameters alpha, beta
     try:
         alpha = paras['alpha'].value
         beta = paras['beta'].value
-        kappa = paras['kappa'].value
 
     except KeyError:
-        alpha, beta, kappa = paras
+        alpha, beta = paras
 
     # the model equations
-    f0 = - (alpha * U * I) / (1 + (kappa*I))   #dU/dt
-    f1 = ((alpha * U * I) / (1 + (kappa*I))) - (beta * I)    #dI/dt
+    f0 = - alpha * U * I   #dU/dt
+    f1 = (alpha * U * I) - (beta * I)    #dI/dt
     return [f0, f1]
 
 def g(t, x0, paras):
@@ -286,9 +285,8 @@ params.add('U0', value=U0, vary=False)
 params.add('I0', value=I0, vary=False)
 
 #my optimised parameters
-params.add('alpha', value=4.3*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=11.4*(10**(0)), min=0, max=1.1*(10**(2)))
-params.add('kappa', value=5.4*(10**-8), min=1*(10**-11), max=3*(10**-7))
+params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
+params.add('beta', value=1.2*(10**(0)), min=0, max=1.1*(10**(2)))
 
 # fit model
 result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -308,14 +306,11 @@ report_fit(result)
 #collect the parameters from the overall model
 overall_alpha=[]
 overall_beta=[]
-overall_kappa=[]
 for name, param in result.params.items():
     if name == 'alpha':
         overall_alpha.append(param.value)
     if name == 'beta':
         overall_beta.append(param.value)
-    if name == 'kappa':
-        overall_kappa.append(param.value)
 
 #compute the variance
 overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
@@ -384,7 +379,6 @@ print('Subject_ID_vals_short',Subject_ID_vals_short)
 #initialise arrays of patient parameters
 alphas=[]
 betas=[]
-kappas = []
 red_chi_squs = []
 residuals = []
 sum_residuals_squs = []
@@ -440,10 +434,9 @@ for j in Subject_ID_vals_short:
         params.add('U0', value=U0, vary=False)
         params.add('I0', value=I0, vary=False)
 
-        #my optimised parameters - optimised with low kappa
+        #my optimised parameters
         params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
         params.add('beta', value=1.2*(10**(0)), min=0, max=1.1*(10**(2)))
-        params.add('kappa', value=2.1*(10**-11), min=1*(10**-11), max=3*(10**-7))
 
         # fit model
         result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -467,8 +460,6 @@ for j in Subject_ID_vals_short:
                 alphas.append(param.value)
             if name == 'beta':
                 betas.append(param.value)
-            if name == 'kappa':
-                kappas.append(param.value)
 
         red_chi_squs.append(result.redchi)
         residuals.append(result.residual)
@@ -494,7 +485,6 @@ for j in Subject_ID_vals_short:
 
 print('alphas',alphas)
 print('betas',betas)
-print('kappas',kappas)
 #print('residuals',residuals)
 print('sum_residuals_squs',sum_residuals_squs)
 print('ndatas',ndatas)
@@ -505,13 +495,11 @@ print('average variance',sum(variances)/len(variances))
 #only include patients who have variance less than a value
 refined_alphas = []
 refined_betas = []
-refined_kappas = []
 
 for i in range (len(variances)):
     if variances[i]<=100: #the value here is the cut off for the variance
         refined_alphas.append(alphas[i])
         refined_betas.append(betas[i])
-        refined_kappas.append(kappas[i])
 
 ########################### plot histograms of alpha, beta and kappa
 
@@ -591,39 +579,6 @@ Y = [0, y.max()]
 plt.plot(X,Y,color='green',label="median beta value from histogram")
 plt.legend()
 
-############kappas
-plt.figure()
-plt.hist(refined_kappas, density=False, bins=n_bins,color = "skyblue",label="individual patient kappa values")
-plt.ylabel('Number of patients')
-plt.xlabel('Kappa')
-plt.title('Histogram of kappa values across individual patients')
-
-#plot the overall kappa (across all the patients) over the top
-y, x, _ = plt.hist(refined_kappas, density=True, bins=n_bins,color = "skyblue")
-X = [overall_kappa, overall_kappa]
-Y = [0, y.max()]
-plt.plot(X,Y,color='red',label="kappa value from model fit on average of patients")
-
-# fit a histogram to the kappa data
-
-# best fit of data
-s, loc, scale = lognorm.fit(refined_kappas)
-mu_kappa = loc
-sigma_kappa = lognorm.std(s, loc=loc, scale=scale)
-print('kappa s',s,'loc',loc,'scale',scale,'sigma_kappa',sigma_kappa)
-
-x=np.linspace(0,np.amax(refined_kappas),500)
-solu=lognorm.pdf(x, s, loc, scale)
-plt.plot(x, 1**(1)*solu,color="black",label="log normal of individual patient kappa values")
-
-#plot the median of the alpha values over the top
-median_kappa = statistics.median(refined_kappas)
-print('median_kappa',median_kappa)
-X = [median_kappa, median_kappa]
-Y = [0, y.max()]
-plt.plot(X,Y,color='green',label="median kappa value from histogram")
-plt.legend()
-
 ##############################
 #Compare gn(Ftrue) to the plot of the average over all patients
 
@@ -635,7 +590,6 @@ params.add('I0', value=I0, vary=False)
 #use the mean values
 params.add('alpha', value=mu_alpha, min=mu_alpha - 10**(-11), max=mu_alpha + 10**(-11))   #rate that viral particles infect susceptible cells
 params.add('beta', value=mu_beta, min=mu_beta - 10**(-11), max=mu_beta + 10**(-11))
-params.add('kappa', value=mu_kappa, min=mu_kappa - 10**(-11), max=mu_kappa + 10**(-11))
 """
 # #use the median values
 # params.add('alpha', value=median_alpha, min=median_alpha - 10**(-11), max=median_alpha + 10**(-11))   #rate that viral particles infect susceptible cells
@@ -736,12 +690,7 @@ for j in Subject_ID_vals_short:
         beta_second_bit = np.exp(beta_exponent)
         beta_term = beta_first_bit * beta_second_bit
 
-        kappa_first_bit = 1/(((2*np.pi)**0.5)*(sigma_kappa**2))
-        kappa_exponent = -((mu_kappa - overall_kappa)**2)/(2*(sigma_kappa**2))
-        kappa_second_bit = np.exp(kappa_exponent)
-        kappa_term = kappa_first_bit * kappa_second_bit
-
-        prior = np.log(alpha_term * beta_term * kappa_term)
+        prior = np.log(alpha_term * beta_term)
         print('prior',prior)
 
         ####################compute the posterior
