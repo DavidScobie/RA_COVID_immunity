@@ -691,18 +691,6 @@ for j in Subject_ID_vals_short:
         for i in range (len(div_vir_list_sum)):
             act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-        ######extrapolation to find first data point
-        max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))  # Get the indices of maximum element in eff_day_vals
-        max_indic = int(max_indic_arr[0])
-
-        a, b = best_fit(eff_day_list[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
-
-        #add the point at time=0, virus=10**a to the eff_day_vals and act_div_vir_list_sum arrays
-        v1 = 0
-        v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
-        eff_day_list = np.insert(eff_day_list, 0, v1, axis=0)
-        act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
-
         # measured data
         t_measured = eff_day_list
         V_measured = act_div_vir_list_sum
@@ -710,24 +698,24 @@ for j in Subject_ID_vals_short:
 
         #######compute first term of loss function
 
-        print('subject ID',j,'t_measured[1:]',t_measured[1:],'len(t_measured[1:])',len(t_measured[1:]),'log_V_measured[1:]',log_V_measured[1:],'len(log_V_measured[1:])',len(log_V_measured[1:]))
+        print('subject ID',j,'t_measured',t_measured,'len(t_measured)',len(t_measured),'log_V_measured',log_V_measured,'len(log_V_measured)',len(log_V_measured))
         print('time points average over everyone',t_measured_init,'length',len(t_measured_init),'len(gn_Ftrue_log_I_fitted)',len(gn_Ftrue_log_I_fitted))
 
-        indices = np.where(np.in1d(t_measured_init, t_measured[1:]))[0]
+        indices = np.where(np.in1d(t_measured_init, t_measured))[0]
         print('indices',indices)
 
         #find differences between the gnFtrue virus amount and the virus amount for this patient
         diff = []
         for k in range (len(t_measured_init)):
-            for m in range (len(t_measured[1:])):
-                if t_measured[1:][m] == t_measured_init[k]:
-                    diff.append(log_V_measured[1:][m] - gn_Ftrue_log_I_fitted[k])
+            for m in range (len(t_measured)):
+                if t_measured[m] == t_measured_init[k]:
+                    diff.append(log_V_measured[m] - gn_Ftrue_log_I_fitted[k])
         print('diff',diff)
 
-        #plot line plot of gnFtrue against t_measured_init in blue, and scatterplot of log_V_measured[1:] against t_measured[1:] in red, title of patient ID
+        #plot line plot of gnFtrue against t_measured_init in blue, and scatterplot of log_V_measured against t_measured in red, title of patient ID
         plt.figure()
         plt.title('Subject ID=%i' %j)
-        plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='patient V data', s=75)
+        plt.scatter(t_measured, log_V_measured, marker='o', color='red', label='patient V data', s=75)
         plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='blue', label='Gn_Ftrue')
         plt.legend()
         plt.xlabel('Days Post Infection')
