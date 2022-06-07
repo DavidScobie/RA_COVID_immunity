@@ -28,7 +28,6 @@ df2['Virus Titre (Log10 copies/mL)'] = df2['Virus Titre (Log10 copies/mL)'].asty
 # drop all rows with any 'N/A' and 'N/A ' values in the viral load
 df2 = df2[df2['Virus Titre (Log10 copies/mL)'].str.contains("N/A") == False]
 df2 = df2[df2['Virus Titre (Log10 copies/mL)'].str.contains("N/A ") == False]
-#vir_list_Non_NA = df2['Virus Titre (Log10 copies/mL)'].tolist()
 
 #sort the string type dataframe by length
 s=df2['Virus Titre (Log10 copies/mL)'].str.len().sort_values().index
@@ -45,10 +44,8 @@ m=0 #counter for the subjects who have less than 15 NON DETs
 Subject_ID_vals_short = Subject_ID_vals[0:3]   #just plotting the first patients as a check up
 for j in Subject_ID_vals:
 
-    #print('j',str(j))
     k+=1
     df2_Subj_ID_sorted = df2_str_sorted.loc[df2_str_sorted['Subject ID'] == j] #make a subset of the dataframe based on the subject ID
-    #print('df2_Subj_ID_sorted',df2_Subj_ID_sorted)
 
     #get rid of the DETECTED
     df2_Subj_ID_sorted = df2_Subj_ID_sorted.assign(length = df2_Subj_ID_sorted['Virus Titre (Log10 copies/mL)'].str.len())
@@ -65,13 +62,9 @@ for j in Subject_ID_vals:
 
     df2_Subj_ID_sorted_comb = pd.concat([df2_Subj_ID_sorted_just_nums, df2_Subj_ID_sorted_NON_DET], axis=0) #combine the virus numbers and the NON DET zeros into datframe
 
-    print('Subject ID',j,'number of NON DETs',number_NON_DETs,'num time points',df2_Subj_ID_sorted_comb.shape[0])
-
     #if number of NON DETs less than 15, then cut this out from the bunch
     if number_NON_DETs < 15: #the case where I want to keep the data
-        print('LESS THAN 15 NON DETs')
         m+=1
-        #print('m',m)
         if m == 1: #the first time through this loop we just create the dataframe
             print('THE BEGINNING')
             df2_cut_out_many = df2_Subj_ID_sorted_comb
@@ -81,22 +74,15 @@ for j in Subject_ID_vals:
     else:
         print('MORE THAN 15 NON DETs')
 
-print('df2_cut_out_many end',df2_cut_out_many)
-
 #convert the strings to numbers
 df2_str_sorted = df2_cut_out_many
 df2_str_sorted['Virus Titre (Log10 copies/mL)'] = pd.to_numeric(df2_str_sorted['Virus Titre (Log10 copies/mL)'], downcast="float")
 df2_str_sorted['Study Day'] = pd.to_numeric(df2_str_sorted['Study Day'], downcast="float")
 
-###################
+################### create the 'effective study day' which takes AM and PM into account
 
-##create the 'effective study day' which takes AM and PM into account
-
-#convert study day and Timepoint into lists
-day_list = df2_str_sorted['Study Day'].tolist()
-#print('length day list',len(day_list),'day_list',day_list)
+day_list = df2_str_sorted['Study Day'].tolist() #convert study day and Timepoint into lists
 Timepoint_list = df2_str_sorted['Timepoint'].tolist()
-#print('Timepoint_list length',len(Timepoint_list),'Timepoint_list',Timepoint_list)
 
 #create 'effective_day' list and add 0.5 to values of study day if it is PM, (keep same as study day if AM)
 effective_day = np.zeros(len(day_list))
@@ -108,25 +94,14 @@ for i in range (len(day_list)):
     else:
         print('i',i) #for checking if there is an error
 
-#print('effective_day',effective_day)
-
 #convert the virus numbers to a list
 vir_list_Non_DET = df2_str_sorted['Virus Titre (Log10 copies/mL)'].tolist()
-#print('vir_list_Non_DET',len(vir_list_Non_DET),'vir_list_Non_DET',vir_list_Non_DET)
 
-#plot the virus against day
-"""
-plt.figure()
-plt.plot(effective_day,vir_list_Non_DET,'bx')
-plt.xlabel('Study Day')
-plt.ylabel('Virus Titre (Log10 copies/mL)')
-"""
-#plot the means
+###########plot the means
 
 #find all the possible effective_day values
 eff_day_vals = list(set(effective_day))
 eff_day_vals.sort()  #THIS ONLY WORKS IF THERE IS AT LEAST 1 COUNT AT EACH TIME POINT
-#print('eff_day_vals',eff_day_vals)
 
 #find the occurences of each of the days
 occ=np.zeros(len(eff_day_vals))
@@ -134,8 +109,6 @@ for j in effective_day:
     for i in eff_day_vals:
         if i==j:
             occ[int(2*(i-min(eff_day_vals)))]+=1   #0.5 gap between vals, and begin at min val
-#print('occ',occ)
-
 
 #divide virus amount by number of counts on that day
 div_vir_list=[]
@@ -145,8 +118,6 @@ for j in effective_day:
         if i==j:
             div_vir_list.append(vir_list_Non_DET[int(k)]/occ[int(2*(i-min(eff_day_vals)))])
             k+=1
-#print('div_vir_list',div_vir_list)
-
 
 #sum the virus amounts on their specific day
 div_vir_list_sum = np.zeros(len(eff_day_vals))
@@ -156,17 +127,12 @@ for j in effective_day:
         if i==j:
             div_vir_list_sum[int(2*(i-min(eff_day_vals)))]+=div_vir_list[int(k)]
             k+=1
-#print('div_vir_list_sum',div_vir_list_sum)
-"""
-plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
-"""
 
-#how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
+#############plot the individual subjects
 
 #find all the possible subject IDs
 Subject_ID = df2_str_sorted['Subject ID'].tolist()
 Subject_ID_vals = list(set(Subject_ID))
-#print('Subject_ID',Subject_ID)
 
 #append effective_day to the dataframe
 df2_str_sorted['effective_day'] = effective_day
@@ -193,8 +159,7 @@ for j in Subject_ID_vals:
     plt.ylabel('Virus Titre (Log10 copies/mL)')
 """
 
-
-#plot actual virus amount (instead of log10 of virus amount)
+###########plot actual virus amount (instead of log10 of virus amount)
 act_div_vir_list_sum = np.zeros(len(div_vir_list_sum))
 for i in range (len(div_vir_list_sum)):
     act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
@@ -297,27 +262,19 @@ v2 = 10**a #THIS IS 10**2.97. 2.97 is the y intercept of the line of best fit
 eff_day_vals = np.insert(eff_day_vals, 0, v1, axis=0)
 act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
 print('eff_day_vals',eff_day_vals,'act_div_vir_list_sum',act_div_vir_list_sum)
-"""
-#paper initial conditions
-U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-V0 = 0.31   #cannot be measured as it is below detectable levels. Previous work has shown use <50 copies/ml
-I0 = 0   #Should be zero
-"""
+
 #my optimised initial conditions
 U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-#Is0 = act_div_vir_list_sum[0] / 2
 I0 = act_div_vir_list_sum[0]
-I0_init = act_div_vir_list_sum[0]
+I0_init = act_div_vir_list_sum[0] #for later on when I need to refer back to initial
 y0 = [U0, I0]
-y0_init = [U0, I0]
+y0_init = [U0, I0] #for later on when I need to refer back to initial
 
 # measured data
 t_measured = eff_day_vals
 t_measured_init = t_measured #this is the timepoints for the average of the data across all patients
 V_measured = act_div_vir_list_sum
-V_measured_init = V_measured
-
-print('t_measured',t_measured,'V_measured',V_measured)
+V_measured_init = V_measured #this is the virus for the average of the data across all patients
 
 #plt.figure()
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
@@ -327,13 +284,7 @@ ax1.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', la
 params = Parameters()
 params.add('U0', value=U0, vary=False)
 params.add('I0', value=I0, vary=False)
-"""
-#parameters optimised on first 6 days of data
-params.add('alpha', value=4.24*(10**(-7)), min=4.23*(10**(-7)), max=4.25*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=61.2, min=61.1, max=61.3)    #Clearance rate of infected cells
-params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells release virus at rate gamma
-params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
-"""
+
 #my optimised parameters
 params.add('alpha', value=4.3*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=11.4*(10**(0)), min=0, max=1.1*(10**(2)))
@@ -345,11 +296,9 @@ result = minimize(residual, params, args=(t_measured, V_measured), method='least
 data_fitted = g(t_measured, y0, result.params)
 
 # plot fitted data
-#plt.figure()
 ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted I data')
 ax1.legend()
 ax1.set_xlim([0, max(t_measured)])
-#ax1.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
 ax1.set_xlabel('Days Post Infection')
 ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
@@ -381,7 +330,7 @@ log_I_fitted = np.log10(data_fitted[:, 1])
 ax2.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 ax2.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
 
-#plotting curve from day -3
+#################plotting curve from day -3
 first_vir_vals = np.array([(-3*b)+a,a])
 
 first_eff_day_vals = np.array([-3,0])
@@ -395,30 +344,15 @@ ax2.set_xlabel('Days Post Infection')
 ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
 ax2.set_title('b)')
 
-"""
-############### plot the fit bigger
-plt.figure()
-plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-plt.plot(first_eff_day_vals, first_vir_vals, '-', linewidth=2, color='red')
-plt.xlim(left=-3)
-plt.xlabel('Days Post Infection')
-plt.ylabel('Virus Titre Concentration (Log10 copies/mL)')
-plt.legend()
-"""
-
 print('virus val day minus 3: ',(-3*b)+a,'virus val day minus 2: ',(-2*b)+a,'virus val day minus 1: ',(-1*b)+a)
 
-#plot the measured data, along with the fitted model for V, I and U
-#plt.figure()
+##################plot the measured data, along with the fitted model for V, I and U
 I_fitted = data_fitted[:, 1]
 ax3.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 ax3.plot(t_measured, 10**(-6)*I_fitted, '-', linewidth=2, color='red', label='fitted I data')
 U_fitted = data_fitted[:, 0]
 ax3.plot(t_measured, 10**(-6)*U_fitted, '-', linewidth=2, color='black', label='fitted U data')
-#plt.ylim(bottom=0.9 * min(log_V_measured))
 ax3.set_xlim(left=0)
-#ax3.set_ylim([0, 1.1 * 10**(-6)*max(Id_measured)])
 ax3.legend()
 ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
@@ -437,14 +371,14 @@ ax3.set_title('c)')
 I_area = np.trapz(data_fitted[:, 1], dx=0.5)
 print('I_area',I_area,'I_area',I_area)
 
+#save arrays
 #np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
 #np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
 
 ##########################################
 #fit models to different patients
 
-#only want to model the first 15 patients as these are the training dat set
-Subject_ID_vals_short = Subject_ID_vals[0:-3]
+Subject_ID_vals_short = Subject_ID_vals[0:-3]  #only want to model the first 15 patients as these are the training dat set
 print('Subject_ID_vals_short',Subject_ID_vals_short)
 
 #initialise arrays of patient parameters
@@ -464,15 +398,11 @@ for j in Subject_ID_vals_short:
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
 
-    #only use the subjects with more than 5 data points
-    #if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5 and j != 635331 and j != 673353 and j != 647785 and j != 634105 and j != 666427:  #excluding the challenging patients
-    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5:
+    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5: #only use the subjects with more than 5 data points
         k+=1
         #convert the virus and the effective day values to a list
         div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
         eff_day_list = df2_Subj_ID_sub_eff_sort['effective_day'].tolist()
-
-        #print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
 
         print('SUBJECT ID ',j)
 
@@ -481,26 +411,21 @@ for j in Subject_ID_vals_short:
         for i in range (len(div_vir_list_sum)):
             act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-        #print('initial V value',act_div_vir_list_sum[0])
-
-        #extrapolation to find first data point
-        # Get the indices of maximum element in eff_day_vals
-        max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
+        ###extrapolation to find first data point
+        max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum)) # Get the indices of maximum element in eff_day_vals
         max_indic = int(max_indic_arr[0])
 
         a, b = best_fit(eff_day_list[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
 
-        #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
+        #add the point at time=0, virus=10**a to the eff_day_vals and act_div_vir_list_sum arrays
         v1 = 0
         v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
         eff_day_list = np.insert(eff_day_list, 0, v1, axis=0)
         act_div_vir_list_sum = np.insert(act_div_vir_list_sum, 0, v2, axis=0)
 
         #my optimised initial conditions
-        U0 = 4*(10**(8))  #the number of cells in an adult is 4x10^8
-        #Is0 = act_div_vir_list_sum[0] / 2
+        U0 = 4*(10**(8))  #the number of target cells in an adult is 4x10^8
         I0 = act_div_vir_list_sum[0]
-        #Id0 = act_div_vir_list_sum[0] / 2  #just taking the first measured value
         y0 = [U0, I0]
 
         # measured data
@@ -525,7 +450,7 @@ for j in Subject_ID_vals_short:
         # check results of the fit
         data_fitted = g(t_measured, y0, result.params)
 
-        #plot absolute values
+        #####plot absolute values
         # plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
         # plt.legend()
         # plt.xlim([0, max(t_measured)])
@@ -537,9 +462,7 @@ for j in Subject_ID_vals_short:
         # display fitted statistics and append parameters to lists
         subj_IDs_over_5.append(j)
         report_fit(result)
-        #print('result params',result.params)
         for name, param in result.params.items():
-            #print(f'{name:7s} {param.value:11.5f} {param.stderr:11.5f}')
             if name == 'alpha':
                 alphas.append(param.value)
             if name == 'beta':
@@ -557,6 +480,7 @@ for j in Subject_ID_vals_short:
         log_V_measured = np.log10(V_measured)
         log_I_fitted = np.log10(data_fitted[:, 1])
 
+        ##########plot the log of virus amount against time
         # plt.figure()
         # plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
         # plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
@@ -584,14 +508,14 @@ refined_betas = []
 refined_kappas = []
 
 for i in range (len(variances)):
-    if variances[i]<=10:
+    if variances[i]<=100: #the value here is the cut off for the variance
         refined_alphas.append(alphas[i])
         refined_betas.append(betas[i])
         refined_kappas.append(kappas[i])
 
 ########################### plot histograms of alpha, beta and kappa
 
-n_bins = 50
+n_bins = 50   #number of bins for the histogram
 
 ##############alphas
 
@@ -614,16 +538,14 @@ mu_alpha = loc
 sigma_alpha = lognorm.std(s, loc=loc, scale=scale)
 print('alpha s',s,'loc',loc,'scale',scale,'sigma_alpha',sigma_alpha)
 
-#plot this lognormal distribution over the range of values I require
+#plot this lognormal distribution over the range of values required
 x=np.linspace(0,np.amax(refined_alphas),500)
 solu=lognorm.pdf(x, s, loc, scale)
 plt.plot(x, solu,color="black",label="log normal of individual patient alpha values")
 
-#plot the median of the alpha values
+###plot the median of the alpha values over the top
 median_alpha = statistics.median(refined_alphas)
 print('median_alpha',median_alpha)
-
-#plot the median alpha (across all the patients) over the top
 X = [median_alpha, median_alpha]
 Y = [0, y.max()]
 plt.plot(X,Y,color='green',label="median alpha value from histogram")
@@ -661,11 +583,9 @@ x=np.linspace(0,np.amax(refined_betas),500)
 solu=lognorm.pdf(x, s, loc, scale)
 plt.plot(x, 4*solu,color="black",label="log normal of individual patient beta values")
 
-#plot the median of the beta values
+#plot the median of the beta values over the top
 median_beta = statistics.median(refined_betas)
 print('median_beta',median_beta)
-
-#plot the median beta (across all the patients) over the top
 X = [median_beta, median_beta]
 Y = [0, y.max()]
 plt.plot(X,Y,color='green',label="median beta value from histogram")
@@ -696,18 +616,16 @@ x=np.linspace(0,np.amax(refined_kappas),500)
 solu=lognorm.pdf(x, s, loc, scale)
 plt.plot(x, 10**(1)*solu,color="black",label="log normal of individual patient kappa values")
 
-#plot the median of the alpha values
+#plot the median of the alpha values over the top
 median_kappa = statistics.median(refined_kappas)
 print('median_kappa',median_kappa)
-
-#plot the median alpha (across all the patients) over the top
 X = [median_kappa, median_kappa]
 Y = [0, y.max()]
 plt.plot(X,Y,color='green',label="median kappa value from histogram")
 plt.legend()
 
 ##############################
-#Compare gn(Ftrue) to the mean of all the patients
+#Compare gn(Ftrue) to the plot of the average over all patients
 
 #firstly have at the optimal model
 params = Parameters()
@@ -749,7 +667,7 @@ sn = 1 #for now. Compute better estimate later
 ######
 #fit models to validation set of patients
 
-##only want to model the first 15 patients as these are the training data set
+##only want to model the last 3 patients as these are the validation data set
 Subject_ID_vals_short = Subject_ID_vals[-3:]
 print('Subject_ID_vals_short',Subject_ID_vals_short)
 
@@ -760,15 +678,11 @@ for j in Subject_ID_vals_short:
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
 
-    #only use the subjects with more than 5 data points
-    #if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5 and j != 635331 and j != 673353 and j != 647785 and j != 634105 and j != 666427:  #excluding the challenging patients
-    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5:
+    if len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()) > 5: #only use the subjects with more than 5 data points
         k+=1
         #convert the virus and the effective day values to a list
         div_vir_list_sum = df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()
         eff_day_list = df2_Subj_ID_sub_eff_sort['effective_day'].tolist()
-
-        #print('Virus',len(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist()))   #print how many datapoints there are
 
         print('SUBJECT ID ',j)
 
@@ -777,16 +691,13 @@ for j in Subject_ID_vals_short:
         for i in range (len(div_vir_list_sum)):
             act_div_vir_list_sum[i] = 10**(div_vir_list_sum[i])
 
-        #print('initial V value',act_div_vir_list_sum[0])
-
-        #extrapolation to find first data point
-        # Get the indices of maximum element in eff_day_vals
-        max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))
+        ######extrapolation to find first data point
+        max_indic_arr = np.where(act_div_vir_list_sum == np.amax(act_div_vir_list_sum))  # Get the indices of maximum element in eff_day_vals
         max_indic = int(max_indic_arr[0])
 
         a, b = best_fit(eff_day_list[:max_indic+1],np.log10(act_div_vir_list_sum)[:max_indic+1])
 
-        #add the point at time=0, virus=933 to the eff_day_vals and act_div_vir_list_sum arrays
+        #add the point at time=0, virus=10**a to the eff_day_vals and act_div_vir_list_sum arrays
         v1 = 0
         v2 = 10**a #THIS IS 10**a. where a is the y intercept of the line of best fit
         eff_day_list = np.insert(eff_day_list, 0, v1, axis=0)
@@ -795,8 +706,6 @@ for j in Subject_ID_vals_short:
         # measured data
         t_measured = eff_day_list
         V_measured = act_div_vir_list_sum
-
-        #plot the fitted data and the model for log(virus) against day
         log_V_measured = np.log10(V_measured)
 
         #######compute first term of loss function
