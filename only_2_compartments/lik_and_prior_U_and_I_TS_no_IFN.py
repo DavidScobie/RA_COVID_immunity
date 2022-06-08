@@ -547,6 +547,7 @@ for i, txt in enumerate(x):
 #print('x',x,'len(x)',len(x),'solu',solu,'len(solu)',len(solu))
 
 ###########betas
+
 plt.figure()
 plt.hist(refined_betas, density=False, bins=n_bins,color = "skyblue",label="individual patient beta values")
 plt.ylabel('Number of patients')
