@@ -12,6 +12,7 @@ library(xlsx)
 library(data.table)
 library(stringr)
 library(tidyr)
+library(pracma)
 
 #read in the 3 timepoints for 1st patient alpha chain
 data_path<-"C:/Research_Assistant/work/data/TCR_data/NS085/"
@@ -78,15 +79,43 @@ sapply(1:9, function(x) { sapply(2:6, function(y) tmpfun(x,y))})
 
 
 
-######works
+
+
 integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))  #poisson distribution
   tmpfun <- function(lam,upper) {                                 #function to integrate
     integrate(integrand,lower=0,upper=upper,lam=lam)$value
   }
-  
+
 lam_vals = subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
-upper_vals = 
-sapply(lam_vals, function(x) { sapply(upper_vals, function(y) tmpfun(x,y))})
+for (i in 1:length(lam_vals)) {
+  print(paste("This iteration represents range value", i))
+  print(paste("lam_vals[i]", lam_vals[i]))
+  upper_vals = linspace(lam_vals[i], 3*lam_vals[i], n = (3*lam_vals[i])-(lam_vals[i])+1)
+  print(paste("upper_vals", upper_vals))
+  sapply(lam_vals[i], function(x) { sapply(upper_vals, function(y) tmpfun(x,y))})
+}
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
