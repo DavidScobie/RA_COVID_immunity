@@ -53,6 +53,60 @@ TCRs_day_14 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.
 
 #######day 0 to day 7 significance
 
+###find the lower and upper bounds for 95% of the data for poisson centered on 1st time point
+
+#first, add a column (top lim) to the data frame which is 5x the first timepoint (surely this is above the 95% range)
+subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
+  mutate(top_lim = if_else(duplicate_count.0 > 0.7 , 5*(duplicate_count.0), 0))  #Deal with the fake abundance of 0.5 if not present
+
+#second, integrate poisson distribution centered at 1st time point between 0 to top lim to find (area_0_to_top_lim)
+# subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
+#   lam <- duplicate_count.0
+#   integrand <- function(lam, x) {((lam^x)*(exp(-lam)))/(factorial(x))}  # define the integrated function
+#   mutate(area_0_to_top_lim = integrate(integrand, lower = 0, upper = top_lim))  # integrate the function from 0 to top_lim
+
+integrand <- function(x) {((subset_pat_439679_alpha_prod_wide$duplicate_count.0^x)*(exp(-subset_pat_439679_alpha_prod_wide$duplicate_count.0)))/(factorial(x))}
+subset_pat_439679_alpha_prod_wide$area_0_to_top_lim <- integrate(integrand, lower = 0, upper = subset_pat_439679_alpha_prod_wide$top_lim)  
+  
+
+
+integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))   ####works
+tmpfun <- function(lam) {
+  integrate(integrand,lower=0,upper=7,lam=lam)$value
+}
+sapply(1:10,tmpfun)
+
+
+integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))        ######works
+tmpfun <- function(lam) {
+  integrate(integrand,lower=0,upper=5*lam,lam=lam)$value
+}
+sapply(1:10,tmpfun)
+
+
+integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))        ######doesnt work
+tmpfun <- function(lam) {
+  integrate(integrand,lower=0,upper=5*lam,lam=lam)$value
+}
+sapply(subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10],tmpfun)
+
+
+
+
+## define the integrated function
+integrand <- function(x) {1/((x+1)*sqrt(x))}
+## integrate the function from 0 to infinity
+integrate(integrand, lower = 0, upper = Inf)
+
+
+
+
+#third, starting at the mean, integrate the poisson dist between 0 to each point higher at increments of 1. 
+#stop doing this when integral = 95% (0 to top lim area). The upper limit is the upper significance bound.
+
+#fourth, repeat all this but start integral at (top lim) and work along left from mean of dist to find lower sig limit.
+
+
 #add column for day 0 to day 7 significant?
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
   mutate(sig_day_7_from_day_0 = if_else(duplicate_count.7 < duplicate_count.0 - sqrt(duplicate_count.0) | duplicate_count.7 > duplicate_count.0 + sqrt(duplicate_count.0) , 1, 0))
@@ -105,6 +159,7 @@ plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.0), log(subset_pat_43
      ylim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.14)), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.14), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.14)))), 
      col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_14_from_day_0_deal_with_zeros == 1,'red','blue'))
 abline(a=0,b=1)
+
 
 
 
