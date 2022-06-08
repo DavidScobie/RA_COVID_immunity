@@ -80,21 +80,23 @@ sapply(1:9, function(x) { sapply(2:6, function(y) tmpfun(x,y))})
 
 
 
-
+#############  This code is instegrating poisson distributions of means (lam_vals) from 0 up to (upper_vals)
+############# it seems that for means much above 20, the integration doesnt seem to work.
 integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))  #poisson distribution
   tmpfun <- function(lam,upper) {                                 #function to integrate
     integrate(integrand,lower=0,upper=upper,lam=lam)$value
   }
 
-lam_vals = subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
+lam_vals <- c(1,4,2,5,3,20,2,6,4,1)
+#lam_vals = subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
 for (i in 1:length(lam_vals)) {
   print(paste("This iteration represents range value", i))
   print(paste("lam_vals[i]", lam_vals[i]))
   upper_vals = linspace(lam_vals[i], 3*lam_vals[i], n = (3*lam_vals[i])-(lam_vals[i])+1)
   print(paste("upper_vals", upper_vals))
-  sapply(lam_vals[i], function(x) { sapply(upper_vals, function(y) tmpfun(x,y))})
+  print(sapply(lam_vals[i], function(x) { sapply(upper_vals, function(y) tmpfun(x,y))}))
 }
-  
+ ################## 
 
 
 
