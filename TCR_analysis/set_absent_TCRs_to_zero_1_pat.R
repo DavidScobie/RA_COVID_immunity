@@ -84,13 +84,17 @@ tmpfun <- function(lam) {
 sapply(1:10,tmpfun)
 
 
-integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))        ######doesnt work
-tmpfun <- function(lam) {
-  integrate(integrand,lower=0,upper=5*lam,lam=lam)$value
+
+integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))    ######does not work
+my_range <- 1:5
+for (i in my_range) {
+  tmpfun <- function(lam,i) {
+    print(paste("This iteration represents range value", length(i)))
+    integrate(integrand,lower=0,upper=i,lam=lam, subdivisions=2000)$value
+  }
+  outer(1:10,i,tmpfun)
 }
-sapply(subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10],tmpfun)
-
-
+  
 
 
 ## define the integrated function
