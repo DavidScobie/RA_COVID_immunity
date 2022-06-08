@@ -69,38 +69,24 @@ integrand <- function(x) {((subset_pat_439679_alpha_prod_wide$duplicate_count.0^
 subset_pat_439679_alpha_prod_wide$area_0_to_top_lim <- integrate(integrand, lower = 0, upper = subset_pat_439679_alpha_prod_wide$top_lim)  
   
 
-
-integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))   ####works
-tmpfun <- function(lam) {
-  integrate(integrand,lower=0,upper=7,lam=lam)$value
-}
-sapply(1:10,tmpfun)
-
-
-integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))        ######works
-tmpfun <- function(lam) {
-  integrate(integrand,lower=0,upper=5*lam,lam=lam)$value
-}
-sapply(1:10,tmpfun)
-
-
-
-integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))    ######does not work
-my_range <- 1:5
-for (i in my_range) {
-  tmpfun <- function(lam,i) {
-    print(paste("This iteration represents range value", length(i)))
-    integrate(integrand,lower=0,upper=i,lam=lam, subdivisions=2000)$value
+######WORKS
+integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))  #poisson distribution
+  tmpfun <- function(lam,upper) {      #function to integrate
+    integrate(integrand,lower=0,upper=upper,lam=lam)$value
   }
-  outer(1:10,i,tmpfun)
-}
+sapply(1:9, function(x) { sapply(2:6, function(y) tmpfun(x,y))})
+
+
+
+######works
+integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))  #poisson distribution
+  tmpfun <- function(lam,upper) {                                 #function to integrate
+    integrate(integrand,lower=0,upper=upper,lam=lam)$value
+  }
   
-
-
-## define the integrated function
-integrand <- function(x) {1/((x+1)*sqrt(x))}
-## integrate the function from 0 to infinity
-integrate(integrand, lower = 0, upper = Inf)
+lam_vals = subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
+upper_vals = 
+sapply(lam_vals, function(x) { sapply(upper_vals, function(y) tmpfun(x,y))})
 
 
 
