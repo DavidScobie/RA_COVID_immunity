@@ -56,74 +56,46 @@ TCRs_day_14 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.
 
 ###find the lower and upper bounds for 95% of the data for poisson centered on 1st time point
 
-#first, add a column (top lim) to the data frame which is 5x the first timepoint (surely this is above the 95% range)
+##first, add a column (top lim) to the data frame which is 5x the first timepoint (surely this is above the 95% range)
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
   mutate(top_lim = if_else(duplicate_count.0 > 0.7 , 5*(duplicate_count.0), 0))  #Deal with the fake abundance of 0.5 if not present
 
-#second, integrate poisson distribution centered at 1st time point between 0 to top lim to find (area_0_to_top_lim)
-# subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
-#   lam <- duplicate_count.0
-#   integrand <- function(lam, x) {((lam^x)*(exp(-lam)))/(factorial(x))}  # define the integrated function
-#   mutate(area_0_to_top_lim = integrate(integrand, lower = 0, upper = top_lim))  # integrate the function from 0 to top_lim
+##second, integrate poisson distribution centered at 1st time point between 0 to top lim to find (area_0_to_top_lim)
+#(No point in doing this as the integral comes out as 1 in every case)
 
-integrand <- function(x) {((subset_pat_439679_alpha_prod_wide$duplicate_count.0^x)*(exp(-subset_pat_439679_alpha_prod_wide$duplicate_count.0)))/(factorial(x))}
-subset_pat_439679_alpha_prod_wide$area_0_to_top_lim <- integrate(integrand, lower = 0, upper = subset_pat_439679_alpha_prod_wide$top_lim)  
-  
+##third, starting at the mean, integrate the poisson dist between 0 to each point higher at increments of 1. 
+#stop doing this when integral = 95% (0 to top lim area). The upper limit is the upper significance bound.
 
-######WORKS
-integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))  #poisson distribution
-  tmpfun <- function(lam,upper) {      #function to integrate
-    integrate(integrand,lower=0,upper=upper,lam=lam)$value
-  }
-sapply(1:9, function(x) { sapply(2:6, function(y) tmpfun(x,y))})
-
-
-
-
-#############  This code is instegrating poisson distributions of means (lam_vals) from 0 up to (upper_vals)
+#############  This code is integrating poisson distributions of means (lam_vals) from 0 up to (upper_vals)
 ############# it seems that for means much above 20, the integration doesnt seem to work.
 integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))  #poisson distribution
   tmpfun <- function(lam,upper) {                                 #function to integrate
     integrate(integrand,lower=0,upper=upper,lam=lam)$value
   }
 
-lam_vals <- c(1,4,2,5,3,20,2,6,4,1)
+lam_vals <- c(1,4,2,5,3,3,2,3,2,20)
 #lam_vals = subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
 for (i in 1:length(lam_vals)) {
   print(paste("This iteration represents range value", i))
   print(paste("lam_vals[i]", lam_vals[i]))
-  upper_vals = linspace(lam_vals[i], 3*lam_vals[i], n = (3*lam_vals[i])-(lam_vals[i])+1)
+  #upper_vals = linspace(lam_vals[i], 5*lam_vals[i], n = (5*lam_vals[i])-(lam_vals[i])+1)
+  upper_vals = linspace(0, 5*lam_vals[i], n = (5*lam_vals[i])-(0)+1)
   print(paste("upper_vals", upper_vals))
   print(sapply(lam_vals[i], function(x) { sapply(upper_vals, function(y) tmpfun(x,y))}))
 }
  ################## 
 
+#
 
 
+# this is just a quick way to do specific integrals if need be
+integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))        ######works
+tmpfun <- function(lam) {
+  integrate(integrand,lower=0,upper=40,lam=lam)$value
+}
+sapply(20,tmpfun)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#third, starting at the mean, integrate the poisson dist between 0 to each point higher at increments of 1. 
-#stop doing this when integral = 95% (0 to top lim area). The upper limit is the upper significance bound.
 
 #fourth, repeat all this but start integral at (top lim) and work along left from mean of dist to find lower sig limit.
 

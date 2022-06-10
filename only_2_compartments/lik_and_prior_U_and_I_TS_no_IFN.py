@@ -283,6 +283,7 @@ ax1.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', la
 params = Parameters()
 params.add('U0', value=U0, vary=False)
 params.add('I0', value=I0, vary=False)
+#params.add('I0', value=I0, min=I0-1, max=I0+1) this is an idea of adding I0 in as a prameter
 
 #my optimised parameters
 params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
@@ -471,16 +472,16 @@ for j in Subject_ID_vals_short:
         log_V_measured = np.log10(V_measured)
         log_I_fitted = np.log10(data_fitted[:, 1])
 
-        ##########plot the log of virus amount against time
-        # plt.figure()
-        # plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-        # plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-        #plt.ylim(bottom=0.9 * min(log_V_measured))
-        #plt.xlim(left=0)
-        # plt.legend()
-        # plt.xlabel('Days Post Infection')
-        # plt.ylabel('Concentration (Log10 copies/mL)')
-        # plt.title('Subject ID=%i' %j)
+        #########plot the log of virus amount against time
+        plt.figure()
+        plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+        plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+        plt.ylim(bottom=0.9 * min(log_V_measured))
+        plt.xlim(left=0)
+        plt.legend()
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Concentration (Log10 copies/mL)')
+        plt.title('Subject ID=%i' %j)
 
 
 print('alphas',alphas)
