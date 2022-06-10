@@ -91,11 +91,40 @@ for (i in 1:length(lam_vals)) {
 # this is just a quick way to do specific integrals if need be
 integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))        ######works
 tmpfun <- function(lam) {
-  integrate(integrand,lower=0,upper=40,lam=lam)$value
+  integrate(integrand,lower=0,upper=4,lam=lam)$value
 }
-sapply(20,tmpfun)
+sapply(3,tmpfun)
 
+############ summing a function between limits
+foo1 = function(k, start = 3, stop = 5) {
+  result = 0
+  for (i in start:stop) {
+    result = result + i / stop * cov(k, stats::lag(k, k = i))
+  }
+  return(result)
+} 
 
+k = rnorm(100)
+
+stops = 5:20
+res = sapply(stops, function(b) foo1(k, start = 3, stop = b))
+print(res)
+
+############# my attempt at summing a function between certain limits
+sum_poisson = function(lam, start=0, stop=5) {
+  result = 0
+  for (i in start:stop) {
+    result = result + ((lam**(i))*(exp(-lam))/(factorial(i)))
+  }
+  return(result)
+}
+
+lam_vals <- c(1,4,2,5,3,3,2,3,2,20)
+for (p in 1:length(lam_vals)) {
+  stops = linspace(0, 5*lam_vals[p], n = (5*lam_vals[p])-(0)+1)
+  summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
+  print(summation)
+}
 
 #fourth, repeat all this but start integral at (top lim) and work along left from mean of dist to find lower sig limit.
 
