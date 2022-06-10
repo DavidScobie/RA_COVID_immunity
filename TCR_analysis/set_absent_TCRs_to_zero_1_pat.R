@@ -63,54 +63,11 @@ subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>%
 ##second, integrate poisson distribution centered at 1st time point between 0 to top lim to find (area_0_to_top_lim)
 #(No point in doing this as the integral comes out as 1 in every case)
 
-##third, starting at the mean, integrate the poisson dist between 0 to each point higher at increments of 1. 
-#stop doing this when integral = 95% (0 to top lim area). The upper limit is the upper significance bound.
-
-#############  This code is integrating poisson distributions of means (lam_vals) from 0 up to (upper_vals)
-############# it seems that for means much above 20, the integration doesnt seem to work.
-integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))  #poisson distribution
-  tmpfun <- function(lam,upper) {                                 #function to integrate
-    integrate(integrand,lower=0,upper=upper,lam=lam)$value
-  }
-
-lam_vals <- c(1,4,2,5,3,3,2,3,2,20)
-#lam_vals = subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
-for (i in 1:length(lam_vals)) {
-  print(paste("This iteration represents range value", i))
-  print(paste("lam_vals[i]", lam_vals[i]))
-  #upper_vals = linspace(lam_vals[i], 5*lam_vals[i], n = (5*lam_vals[i])-(lam_vals[i])+1)
-  upper_vals = linspace(0, 5*lam_vals[i], n = (5*lam_vals[i])-(0)+1)
-  print(paste("upper_vals", upper_vals))
-  print(sapply(lam_vals[i], function(x) { sapply(upper_vals, function(y) tmpfun(x,y))}))
-}
- ################## 
-
-#
+##third, starting at the mean, sum the poisson dist between 0 to each point higher at increments of 1. 
+#stop doing this when sum = 95% (0.95). The upper limit is the upper significance bound.
 
 
-# this is just a quick way to do specific integrals if need be
-integrand<-function(x,lam)(((lam^x)*(exp(-lam)))/(factorial(x)))        ######works
-tmpfun <- function(lam) {
-  integrate(integrand,lower=0,upper=4,lam=lam)$value
-}
-sapply(3,tmpfun)
-
-############ summing a function between limits
-foo1 = function(k, start = 3, stop = 5) {
-  result = 0
-  for (i in start:stop) {
-    result = result + i / stop * cov(k, stats::lag(k, k = i))
-  }
-  return(result)
-} 
-
-k = rnorm(100)
-
-stops = 5:20
-res = sapply(stops, function(b) foo1(k, start = 3, stop = b))
-print(res)
-
-############# my attempt at summing a function between certain limits
+############# This code is summing poisson distributions of means (lam_vals) from 0 up to (stops)
 sum_poisson = function(lam, start=0, stop=5) {
   result = 0
   for (i in start:stop) {
@@ -119,12 +76,15 @@ sum_poisson = function(lam, start=0, stop=5) {
   return(result)
 }
 
-lam_vals <- c(1,4,2,5,3,3,2,3,2,20)
+lam_vals <- c(1,4,2,5,3,3,2,3,1,802)
 for (p in 1:length(lam_vals)) {
-  stops = linspace(0, 5*lam_vals[p], n = (5*lam_vals[p])-(0)+1)
+  stops = linspace(0, 3*lam_vals[p], n = (3*lam_vals[p])-(0)+1)
   summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
   print(summation)
 }
+
+
+
 
 #fourth, repeat all this but start integral at (top lim) and work along left from mean of dist to find lower sig limit.
 
