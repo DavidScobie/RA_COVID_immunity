@@ -76,8 +76,17 @@ sum_poisson = function(lam, start=0, stop=5) {
   return(result)
 }
 
+#the first timepoint data set
 lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
 #lam_vals <- c(1,2,51) #dummy array of first timepoint values
+
+#the timepoint 7 dataset
+end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7[0:10]
+#end_time_vals <- c(1,2,52)
+
+#the binary array to see if significant or not
+sig_day_7_from_day_0 <- vector()
+
 for (p in 1:length(lam_vals)) {
   greater_than_min_sig <- vector() #initialise empty array 
   low_counter <- 0 #initialize lower significance level counter
@@ -107,18 +116,26 @@ for (p in 1:length(lam_vals)) {
   }
   print(paste("low_sig_lim",low_sig_lim))
   print(paste("high_sig_lim",high_sig_lim))
+  
+  #compare the timepoint 7 data set to the significance thresholds
+  if (end_time_vals[p] < low_sig_lim) { #it is significant
+    sig_day_7_from_day_0[p] = 1
+    } else if (end_time_vals[p] > high_sig_lim) {
+      sig_day_7_from_day_0[p] = 1
+    } else {
+    sig_day_7_from_day_0[p] = 0
+  }
 }
 
+print(paste("sig_day_7_from_day_0",sig_day_7_from_day_0))
+print(paste("first_timepoint_vals",lam_vals))
+print(paste("end_time_vals",end_time_vals))
 
-
-
-
-#fourth, repeat all this but start integral at (top lim) and work along left from mean of dist to find lower sig limit.
-
+#add significance column
 
 #add column for day 0 to day 7 significant?
-subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
-  mutate(sig_day_7_from_day_0 = if_else(duplicate_count.7 < duplicate_count.0 - sqrt(duplicate_count.0) | duplicate_count.7 > duplicate_count.0 + sqrt(duplicate_count.0) , 1, 0))
+# subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
+#   mutate(sig_day_7_from_day_0 = if_else(duplicate_count.7 < duplicate_count.0 - sqrt(duplicate_count.0) | duplicate_count.7 > duplicate_count.0 + sqrt(duplicate_count.0) , 1, 0))
 
 #deal with the cases of 0's and 1's where we want not significant
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
