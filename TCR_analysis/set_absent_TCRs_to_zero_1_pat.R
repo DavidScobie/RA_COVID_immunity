@@ -76,12 +76,36 @@ sum_poisson = function(lam, start=0, stop=5) {
   return(result)
 }
 
-lam_vals <- c(1,4,2,5,3,3,2,3,1,802)
+#lam_vals <- c(1,4,2,5,3,3,2,3,1,51) #dummy array of first timepoint values
+lam_vals <- c(1,2) #dummy array of first timepoint values
 for (p in 1:length(lam_vals)) {
-  stops = linspace(0, 3*lam_vals[p], n = (3*lam_vals[p])-(0)+1)
-  summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
-  print(summation)
+  greater_than_min_sig <- vector() #initialise empty array 
+  low_counter <- 0 #initialize lower significance level counter
+  high_counter <- 0 #initialize higher significance level counter
+  print(lam_vals[p])
+  #logic to find upper significance level
+  if (lam_vals[p] < 50) {     #lambda is low so manually sum to find significance level
+    stops = linspace(0, 3*lam_vals[p], n = (3*lam_vals[p])-(0)+1)
+    summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
+    print(summation)
+    for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
+      if (summation[k] > 0.025) {   #logic for finding the lower significance level
+        low_counter = low_counter + 1
+        greater_than_min_sig[low_counter] = k
+        print(paste("summation[k]", summation[k]))
+      }
+      if (summation[k] < 0.975) {  #logic for finding the upper significance level
+        counter = counter1 + 1
+    }
+  } else {  #lambda is big so use std_dev=sqrt(mean) 
+    print('huge')
+  }
 }
+print(paste("greater_than_min_sig", greater_than_min_sig))
+low_sig_lim = min(greater_than_min_sig)
+print(paste("low_sig_lim",low_sig_lim))
+
+
 
 
 
