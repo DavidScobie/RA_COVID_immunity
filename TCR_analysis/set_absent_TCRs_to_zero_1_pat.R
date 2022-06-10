@@ -76,8 +76,8 @@ sum_poisson = function(lam, start=0, stop=5) {
   return(result)
 }
 
-#lam_vals <- c(1,4,2,5,3,3,2,3,1,51) #dummy array of first timepoint values
-lam_vals <- c(1,2,51) #dummy array of first timepoint values
+lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
+#lam_vals <- c(1,2,51) #dummy array of first timepoint values
 for (p in 1:length(lam_vals)) {
   greater_than_min_sig <- vector() #initialise empty array 
   low_counter <- 0 #initialize lower significance level counter
@@ -88,28 +88,20 @@ for (p in 1:length(lam_vals)) {
   if (lam_vals[p] < 50) {     #lambda is low so manually sum to find significance level
     stops = linspace(0, 3*lam_vals[p], n = (3*lam_vals[p])-(0)+1)
     summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
-    #print(summation)
     for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
       if (summation[k] > 0.025) {   #logic for finding the lower significance level
         low_counter = low_counter + 1
         greater_than_min_sig[low_counter] = k
-        #print(paste("low loop summation[k]", summation[k]))
       }
       if (summation[k] < 0.975) {  #logic for finding the upper significance level
         high_counter = high_counter + 1
         lesser_than_max_sig[high_counter] = k
-        #print(paste("high loop summation[k]", summation[k]))
       }
     }
     low_sig_lim = min(greater_than_min_sig)
-    #print(paste("low_sig_lim",low_sig_lim))
-    
     high_sig_lim = max(lesser_than_max_sig)
-    #print(paste("high_sig_lim",high_sig_lim))
-    
-    
+
   } else {  #lambda is big so approximate as normal dist. p=0.05, which is 95% sig, which is 2 std_devs = 2*sqrt(mean) 
-    print('huge')
     low_sig_lim <- ceiling(lam_vals[p] - (2*sqrt(lam_vals[p])))
     high_sig_lim <- floor(lam_vals[p] + (2*sqrt(lam_vals[p])))
   }
