@@ -77,7 +77,7 @@ end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
 
 
 
-lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
+#lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
 
 ####dealing with the errors in the significance colour for having no TCR abundance on day 7 or day 0
 #first of all, use the p value above to calculate what the threshold in this case should be
@@ -96,6 +96,9 @@ print(paste("count_1_thresh",count_1_thresh,"max(lam_vals)",max(lam_vals),"count
 
 #the binary array to see if significant or not
 sig_day_7_from_day_0 <- vector()
+
+start_day_0_count = 0
+start_day_7_count = 0
 
 for (p in 1:length(lam_vals)) {
   greater_than_min_sig <- vector() #initialise empty array 
@@ -121,8 +124,9 @@ for (p in 1:length(lam_vals)) {
     high_sig_lim = max(lesser_than_max_sig)
     
   } else {  #lambda is big so approximate as normal dist. p=0.05, which is 95% sig, which is 2 std_devs = 2*sqrt(mean) 
-    low_sig_lim <- ceiling(lam_vals[p] - (2*sqrt(lam_vals[p])))
-    high_sig_lim <- floor(lam_vals[p] + (2*sqrt(lam_vals[p])))
+    num_std_devs_gauss <- qnorm(1-(p_value/2))
+    low_sig_lim <- ceiling(lam_vals[p] - (num_std_devs_gauss*sqrt(lam_vals[p])))
+    high_sig_lim <- floor(lam_vals[p] + (num_std_devs_gauss*sqrt(lam_vals[p])))
   }
   # print(paste("low_sig_lim",low_sig_lim))
   # print(paste("high_sig_lim",high_sig_lim))
@@ -140,14 +144,17 @@ for (p in 1:length(lam_vals)) {
   if (lam_vals[p] < 1) { #these are just the zero readings in the first count
     if (end_time_vals[p] < count_1_thresh) {
       sig_day_7_from_day_0[p] = 0}
+      start_day_0_count = start_day_0_count + 1
+      
   }
-  if (end_time_vals[p] < 1) { #these are just the zero readings in the first count
+  if (end_time_vals[p] < 1) { #these are just the zero readings in the second count
     if (lam_vals[p] < count_1_thresh) {
       sig_day_7_from_day_0[p] = 0
+      start_day_7_count = start_day_7_count + 1
     }
   }
 }
-
+print(paste("start_day_0_count",start_day_0_count,"start_day_7_count",start_day_7_count))
 # print(paste("sig_day_7_from_day_0",sig_day_7_from_day_0))
 # print(paste("first_timepoint_vals",lam_vals))
 # print(paste("end_time_vals",end_time_vals))
@@ -159,21 +166,19 @@ subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
 # subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
 #   mutate(sig_day_7_from_day_0 = if_else(duplicate_count.7 < duplicate_count.0 - sqrt(duplicate_count.0) | duplicate_count.7 > duplicate_count.0 + sqrt(duplicate_count.0) , 1, 0))
 
-#deal with the cases of 0's and 1's where we want not significant
-subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% 
-  mutate(sig_day_7_from_day_0_deal_with_zeros = if_else(duplicate_count.0 == 0 & duplicate_count.7 == 1, 0, sig_day_7_from_day_0))
-
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
-#plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), main = "log TCR amount day 0 to day 7",
-plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.0), log(subset_pat_439679_alpha_prod_wide$duplicate_count.7), main = "log TCR amount day 0 to day 7",
+plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), main = "log TCR amount day 0 to day 7",
+#plot(log(subset_pat_439679_alpha_prod_wide$duplicate_count.0), log(subset_pat_439679_alpha_prod_wide$duplicate_count.7), main = "log TCR amount day 0 to day 7",
      xlab = "log(TCR per million day 0/sum(TCR per million day 0))", ylab = "log(TCR per million day 7/sum(TCR per million day 7))",asp = 1,
-     xlim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)))),
-     #xlim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0))), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0)) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0))), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7))))),
-     #ylim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7))), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0)) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0))), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7))))), 
-     ylim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)))), 
-     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0_deal_with_zeros == 1,'red','blue'))
+     #xlim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)))),
+     xlim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0))), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0)) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0))), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7))))),
+     ylim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7))), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0)) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.0))), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7/sum(subset_pat_439679_alpha_prod_wide$duplicate_count.7))))),
+     #ylim = c(log(min(subset_pat_439679_alpha_prod_wide$duplicate_count.7)), if_else(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0) > max(subset_pat_439679_alpha_prod_wide$duplicate_count.7), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.0)), log(max(subset_pat_439679_alpha_prod_wide$duplicate_count.7)))),
+     col = ifelse(subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 == 1,'red','blue'))
 abline(a=0,b=1)
 
 
 
+
+#######
