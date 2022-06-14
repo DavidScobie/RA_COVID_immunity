@@ -159,6 +159,24 @@ print(paste("start_day_0_count",start_day_0_count,"start_day_7_count",start_day_
 # print(paste("first_timepoint_vals",lam_vals))
 # print(paste("end_time_vals",end_time_vals))
 
+
+#make graph of TCR change over time
+#asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
+plot(log(lam_vals/sum(lam_vals)), log(end_time_vals/sum(end_time_vals)), main = "log TCR amount day 0 to day 7",
+     xlab = "log(TCR per million day 0/sum(TCR per million day 0))", ylab = "log(TCR per million day 7/sum(TCR per million day 7))",asp = 1,
+     xlim = c(log(min(lam_vals/sum(lam_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
+     ylim = c(log(min(end_time_vals/sum(end_time_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
+     col = ifelse(sig_day_7_from_day_0 == 1,'red','blue'))
+abline(a=0,b=1)
+
+
+
+
+
+
+
+
+
 #add significance column to data frame
 subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
 

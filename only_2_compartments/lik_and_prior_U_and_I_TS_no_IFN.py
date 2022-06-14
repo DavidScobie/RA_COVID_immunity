@@ -283,7 +283,7 @@ ax1.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', la
 params = Parameters()
 params.add('U0', value=U0, vary=False)
 params.add('I0', value=I0, vary=False)
-#params.add('I0', value=I0, min=I0-1, max=I0+1) this is an idea of adding I0 in as a prameter
+#params.add('I0', value=I0, min=I0-1, max=I0+1) this is an idea of adding I0 in as a parameter
 
 #my optimised parameters
 params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
