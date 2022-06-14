@@ -46,6 +46,7 @@ subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
 
 #replace duplicate count NA with duplicate count = 0.5 (so that all TCR's appear on log plot)
 subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0.5
+#subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
 
 #find total number of TCR's on each day
 TCRs_day_0 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.0))
@@ -73,8 +74,8 @@ lam_vals <- c(8,9,10,11,8,9,10,11) #dummy array of first timepoint values
 
 #the timepoint 7 dataset
 #end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
+#end_time_vals <- c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,1,1,1,1,1,1,1) #dummy array
 end_time_vals <- c(0.5,0.5,0.5,0.5,1,1,1,1) #dummy array
-
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
@@ -84,7 +85,7 @@ end_time_vals <- c(0.5,0.5,0.5,0.5,1,1,1,1) #dummy array
 ar_before_1 <- vector()
 count <- 0
 for (z in 1:max(lam_vals)) {
-  ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=1))
+  ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=0))
   print(paste("ar_before_1",ar_before_1))
   if (ar_before_1 < (p_value/2)) {
     count=count+1 
@@ -154,11 +155,22 @@ for (p in 1:length(lam_vals)) {
       start_day_7_count = start_day_7_count + 1
     }
   }
+  
+  # #change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
+  # if (end_time_vals[p] = 0) {
+  #   end_time_vals[p] = 0.5
+  # }
+  # if (lam_vals[p] = 0) {
+  #   lam_vals[p] = 0.5
+  # }
+  
 }
 print(paste("start_day_0_count",start_day_0_count,"start_day_7_count",start_day_7_count))
 # print(paste("sig_day_7_from_day_0",sig_day_7_from_day_0))
 # print(paste("first_timepoint_vals",lam_vals))
 # print(paste("end_time_vals",end_time_vals))
+
+#change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
 
 #add significance column to data frame
 #subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
