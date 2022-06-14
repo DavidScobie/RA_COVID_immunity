@@ -44,9 +44,8 @@ day_0_over_0 <- nrow(pat_439679_alpha_prod_wide[pat_439679_alpha_prod_wide$dupli
 myvars <- c("junction_aa", "duplicate_count.0", "duplicate_count.7", "duplicate_count.14")
 subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
 
-#replace duplicate count NA with duplicate count = 0.5 (so that all TCR's appear on log plot)
-subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0.5
-#subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
+#replace duplicate count NA with duplicate count = 0 
+subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
 
 #find total number of TCR's on each day
 TCRs_day_0 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.0))
@@ -69,13 +68,13 @@ sum_poisson = function(lam, start=0, stop=5) {
 }
 
 #the first timepoint data set
-#lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
-lam_vals <- c(8,9,10,11,8,9,10,11) #dummy array of first timepoint values
+lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
+#lam_vals <- c(8,9,10,11,8,9,10,11) #dummy array of first timepoint values
 
 #the timepoint 7 dataset
-#end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
+end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
 #end_time_vals <- c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,1,1,1,1,1,1,1) #dummy array
-end_time_vals <- c(0.5,0.5,0.5,0.5,1,1,1,1) #dummy array
+#end_time_vals <- c(0,0,0,0,1,1,1,1) #dummy array
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
@@ -86,14 +85,14 @@ ar_before_1 <- vector()
 count <- 0
 for (z in 1:max(lam_vals)) {
   ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=0))
-  print(paste("ar_before_1",ar_before_1))
+  #print(paste("ar_before_1",ar_before_1))
   if (ar_before_1 < (p_value/2)) {
     count=count+1 
     #print(paste("count",count))
   }
 }
 count_1_thresh <- max(lam_vals) - count
-print(paste("count_1_thresh",count_1_thresh,"max(lam_vals)",max(lam_vals),"count",count))
+#print(paste("count_1_thresh",count_1_thresh,"max(lam_vals)",max(lam_vals),"count",count))
 
 #the binary array to see if significant or not
 sig_day_7_from_day_0 <- vector()
@@ -111,7 +110,7 @@ for (p in 1:length(lam_vals)) {
   if (lam_vals[p] < 50) {     #lambda is low so manually sum to find significance level
     stops = linspace(0, 3*lam_vals[p], n = (3*lam_vals[p])-(0)+1)
     summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
-    print(paste("summation",summation))
+    #print(paste("summation",summation))
     for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
       if (summation[k] > (p_value/2)) {   #logic for finding the lower significance level
         low_counter = low_counter + 1
@@ -155,32 +154,23 @@ for (p in 1:length(lam_vals)) {
       start_day_7_count = start_day_7_count + 1
     }
   }
-  
-  # #change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
-  # if (end_time_vals[p] = 0) {
-  #   end_time_vals[p] = 0.5
-  # }
-  # if (lam_vals[p] = 0) {
-  #   lam_vals[p] = 0.5
-  # }
-  
+
 }
-print(paste("start_day_0_count",start_day_0_count,"start_day_7_count",start_day_7_count))
+
 # print(paste("sig_day_7_from_day_0",sig_day_7_from_day_0))
 # print(paste("first_timepoint_vals",lam_vals))
 # print(paste("end_time_vals",end_time_vals))
 
 #change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
-
-#add significance column to data frame
-#subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
+lam_vals <- replace(lam_vals, lam_vals==0, 0.5)
+end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
 
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
 plot(log(lam_vals/sum(lam_vals)), log(end_time_vals/sum(end_time_vals)), main = "log TCR amount day 0 to day 7",
      xlab = "log(TCR per million day 0/sum(TCR per million day 0))", ylab = "log(TCR per million day 7/sum(TCR per million day 7))",asp = 1,
-     #xlim = c(log(min(lam_vals/sum(lam_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
-     #ylim = c(log(min(end_time_vals/sum(end_time_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
+     xlim = c(log(min(lam_vals/sum(lam_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
+     ylim = c(log(min(end_time_vals/sum(end_time_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
      col = ifelse(sig_day_7_from_day_0 == 1,'red','blue'))
 abline(a=0,b=1)
 
