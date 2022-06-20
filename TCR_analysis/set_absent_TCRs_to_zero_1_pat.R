@@ -58,7 +58,7 @@ p_value <- 0.0001
 
 ###find the lower and upper bounds for p value of the data for poisson centered on 1st time point
 
-############# This code is summing poisson distributions of means (lam_vals) from 0 up to (stops)
+############# This function is summing poisson distributions of means (lam_vals) from 0 up to (stops)
 sum_poisson = function(lam, start=0, stop=5) {
   result = 0
   for (i in start:stop) {
@@ -69,11 +69,11 @@ sum_poisson = function(lam, start=0, stop=5) {
 
 #the first timepoint data set
 lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
-#lam_vals <- c(8,9,10,11,8,9,10,11) #dummy array of first timepoint values
+lam_vals <- c(0,0,0,0,0,1,1,1,1,1,2,2,2,2,2) #dummy array of first timepoint values
 
 #the timepoint 7 dataset
 end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
-#end_time_vals <- c(0,0,0,0,1,1,1,1) #dummy array
+end_time_vals <- c(3,4,5,6,7,3,4,5,6,7,3,4,5,6,7) #dummy array
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
@@ -108,9 +108,9 @@ for (p in 1:length(lam_vals)) {
   # print(lam_vals[p])
   #logic to find upper significance level
   if (lam_vals[p] < 50) {     #lambda is low so manually sum to find significance level
-    stops = linspace(0, 3*lam_vals[p], n = (3*lam_vals[p])-(0)+1)
+    stops = linspace(0, 10*lam_vals[p], n = (10*lam_vals[p])-(0)+1)  #need stops to go far beyond
     summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
-    #print(paste("summation",summation))
+    print(paste("summation",summation))
     for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
       if (summation[k] > (p_value/2)) {   #logic for finding the lower significance level
         low_counter = low_counter + 1
@@ -121,16 +121,16 @@ for (p in 1:length(lam_vals)) {
         lesser_than_max_sig[high_counter] = k
       }
     }
-    low_sig_lim = min(greater_than_min_sig)
-    high_sig_lim = max(lesser_than_max_sig)
+    low_sig_lim = min(greater_than_min_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
+    high_sig_lim = max(lesser_than_max_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
     
   } else {  #lambda is big so approximate as normal dist. p=0.05, which is 95% sig, which is 2 std_devs = 2*sqrt(mean) 
     num_std_devs_gauss <- qnorm(1-(p_value/2))
     low_sig_lim <- ceiling(lam_vals[p] - (num_std_devs_gauss*sqrt(lam_vals[p])))
     high_sig_lim <- floor(lam_vals[p] + (num_std_devs_gauss*sqrt(lam_vals[p])))
   }
-  # print(paste("low_sig_lim",low_sig_lim))
-  # print(paste("high_sig_lim",high_sig_lim))
+  print(paste("lesser_than_max_sig",lesser_than_max_sig))
+  print(paste("high_sig_lim",high_sig_lim))
   
   #compare the timepoint 7 data set to the significance thresholds
   if (end_time_vals[p] < low_sig_lim) { #it is significant at lower end
@@ -142,19 +142,19 @@ for (p in 1:length(lam_vals)) {
   }
   
 
-  if (lam_vals[p] < 1) { #these are just the zero readings in the first count
-    if (end_time_vals[p] < count_1_thresh) {
-      sig_day_7_from_day_0[p] = 0
-      start_day_0_count = start_day_0_count + 1
-    }
-  }
-  
-  if (end_time_vals[p] < 1) { #these are just the zero readings in the second count
-    if (lam_vals[p] <= count_1_thresh) {
-      sig_day_7_from_day_0[p] = 0
-      start_day_7_count = start_day_7_count + 1
-    }
-  }
+  # if (lam_vals[p] < 1) { #these are just the zero readings in the first count
+  #   if (end_time_vals[p] < count_1_thresh) {
+  #     sig_day_7_from_day_0[p] = 0
+  #     start_day_0_count = start_day_0_count + 1
+  #   }
+  # }
+  # 
+  # if (end_time_vals[p] < 1) { #these are just the zero readings in the second count
+  #   if (lam_vals[p] <= count_1_thresh) {
+  #     sig_day_7_from_day_0[p] = 0
+  #     start_day_7_count = start_day_7_count + 1
+  #   }
+  # }
 
 }
 
@@ -168,10 +168,10 @@ end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
 
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
-plot(log(lam_vals/sum(lam_vals)), log(end_time_vals/sum(end_time_vals)), main = "log TCR amount day 0 to day 7",
-     xlab = "log(TCR per million day 0/sum(TCR per million day 0))", ylab = "log(TCR per million day 7/sum(TCR per million day 7))",asp = 1,
-     xlim = c(log(min(lam_vals/sum(lam_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
-     ylim = c(log(min(end_time_vals/sum(end_time_vals))), if_else(max(lam_vals/sum(lam_vals)) > max(end_time_vals/sum(end_time_vals)), log(max(lam_vals/sum(lam_vals))), log(max(end_time_vals/sum(end_time_vals))))),
+plot(log(lam_vals), log(end_time_vals), main = "log TCR amount day 0 to day 7",
+     xlab = "log(TCR per million day 0)", ylab = "log(TCR per million day 7)",asp = 1,
+     xlim = c(log(min(lam_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
+     ylim = c(log(min(end_time_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
      col = ifelse(sig_day_7_from_day_0 == 1,'red','blue'))
 abline(a=0,b=1)
 
