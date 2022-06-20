@@ -69,11 +69,11 @@ sum_poisson = function(lam, start=0, stop=5) {
 
 #the first timepoint data set
 lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
-#lam_vals <- c(0,0,0,0,0,1,1,1,1,1,2,2,2,2,2) #dummy array of first timepoint values
+#lam_vals <- c(0,0,0,0,0,0,0,1,1,1,1,1,2,2,2,2,2) #dummy array of first timepoint values
 
 #the timepoint 7 dataset
 end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
-#end_time_vals <- c(6,7,8,9,10,6,7,8,9,10,6,7,8,9,10) #dummy array
+#end_time_vals <- c(4,5,6,7,8,9,10,6,7,8,9,10,6,7,8,9,10) #dummy array
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
@@ -92,6 +92,14 @@ count_1_thresh <- max(lam_vals) - count  #this finds the lowest value of the mea
 ####dealing with the errors in the significance colour for having no TCR abundance on day 0
 ar_bef_1 <- vector()
 count2 <- 0
+for (z in 1:max(end_time_vals)) {
+  ar_bef_1 <- sapply(1, function(x) sum_poisson(x,start=0,stop=z))
+  #print(paste("ar_bef_1",ar_bef_1))
+  if (ar_bef_1 > (1-(p_value/2))) {  
+    count2 = count2+1
+  }
+}
+count_2_thresh <- max(end_time_vals) - count2
 #######
 
 #the binary array to see if significant or not
@@ -153,12 +161,12 @@ for (p in 1:length(lam_vals)) {
   }
   
 
-  # if (lam_vals[p] < 1) { #these are just the zero readings in the first count
-  #   if (end_time_vals[p] < count_1_thresh) {
-  #     sig_day_7_from_day_0[p] = 0
-  #     start_day_0_count = start_day_0_count + 1
-  #   }
-  # }
+  if (lam_vals[p] < 1) { #these are just the zero readings in the first count
+    if (end_time_vals[p] <= count_2_thresh) {
+      sig_day_7_from_day_0[p] = 0
+      start_day_0_count = start_day_0_count + 1
+    }
+  }
   # 
   # if (end_time_vals[p] < 1) { #these are just the zero readings in the second count
   #   if (lam_vals[p] <= count_1_thresh) {
@@ -176,6 +184,8 @@ for (p in 1:length(lam_vals)) {
 #change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
 lam_vals <- replace(lam_vals, lam_vals==0, 0.5)
 end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
+
+#print(paste("sig_day_7_from_day_0",sig_day_7_from_day_0))
 
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
