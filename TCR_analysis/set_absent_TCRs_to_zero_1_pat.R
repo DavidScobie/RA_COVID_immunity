@@ -56,7 +56,7 @@ TCRs_day_14 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.
 
 p_value <- 0.0001
 
-###find the lower and upper bounds for 95% of the data for poisson centered on 1st time point
+###find the lower and upper bounds for p value of the data for poisson centered on 1st time point
 
 ############# This code is summing poisson distributions of means (lam_vals) from 0 up to (stops)
 sum_poisson = function(lam, start=0, stop=5) {
@@ -73,26 +73,26 @@ lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
 
 #the timepoint 7 dataset
 end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
-#end_time_vals <- c(0.5,0.5,0.5,0.5,0.5,0.5,0.5,1,1,1,1,1,1,1) #dummy array
 #end_time_vals <- c(0,0,0,0,1,1,1,1) #dummy array
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
 
-####dealing with the errors in the significance colour for having no TCR abundance on day 7 or day 0
-#first of all, use the p value above to calculate what the threshold in this case should be
+####dealing with the errors in the significance colour for having no TCR abundance on day 7 
 ar_before_1 <- vector()
 count <- 0
 for (z in 1:max(lam_vals)) {
-  ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=0))
-  #print(paste("ar_before_1",ar_before_1))
-  if (ar_before_1 < (p_value/2)) {
-    count=count+1 
-    #print(paste("count",count))
+  ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=0)) #here we are finding height of 1st line in poisson centered at means from 1 to maximum day 0 value
+  if (ar_before_1 < (p_value/2)) { #use the p value above to calculate what the threshold in this case should be
+    count=count+1 #count increases if height of 1st line is below the threshold set by (p value/2). (So it is significant)
   }
 }
-count_1_thresh <- max(lam_vals) - count
-#print(paste("count_1_thresh",count_1_thresh,"max(lam_vals)",max(lam_vals),"count",count))
+count_1_thresh <- max(lam_vals) - count  #this finds the lowest value of the mean where the sum at x=0 is significant
+
+####dealing with the errors in the significance colour for having no TCR abundance on day 0
+ar_bef_1 <- vector()
+count2 <- 0
+#######
 
 #the binary array to see if significant or not
 sig_day_7_from_day_0 <- vector()
@@ -133,21 +133,22 @@ for (p in 1:length(lam_vals)) {
   # print(paste("high_sig_lim",high_sig_lim))
   
   #compare the timepoint 7 data set to the significance thresholds
-  if (end_time_vals[p] < low_sig_lim) { #it is significant
+  if (end_time_vals[p] < low_sig_lim) { #it is significant at lower end
     sig_day_7_from_day_0[p] = 1
-  } else if (end_time_vals[p] > high_sig_lim) {
+  } else if (end_time_vals[p] > high_sig_lim) { #it is significant at higher end
     sig_day_7_from_day_0[p] = 1
-  } else {
-    sig_day_7_from_day_0[p] = 0
+  } else { #it is not significant
+    sig_day_7_from_day_0[p] = 0 
   }
   
-  #correct the significance if duplicate count is less than 1 to check with threshold
+
   if (lam_vals[p] < 1) { #these are just the zero readings in the first count
     if (end_time_vals[p] < count_1_thresh) {
-      sig_day_7_from_day_0[p] = 0}
+      sig_day_7_from_day_0[p] = 0
       start_day_0_count = start_day_0_count + 1
-      
+    }
   }
+  
   if (end_time_vals[p] < 1) { #these are just the zero readings in the second count
     if (lam_vals[p] <= count_1_thresh) {
       sig_day_7_from_day_0[p] = 0
