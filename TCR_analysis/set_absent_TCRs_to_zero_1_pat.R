@@ -69,11 +69,11 @@ sum_poisson = function(lam, start=0, stop=5) {
 
 #the first timepoint data set
 lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
-lam_vals <- c(0,0,0,0,0,1,1,1,1,1,2,2,2,2,2) #dummy array of first timepoint values
+#lam_vals <- c(0,0,0,0,0,1,1,1,1,1,2,2,2,2,2) #dummy array of first timepoint values
 
 #the timepoint 7 dataset
 end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
-end_time_vals <- c(3,4,5,6,7,3,4,5,6,7,3,4,5,6,7) #dummy array
+#end_time_vals <- c(6,7,8,9,10,6,7,8,9,10,6,7,8,9,10) #dummy array
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
@@ -99,16 +99,24 @@ sig_day_7_from_day_0 <- vector()
 
 start_day_0_count = 0
 start_day_7_count = 0
+manual_x_threshold =50 #what value of x do we start approximating sig with (mean +- (num_std_devs*sqrt(lambda))) ? 
 
 for (p in 1:length(lam_vals)) {
   greater_than_min_sig <- vector() #initialise empty array 
   low_counter <- 0 #initialize lower significance level counter
   lesser_than_max_sig <- vector() #initialise empty array 
   high_counter <- 0 #initialize higher significance level counter
-  # print(lam_vals[p])
   #logic to find upper significance level
-  if (lam_vals[p] < 50) {     #lambda is low so manually sum to find significance level
-    stops = linspace(0, 10*lam_vals[p], n = (10*lam_vals[p])-(0)+1)  #need stops to go far beyond
+  if (lam_vals[p] < manual_x_threshold) {     #lambda is low so manually sum to find significance level
+    
+    #this loop is in to save memory. We only need large num_lam_multip for small lambdas. Can always add steps in the loop to be more memory efficient
+    if (lam_vals[p] < 10) {
+      num_lam_multip = 12  #number of multiples of lambda to sum up to in the poisson distribution
+    } else {
+      num_lam_multip = 3
+    }
+    
+    stops = linspace(0, num_lam_multip*lam_vals[p], n = (num_lam_multip*lam_vals[p])-(0)+1)  #need stops to go far beyond
     summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
     print(paste("summation",summation))
     for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
@@ -129,15 +137,18 @@ for (p in 1:length(lam_vals)) {
     low_sig_lim <- ceiling(lam_vals[p] - (num_std_devs_gauss*sqrt(lam_vals[p])))
     high_sig_lim <- floor(lam_vals[p] + (num_std_devs_gauss*sqrt(lam_vals[p])))
   }
-  print(paste("lesser_than_max_sig",lesser_than_max_sig))
-  print(paste("high_sig_lim",high_sig_lim))
+  #print(paste("lesser_than_max_sig",lesser_than_max_sig))
+  #print(paste("high_sig_lim",high_sig_lim))
   
   #compare the timepoint 7 data set to the significance thresholds
   if (end_time_vals[p] < low_sig_lim) { #it is significant at lower end
+    #print(paste("SIGNIFICANT"))
     sig_day_7_from_day_0[p] = 1
   } else if (end_time_vals[p] > high_sig_lim) { #it is significant at higher end
+    #print(paste("SIGNIFICANT"))
     sig_day_7_from_day_0[p] = 1
   } else { #it is not significant
+    #print(paste("NOT SIGNIFICANT"))
     sig_day_7_from_day_0[p] = 0 
   }
   
