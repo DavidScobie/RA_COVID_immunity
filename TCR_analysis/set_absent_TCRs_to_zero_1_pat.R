@@ -118,7 +118,7 @@ for (p in 1:length(lam_vals)) {
     
     stops = linspace(0, num_lam_multip*lam_vals[p], n = (num_lam_multip*lam_vals[p])-(0)+1)  #need stops to go far beyond
     summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
-    print(paste("summation",summation))
+    #print(paste("summation",summation))
     for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
       if (summation[k] > (p_value/2)) {   #logic for finding the lower significance level
         low_counter = low_counter + 1
