@@ -117,7 +117,7 @@ for (p in 1:length(lam_vals)) {
   #logic to find upper significance level
   if (lam_vals[p] < manual_x_threshold) {     #lambda is low so manually sum to find significance level
     
-    #this loop is in to save memory. We only need large num_lam_multip for small lambdas. Can always add steps in the loop to be more memory efficient
+    #this loop is in to save memory. We only need large num_lam_multip for small lambdas (in order to find upper p value threshold). Can always add steps in the loop to be more memory efficient
     if (lam_vals[p] < 10) {
       num_lam_multip = 12  #number of multiples of lambda to sum up to in the poisson distribution
     } else {
