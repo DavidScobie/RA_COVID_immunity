@@ -1,16 +1,18 @@
 
 lam_vals <- c(0,0,0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,30,30,30,30,30,30) #dummy array of first timepoint values
+lam_vals <- c(10,3,3,2,5,8,7)
 
 lam_vals_used <- vector()
 low_sig_lim_list <- vector()
 
-counter = 0
+#counter = 0
 
 for (p in 1:length(lam_vals)) {
   
   low_sig_lim <- 2*lam_vals[p]
     
-  if (counter == 0) {
+  #if (lam_vals[p] == lam_vals[1]) { 
+  if (p == 1) {
     low_sig_lim_list <- append(low_sig_lim_list, low_sig_lim)
   }
   
@@ -21,7 +23,7 @@ for (p in 1:length(lam_vals)) {
   }
   
   lam_vals_used <- append(lam_vals_used, lam_vals[p])
-  counter = counter + 1
+#  counter = counter + 1
   
   
   print(paste("lam_vals_used",lam_vals_used))
