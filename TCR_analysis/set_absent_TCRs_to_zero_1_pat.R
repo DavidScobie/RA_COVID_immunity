@@ -69,11 +69,13 @@ sum_poisson = function(lam, start=0, stop=5) {
 
 #the first timepoint data set
 lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
-#lam_vals <- c(0,0,0,0,0,0,0,1,1,1,1,1,2,2,2,2,2) #dummy array of first timepoint values
+#lam_vals <- c(0,0,0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,30,30,30,30,30,30) #dummy array of first timepoint values
+lam_vals <- c(30,30,2,0,2,30,1)
 
 #the timepoint 7 dataset
 end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
-#end_time_vals <- c(4,5,6,7,8,9,10,6,7,8,9,10,6,7,8,9,10) #dummy array
+#end_time_vals <- c(4,5,6,7,8,9,10,6,7,8,9,10,6,7,8,9,10,10,11,12,52,53,54) #dummy array
+end_time_vals <- c(10,4,2,7,3,3,0)
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
@@ -108,6 +110,10 @@ sig_day_7_from_day_0 <- vector()
 start_day_0_count = 0
 start_day_7_count = 0
 manual_x_threshold =50 #what value of x do we start approximating sig with (mean +- (num_std_devs*sqrt(lambda))) ? 
+
+low_sig_lim_list <- vector() #initialise list for plotting lower significance bound
+high_sig_lim_list <- vector()
+lam_vals_used <- vector()
 
 for (p in 1:length(lam_vals)) {
   greater_than_min_sig <- vector() #initialise empty array 
@@ -156,8 +162,30 @@ for (p in 1:length(lam_vals)) {
     low_sig_lim <- ceiling(lam_vals[p] - (num_std_devs_gauss*sqrt(lam_vals[p])))
     high_sig_lim <- floor(lam_vals[p] + (num_std_devs_gauss*sqrt(lam_vals[p])))
   }
-  #print(paste("lesser_than_max_sig",lesser_than_max_sig))
-  #print(paste("high_sig_lim",high_sig_lim))
+  print(paste("lesser_than_max_sig",lesser_than_max_sig))
+  print(paste("high_sig_lim",high_sig_lim))
+  print(paste("greater_than_min_sig",greater_than_min_sig))
+  print(paste("low_sig_lim",low_sig_lim))
+  
+  ######### making the low_sig_lim and high_sig_lim ready to plot
+  
+  #for each lam_vals value (day 0 abundance value), append low_sig_lim to a list and high_sig_lim to a list
+  if (p == 1) {  #the vector is of length zero in the beginning so we have to append in the first instance
+    low_sig_lim_list <- append(low_sig_lim_list, low_sig_lim)
+    high_sig_lim_list <- append(high_sig_lim_list, high_sig_lim)
+  }
+  #here we are checking if lam_vals[p] appears in lam_vals_used. If it does then we do not do the else if loop
+  else if (setequal(lam_vals_used[!(lam_vals_used %in% lam_vals[p])], lam_vals_used)) { 
+    #print(paste("lam_vals_used[!(lam_vals_used %in% lam_vals[p])] == lam_vals_used",lam_vals_used[!(lam_vals_used %in% lam_vals[p])] == lam_vals_used))
+    low_sig_lim_list <- append(low_sig_lim_list, low_sig_lim)
+    high_sig_lim_list <- append(high_sig_lim_list, high_sig_lim)
+  }
+  
+  lam_vals_used <- append(lam_vals_used, lam_vals[p])
+  
+  ##########
+  
+  print(paste("lam_vals_used",lam_vals_used))
   
   #compare the timepoint 7 data set to the significance thresholds
   if (end_time_vals[p] < low_sig_lim) { #it is significant at lower end
@@ -188,11 +216,18 @@ for (p in 1:length(lam_vals)) {
 
 }
 
-# print(paste("sig_day_7_from_day_0",sig_day_7_from_day_0))
-# print(paste("first_timepoint_vals",lam_vals))
-# print(paste("end_time_vals",end_time_vals))
+lam_vals_used_unique <- unique(lam_vals_used)
+
+print(paste("lam_vals_used_unique",lam_vals_used_unique))
+print(paste("low_sig_lim_list",low_sig_lim_list))
+print(paste("high_sig_lim_list",high_sig_lim_list))
+
+#order lam_vals_used_unique into ascending order and order other arrays in the same order
+ascending_order_lam_vals_used_unique <- order(lam_vals_used_unique)
+
 
 #change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
+lam_vals_used_unique <- replace(lam_vals_used_unique, lam_vals_used_unique==0, 0.5)
 lam_vals <- replace(lam_vals, lam_vals==0, 0.5)
 end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
 
