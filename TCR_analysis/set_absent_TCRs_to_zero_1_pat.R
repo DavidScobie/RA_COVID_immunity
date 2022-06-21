@@ -114,12 +114,16 @@ for (p in 1:length(lam_vals)) {
   low_counter <- 0 #initialize lower significance level counter
   lesser_than_max_sig <- vector() #initialise empty array 
   high_counter <- 0 #initialize higher significance level counter
+  
+  greater_than_up_sig_bound <- vector() #error check vector for upper significance bound
+  sig_error_check_counter <- 0 #counter for the error checker on upper significance bound
+  
   #logic to find upper significance level
-  if (lam_vals[p] < manual_x_threshold) {     #lambda is low so manually sum to find significance level
+  if (lam_vals[p] < manual_x_threshold) {     #lambda is low, so manually sum to find significance level
     
     #this loop is in to save memory. We only need large num_lam_multip for small lambdas (in order to find upper p value threshold). Can always add steps in the loop to be more memory efficient
     if (lam_vals[p] < 10) {
-      num_lam_multip = 12  #number of multiples of lambda to sum up to in the poisson distribution
+      num_lam_multip = 8  #number of multiples of lambda to sum up to in the poisson distribution
     } else {
       num_lam_multip = 3
     }
@@ -136,11 +140,18 @@ for (p in 1:length(lam_vals)) {
         high_counter = high_counter + 1
         lesser_than_max_sig[high_counter] = k
       }
+    
+      if (summation[k] > (1-(p_value/2))) { #logic to check if any values in summation are above the upper sig bound
+        sig_error_check_counter = sig_error_check_counter + 1
+      }
     }
+    #if no values in summation above upper sig bound throw error because using wrong indicie for significance
+    if( sig_error_check_counter < 1 ) stop('NOT CORRECTLY FINDING UPPER SIGNIFICANCE THRESHOLD. Raise num_lam_multip to fix this. Or increase p_value.')
+    
     low_sig_lim = min(greater_than_min_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
     high_sig_lim = max(lesser_than_max_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
     
-  } else {  #lambda is big so approximate as normal dist. p=0.05, which is 95% sig, which is 2 std_devs = 2*sqrt(mean) 
+  } else {  #lambda is big so approximate as normal dist. use qnorm to find the number of standard deviations from the p value
     num_std_devs_gauss <- qnorm(1-(p_value/2))
     low_sig_lim <- ceiling(lam_vals[p] - (num_std_devs_gauss*sqrt(lam_vals[p])))
     high_sig_lim <- floor(lam_vals[p] + (num_std_devs_gauss*sqrt(lam_vals[p])))
@@ -184,8 +195,6 @@ for (p in 1:length(lam_vals)) {
 #change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
 lam_vals <- replace(lam_vals, lam_vals==0, 0.5)
 end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
-
-#print(paste("sig_day_7_from_day_0",sig_day_7_from_day_0))
 
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
