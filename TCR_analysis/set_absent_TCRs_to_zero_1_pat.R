@@ -70,12 +70,12 @@ sum_poisson = function(lam, start=0, stop=5) {
 #the first timepoint data set
 lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
 #lam_vals <- c(0,0,0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,30,30,30,30,30,30) #dummy array of first timepoint values
-lam_vals <- c(30,30,2,0,2,30,1)
+#lam_vals <- c(30,30,2,0,2,30,1)
 
 #the timepoint 7 dataset
 end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
 #end_time_vals <- c(4,5,6,7,8,9,10,6,7,8,9,10,6,7,8,9,10,10,11,12,52,53,54) #dummy array
-end_time_vals <- c(10,4,2,7,3,3,0)
+#end_time_vals <- c(10,4,2,7,3,3,0)
 
 
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[0:10]
@@ -162,10 +162,10 @@ for (p in 1:length(lam_vals)) {
     low_sig_lim <- ceiling(lam_vals[p] - (num_std_devs_gauss*sqrt(lam_vals[p])))
     high_sig_lim <- floor(lam_vals[p] + (num_std_devs_gauss*sqrt(lam_vals[p])))
   }
-  print(paste("lesser_than_max_sig",lesser_than_max_sig))
-  print(paste("high_sig_lim",high_sig_lim))
-  print(paste("greater_than_min_sig",greater_than_min_sig))
-  print(paste("low_sig_lim",low_sig_lim))
+  # print(paste("lesser_than_max_sig",lesser_than_max_sig))
+  # print(paste("high_sig_lim",high_sig_lim))
+  # print(paste("greater_than_min_sig",greater_than_min_sig))
+  # print(paste("low_sig_lim",low_sig_lim))
   
   ######### making the low_sig_lim and high_sig_lim ready to plot
   
@@ -185,7 +185,7 @@ for (p in 1:length(lam_vals)) {
   
   ##########
   
-  print(paste("lam_vals_used",lam_vals_used))
+  #print(paste("lam_vals_used",lam_vals_used))
   
   #compare the timepoint 7 data set to the significance thresholds
   if (end_time_vals[p] < low_sig_lim) { #it is significant at lower end
@@ -218,12 +218,21 @@ for (p in 1:length(lam_vals)) {
 
 lam_vals_used_unique <- unique(lam_vals_used)
 
-print(paste("lam_vals_used_unique",lam_vals_used_unique))
-print(paste("low_sig_lim_list",low_sig_lim_list))
-print(paste("high_sig_lim_list",high_sig_lim_list))
+# print(paste("lam_vals_used_unique",lam_vals_used_unique))
+# print(paste("low_sig_lim_list",low_sig_lim_list))
+# print(paste("high_sig_lim_list",high_sig_lim_list))
 
 #order lam_vals_used_unique into ascending order and order other arrays in the same order
-ascending_order_lam_vals_used_unique <- order(lam_vals_used_unique)
+#ascen_ord_lam_vals_used_unique <- order(lam_vals_used_unique)
+
+ordered_low_sig_lim_list <- low_sig_lim_list[order(lam_vals_used_unique)]
+ordered_high_sig_lim_list <- high_sig_lim_list[order(lam_vals_used_unique)]
+ordered_lam_vals_used_unique <- sort(lam_vals_used_unique)
+
+#replace the -Inf at the start of ordered_high_sig_lim_list with the value at indicie of 2. 
+if (ordered_lam_vals_used_unique[1] == 0) {  #Only if first value in ordered_lam_vals_used_unique is 0
+  ordered_high_sig_lim_list[1] = ordered_high_sig_lim_list[2]
+}
 
 
 #change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
@@ -231,12 +240,21 @@ lam_vals_used_unique <- replace(lam_vals_used_unique, lam_vals_used_unique==0, 0
 lam_vals <- replace(lam_vals, lam_vals==0, 0.5)
 end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
 
+#do the same for the line I am plotting
+ordered_lam_vals_used_unique <- replace(ordered_lam_vals_used_unique, ordered_lam_vals_used_unique==0, 0.5)
+ordered_low_sig_lim_list <- replace(ordered_low_sig_lim_list, ordered_low_sig_lim_list==0, 0.5)
+ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig_lim_list==0, 0.5)
+
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
 plot(log(lam_vals), log(end_time_vals), main = "log TCR amount day 0 to day 7",
      xlab = "log(TCR per million day 0)", ylab = "log(TCR per million day 7)",asp = 1,
      xlim = c(log(min(lam_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
      ylim = c(log(min(end_time_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
+     #xlim = c(-1,10),
+     #ylim = c(-1,10),
      col = ifelse(sig_day_7_from_day_0 == 1,'red','blue'))
 abline(a=0,b=1)
+lines(log(ordered_lam_vals_used_unique),log(ordered_low_sig_lim_list), type="l", lty=2)
+lines(log(ordered_lam_vals_used_unique),log(ordered_high_sig_lim_list), type="l", lty=2)
 
