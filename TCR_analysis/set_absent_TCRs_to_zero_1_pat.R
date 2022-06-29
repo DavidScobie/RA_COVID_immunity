@@ -54,7 +54,7 @@ TCRs_day_14 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.
 
 #######day 0 to day 7 significance
 
-p_value <- 0.0001
+p_value <- 0.001
 
 ###find the lower and upper bounds for p value of the data for poisson centered on 1st time point
 
@@ -68,13 +68,13 @@ sum_poisson = function(lam, start=0, stop=5) {
 }
 
 #the first timepoint data set
-lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
-#lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[1:500] #just taking a subset
+#lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
+lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[1:500] #just taking a subset
 #lam_vals <- c(30,30,2,0,2,30,1)
 
 #the timepoint 7 dataset
-end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
-#end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7[1:500] #just taking a subset
+#end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
+end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7[1:500] #just taking a subset
 #end_time_vals <- c(10,4,2,7,3,3,0)
 
 ####dealing with the errors in the significance colour for having no TCR abundance on day 7 
@@ -198,7 +198,7 @@ for (p in 1:length(lam_vals)) {
   } else { #lambda is really big so have the significance lines go straight from this point onwards
     num_std_devs_gauss <- qnorm(1-(p_value/2))
     low_sig_lim <- ceiling(top_x_threshold - (num_std_devs_gauss*sqrt(top_x_threshold)))
-    high_sig_lim <- 10*max(lam_vals)
+    high_sig_lim <- 10*max(lam_vals)  #########MAKE THIS MORE SCIENTIFIC
   }
   
   ######### making the low_sig_lim and high_sig_lim ready to plot
