@@ -47,6 +47,8 @@ subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
 #replace duplicate count NA with duplicate count = 0 
 subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
 
+rownames(subset_pat_439679_alpha_prod_wide) <- NULL  #This resets the index of the rows of the dataframe
+
 #find total number of TCR's on each day
 TCRs_day_0 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.0))
 TCRs_day_7 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.7))
@@ -69,13 +71,13 @@ sum_poisson = function(lam, start=0, stop=5) {
 
 #the first timepoint data set
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
-#lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[1:10] #just taking a subset
-lam_vals <- c(30,0,2,0,2,30,1)
+lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[1:500] #just taking a subset
+#lam_vals <- c(30,0,2,0,2,30,1)
 
 #the timepoint 7 dataset
 #end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
-#end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7[1:10] #just taking a subset
-end_time_vals <- c(10,0,2,7,3,3,0)
+end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7[1:500] #just taking a subset
+#end_time_vals <- c(10,0,2,7,3,3,0)
 
 ####dealing with the errors in the significance colour for having no TCR abundance on day 7 
 ar_before_1 <- vector()
@@ -108,7 +110,7 @@ start_day_0_count = 0
 start_day_7_count = 0
 manual_x_threshold = 50 #what value of x do we start approximating sig with (mean +- (num_std_devs*sqrt(lambda))) ? 
 top_x_threshold = 200 #what value of x do we make the significance lines flat?
-bottom_threshold = 0
+bottom_threshold = 10
 
 low_sig_lim_list <- vector() #initialise list for plotting lower significance bound
 high_sig_lim_list <- vector()
@@ -150,7 +152,8 @@ for (p in 1:length(lam_vals)) {
     #if no values in summation above upper sig bound throw error because using wrong indicie for significance
     if( sig_error_check_counter < 1 ) stop('NOT CORRECTLY FINDING UPPER SIGNIFICANCE THRESHOLD. Raise num_lam_multip to fix this. Or increase p_value.')
     
-    low_sig_lim = min(greater_than_min_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
+    #low_sig_lim = min(greater_than_min_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
+    low_sig_lim = 0
     high_sig_lim = max(lesser_than_max_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
     
     ###########################
