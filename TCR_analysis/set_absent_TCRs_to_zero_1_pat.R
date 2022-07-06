@@ -43,8 +43,8 @@ day_0_over_0 <- nrow(pat_439679_alpha_prod_wide[pat_439679_alpha_prod_wide$dupli
 
 # select variables junction_aa, duplicate_count.0, duplicate_count.7, duplicate_count.14
 myvars <- c("junction_aa", "duplicate_count.0", "duplicate_count.7", "duplicate_count.14")
-#subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
-subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars][1:50,] #only want first 500 for speed
+subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
+#subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars][1:22,] #only want first 500 for speed
 
 #replace duplicate count NA with duplicate count = 0
 subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
@@ -278,6 +278,7 @@ ordered_lam_vals_used_unique <- replace(ordered_lam_vals_used_unique, ordered_la
 ordered_low_sig_lim_list <- replace(ordered_low_sig_lim_list, ordered_low_sig_lim_list==0, 0.5)
 ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig_lim_list==0, 0.5)
 
+######old way of plotting the data
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
 # plot(log(lam_vals), log(end_time_vals), main = "log TCR amount day 0 to day 7",
@@ -305,19 +306,13 @@ subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
 subset_pat_439679_alpha_prod_wide$density <- get_density(log(lam_vals), log(end_time_vals), n = 10)
 
 ###introducing jitter
-#what is the standard deviation on each point?
-subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% rowwise() %>%
-  mutate(log_day_0_for_plot_with_jitter_sd = 1/(log_day_0_for_plot + 10))
-
-subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% rowwise() %>%
-  mutate(log_day_7_for_plot_with_jitter_sd = 1/(log_day_7_for_plot + 10))
 
 #then calculate the jitter
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% rowwise() %>%
-  mutate(log_day_0_for_plot_with_jitter = rnorm(1,mean=log_day_0_for_plot, sd=log_day_0_for_plot_with_jitter_sd))
+  mutate(log_day_0_for_plot_with_jitter = rnorm(1,mean=log_day_0_for_plot, sd=1/(log_day_0_for_plot + 10)))
 
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% rowwise() %>%
-  mutate(log_day_7_for_plot_with_jitter = rnorm(1,mean=log_day_7_for_plot, sd=log_day_7_for_plot_with_jitter_sd))
+  mutate(log_day_7_for_plot_with_jitter = rnorm(1,mean=log_day_7_for_plot, sd=1/(log_day_7_for_plot + 10)))
 
 #Next the significance lines
 log_ordered_lam_vals_used_unique <- log(ordered_lam_vals_used_unique)
@@ -326,15 +321,12 @@ log_ordered_high_sig_lim_list <- log(ordered_high_sig_lim_list)
 subset_pat_439679_alpha_prod_wide_sig_lines <- data.frame(log_ordered_lam_vals_used_unique, log_ordered_low_sig_lim_list, log_ordered_high_sig_lim_list)
 
 p1 <- ggplot(subset_pat_439679_alpha_prod_wide) 
-p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter, color = density), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count 7)")
+#p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter, color = density), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count 7)")  #if we want colour for density
+p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count 7)")
 p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_low_sig_lim_list),linetype="dotted")
 p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_high_sig_lim_list),linetype="dotted")
-#p5 <- p4 + xlim(c(log(min(day_0_for_plot_with_jitter)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))))
-#p6 <- p5 + coord_cartesian(ylim=c(log(min(day_7_for_plot_with_jitter)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals))))) 
-# p5 <- p4 + xlim(c(-2, if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))))
-# p6 <- p5 + coord_cartesian(ylim=c(-2, if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))))
-p5 <- p4 + xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))))
-p6 <- p5 + coord_cartesian(ylim=c(min(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))))
+p5 <- p4 + xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter))))
+p6 <- p5 + coord_cartesian(ylim=c(min(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter))))
 p7 <- p6 + geom_abline()
 p7
 
