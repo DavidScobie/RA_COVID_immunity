@@ -271,18 +271,6 @@ ordered_lam_vals_used_unique <- replace(ordered_lam_vals_used_unique, ordered_la
 ordered_low_sig_lim_list <- replace(ordered_low_sig_lim_list, ordered_low_sig_lim_list==0, 0.5)
 ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig_lim_list==0, 0.5)
 
-######old way of plotting the data
-#make graph of TCR change over time
-#asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
-# plot(log(lam_vals), log(end_time_vals), main = "log TCR amount day 0 to day 7",
-#      xlab = "log(TCR per million day 0)", ylab = "log(TCR per million day 7)",asp = 1,
-#      xlim = c(log(min(lam_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
-#      ylim = c(log(min(end_time_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
-#      col = ifelse(sig_day_7_from_day_0 == 1,'red','blue'))
-# abline(a=0,b=1)
-# lines(log(ordered_lam_vals_used_unique),log(ordered_low_sig_lim_list), type="l", lty=2)
-# lines(log(ordered_lam_vals_used_unique),log(ordered_high_sig_lim_list), type="l", lty=2)
-
 #this function computes the density in x and y directions
 get_density <- function(x, y, ...) {
   dens <- MASS::kde2d(x, y, ...)
@@ -311,12 +299,17 @@ log_ordered_low_sig_lim_list <- log(ordered_low_sig_lim_list)
 log_ordered_high_sig_lim_list <- log(ordered_high_sig_lim_list)
 subset_pat_439679_alpha_prod_wide_sig_lines <- data.frame(log_ordered_lam_vals_used_unique, log_ordered_low_sig_lim_list, log_ordered_high_sig_lim_list)
 
+#we dont want to plot the start of the lower significance line, as it looks incorrect with the jitter
+chopped_log_ordered_low_sig_lim_list <- log_ordered_low_sig_lim_list[max(which(log(ordered_low_sig_lim_list) == min(log(ordered_low_sig_lim_list)))):length(log_ordered_low_sig_lim_list)]
+chopped_log_ordered_lam_vals_used_unique <- log_ordered_lam_vals_used_unique[max(which(log(ordered_low_sig_lim_list) == min(log(ordered_low_sig_lim_list)))):length(log_ordered_low_sig_lim_list)]
+subset_pat_439679_alpha_prod_wide_chopped_sig_lines <- data.frame(chopped_log_ordered_low_sig_lim_list, chopped_log_ordered_lam_vals_used_unique)
+
 p1 <- ggplot(subset_pat_439679_alpha_prod_wide) #define the dataframe to plot
 #p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter, color = density), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count day 7)")  #if we want colour for density
-p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count 7)") #make the scatterplot and give axis labels
-p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_low_sig_lim_list),linetype="dotted") #plot the lower significance boundary line
-p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_high_sig_lim_list),linetype="dotted") #plot the upper significance boundary line
-p5 <- p4 + xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter)))) #define the xlim of the plot
+p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter), shape = sig_day_7_from_day_0, colour = sig_day_7_from_day_0+1) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count day 7)") #make the scatterplot and give axis labels
+p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_chopped_sig_lines, aes(x=chopped_log_ordered_lam_vals_used_unique,y=chopped_log_ordered_low_sig_lim_list),linetype="dashed", color = 'blue', size = 2) #plot the lower significance boundary line
+p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_high_sig_lim_list),linetype="dashed", color = 'blue', size = 2) #plot the upper significance boundary line
+p5 <- p4 + coord_cartesian(xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter))))) #define the xlim of the plot
 p6 <- p5 + coord_cartesian(ylim=c(min(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter)))) #define the ylim of the plot, coordinates cartesian ensures that we plot all of the line
 p7 <- p6 + geom_abline() #plot the line y=x
 p7 #show the plot
