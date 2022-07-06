@@ -298,15 +298,25 @@ get_density <- function(x, y, ...) {
   return(dens$z[ii])
 }
 
-#take all the important arrays and place them into a dataframe
+#take all the important arrays and place them into a dataframe. First the points and density
 subset_pat_439679_alpha_prod_wide$day_0_for_plot <- log(lam_vals)
 subset_pat_439679_alpha_prod_wide$day_7_for_plot <- log(end_time_vals)
 subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
-# subset_pat_439679_alpha_prod_wide$ordered_lam_vals_used_unique <- ordered_lam_vals_used_unique
-# subset_pat_439679_alpha_prod_wide$ordered_low_sig_lim_list <- ordered_low_sig_lim_list
-# subset_pat_439679_alpha_prod_wide$ordered_high_sig_lim_list <- ordered_high_sig_lim_list
 subset_pat_439679_alpha_prod_wide$density <- get_density(log(lam_vals), log(end_time_vals), n = 10)
+#Next the significance lines
+log_ordered_lam_vals_used_unique <- log(ordered_lam_vals_used_unique)
+log_ordered_low_sig_lim_list <- log(ordered_low_sig_lim_list)
+log_ordered_high_sig_lim_list <- log(ordered_high_sig_lim_list)
+subset_pat_439679_alpha_prod_wide_sig_lines <- data.frame(log_ordered_lam_vals_used_unique, log_ordered_low_sig_lim_list, log_ordered_high_sig_lim_list)
+# subset_pat_439679_alpha_prod_wide_sig_lines$ordered_lam_vals_used_unique <- ordered_lam_vals_used_unique
+# subset_pat_439679_alpha_prod_wide_sig_lines$ordered_low_sig_lim_list <- ordered_low_sig_lim_list
+# subset_pat_439679_alpha_prod_wide_sig_lines$ordered_high_sig_lim_list <- ordered_high_sig_lim_list
 
-ggplot(subset_pat_439679_alpha_prod_wide) + geom_point(aes(day_0_for_plot, day_7_for_plot, color = density))
-
+p1 <- ggplot(subset_pat_439679_alpha_prod_wide) 
+p2 <- p1 + geom_point(aes(day_0_for_plot, day_7_for_plot, color = density))
+p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_low_sig_lim_list))
+p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_high_sig_lim_list))
+p5 <- p4 +  xlim(c(log(min(lam_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))))
+p6 <- p5 + ylim(c(log(min(end_time_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))))
+p6
 
