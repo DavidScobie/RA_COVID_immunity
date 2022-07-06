@@ -308,7 +308,7 @@ plt.xlabel('Days Post Infection')
 plt.ylabel('Virus Titre (copies/mL)')
 plt.title('patients with at least 5 datapoints linear scale')
 
-np.save('FFA_TS_V_measured_NON_DET_eq_zero_sick_only', 10**div_vir_list_sum_front_and_end_chopped)
-np.save('FFA_TS_t_measured_NON_DET_eq_zero_sick_only', eff_day_vals_front_and_end_chopped)
+# np.save('FFA_TS_V_measured_NON_DET_eq_zero_sick_only', 10**div_vir_list_sum_front_and_end_chopped)
+# np.save('FFA_TS_t_measured_NON_DET_eq_zero_sick_only', eff_day_vals_front_and_end_chopped)
 
 plt.show()
