@@ -43,7 +43,8 @@ day_0_over_0 <- nrow(pat_439679_alpha_prod_wide[pat_439679_alpha_prod_wide$dupli
 
 # select variables junction_aa, duplicate_count.0, duplicate_count.7, duplicate_count.14
 myvars <- c("junction_aa", "duplicate_count.0", "duplicate_count.7", "duplicate_count.14")
-subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
+#subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
+subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars][1:500,] #only want first 500 for speed
 
 #replace duplicate count NA with duplicate count = 0
 subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
@@ -279,28 +280,33 @@ ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig
 
 #make graph of TCR change over time
 #asp = 1 makes axes equal. logic in xlim and ylim to choose the maximum of the x and y data. col is conditional colouring.
-plot(log(lam_vals), log(end_time_vals), main = "log TCR amount day 0 to day 7",
-     xlab = "log(TCR per million day 0)", ylab = "log(TCR per million day 7)",asp = 1,
-     xlim = c(log(min(lam_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
-     ylim = c(log(min(end_time_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
-     col = ifelse(sig_day_7_from_day_0 == 1,'red','blue'))
-abline(a=0,b=1)
-lines(log(ordered_lam_vals_used_unique),log(ordered_low_sig_lim_list), type="l", lty=2)
-lines(log(ordered_lam_vals_used_unique),log(ordered_high_sig_lim_list), type="l", lty=2)
+# plot(log(lam_vals), log(end_time_vals), main = "log TCR amount day 0 to day 7",
+#      xlab = "log(TCR per million day 0)", ylab = "log(TCR per million day 7)",asp = 1,
+#      xlim = c(log(min(lam_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
+#      ylim = c(log(min(end_time_vals)), if_else(max(lam_vals) > max(end_time_vals), log(max(lam_vals)), log(max(end_time_vals)))),
+#      col = ifelse(sig_day_7_from_day_0 == 1,'red','blue'))
+# abline(a=0,b=1)
+# lines(log(ordered_lam_vals_used_unique),log(ordered_low_sig_lim_list), type="l", lty=2)
+# lines(log(ordered_lam_vals_used_unique),log(ordered_high_sig_lim_list), type="l", lty=2)
 
-# #this function computes the density in x and y directions
-# get_density <- function(x, y, ...) {
-#   dens <- MASS::kde2d(x, y, ...)
-#   ix <- findInterval(x, dens$x)
-#   iy <- findInterval(y, dens$y)
-#   ii <- cbind(ix, iy)
-#   return(dens$z[ii])
-# }
-# 
-# #take all the important arrays and place them into a dataframe
-# 
-# 
-# dat$density <- get_density(log(lam_vals), log(end_time_vals), n = 100)
+#this function computes the density in x and y directions
+get_density <- function(x, y, ...) {
+  dens <- MASS::kde2d(x, y, ...)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
 
+#take all the important arrays and place them into a dataframe
+subset_pat_439679_alpha_prod_wide$day_0_for_plot <- log(lam_vals)
+subset_pat_439679_alpha_prod_wide$day_7_for_plot <- log(end_time_vals)
+subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
+# subset_pat_439679_alpha_prod_wide$ordered_lam_vals_used_unique <- ordered_lam_vals_used_unique
+# subset_pat_439679_alpha_prod_wide$ordered_low_sig_lim_list <- ordered_low_sig_lim_list
+# subset_pat_439679_alpha_prod_wide$ordered_high_sig_lim_list <- ordered_high_sig_lim_list
+subset_pat_439679_alpha_prod_wide$density <- get_density(log(lam_vals), log(end_time_vals), n = 10)
+
+ggplot(subset_pat_439679_alpha_prod_wide) + geom_point(aes(day_0_for_plot, day_7_for_plot, color = density))
 
 
