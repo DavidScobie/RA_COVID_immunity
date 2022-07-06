@@ -246,13 +246,6 @@ for (p in 1:length(lam_vals)) {
       start_day_0_count = start_day_0_count + 1
     }
   }
-  #
-  # if (end_time_vals[p] < 1) { #these are just the zero readings in the second count
-  #   if (lam_vals[p] <= count_1_thresh) {
-  #     sig_day_7_from_day_0[p] = 0
-  #     start_day_7_count = start_day_7_count + 1
-  #   }
-  # }
 
 }
 
@@ -306,8 +299,6 @@ subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
 subset_pat_439679_alpha_prod_wide$density <- get_density(log(lam_vals), log(end_time_vals), n = 10)
 
 ###introducing jitter
-
-#then calculate the jitter
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% rowwise() %>%
   mutate(log_day_0_for_plot_with_jitter = rnorm(1,mean=log_day_0_for_plot, sd=1/(log_day_0_for_plot + 10)))
 
@@ -320,13 +311,13 @@ log_ordered_low_sig_lim_list <- log(ordered_low_sig_lim_list)
 log_ordered_high_sig_lim_list <- log(ordered_high_sig_lim_list)
 subset_pat_439679_alpha_prod_wide_sig_lines <- data.frame(log_ordered_lam_vals_used_unique, log_ordered_low_sig_lim_list, log_ordered_high_sig_lim_list)
 
-p1 <- ggplot(subset_pat_439679_alpha_prod_wide) 
-#p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter, color = density), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count 7)")  #if we want colour for density
-p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count 7)")
-p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_low_sig_lim_list),linetype="dotted")
-p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_high_sig_lim_list),linetype="dotted")
-p5 <- p4 + xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter))))
-p6 <- p5 + coord_cartesian(ylim=c(min(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter))))
-p7 <- p6 + geom_abline()
-p7
+p1 <- ggplot(subset_pat_439679_alpha_prod_wide) #define the dataframe to plot
+#p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter, color = density), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count day 7)")  #if we want colour for density
+p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count 7)") #make the scatterplot and give axis labels
+p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_low_sig_lim_list),linetype="dotted") #plot the lower significance boundary line
+p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique,y=log_ordered_high_sig_lim_list),linetype="dotted") #plot the upper significance boundary line
+p5 <- p4 + xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter)))) #define the xlim of the plot
+p6 <- p5 + coord_cartesian(ylim=c(min(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter)))) #define the ylim of the plot, coordinates cartesian ensures that we plot all of the line
+p7 <- p6 + geom_abline() #plot the line y=x
+p7 #show the plot
 
