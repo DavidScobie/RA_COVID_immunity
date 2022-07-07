@@ -42,8 +42,8 @@ pat_439679_alpha_prod_wide <- reshape(pat_439679_alpha_prod, idvar = "junction_a
 
 # select variables junction_aa, duplicate_count.0, duplicate_count.7, duplicate_count.14
 myvars <- c("junction_aa", "duplicate_count.0", "duplicate_count.7", "duplicate_count.14")
-#subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
-subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars][1:22,] #only want first 500 for speed
+subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars]
+#subset_pat_439679_alpha_prod_wide <- pat_439679_alpha_prod_wide[myvars][1:500,] #only want first 500 for speed
 
 #replace duplicate count NA with duplicate count = 0
 subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
@@ -270,55 +270,44 @@ ordered_lam_vals_used_unique <- replace(ordered_lam_vals_used_unique, ordered_la
 ordered_low_sig_lim_list <- replace(ordered_low_sig_lim_list, ordered_low_sig_lim_list==0, 0.5)
 ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig_lim_list==0, 0.5)
 
-#this function computes the density in x and y directions
-# get_density <- function(x, y, ...) {
-#   dens <- MASS::kde2d(x, y, ...)
-#   ix <- findInterval(x, dens$x)
-#   iy <- findInterval(y, dens$y)
-#   ii <- cbind(ix, iy)
-#   return(dens$z[ii])
-# }
-
 #need to scale the lam_vals and end_time_vals so that units are in TCR per million
-lam_vals_units_per_million <- ((10**6)/(total_TCRs_day_0))*lam_vals
-end_time_vals_units_per_million <- ((10**6)/(total_TCRs_day_7))*end_time_vals
+lam_vals_u_p_m <- ((10**6)/(total_TCRs_day_0))*lam_vals
+end_time_vals_u_p_m <- ((10**6)/(total_TCRs_day_7))*end_time_vals
 
 #take all the important arrays and place them into a dataframe. First the points and density
-subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_units_per_million <- log(lam_vals_units_per_million)
-subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_units_per_million <- log(end_time_vals_units_per_million)
+subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_u_p_m <- log(lam_vals_u_p_m)
+subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_u_p_m <- log(end_time_vals_u_p_m)
 subset_pat_439679_alpha_prod_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
-#subset_pat_439679_alpha_prod_wide$density <- get_density(log(lam_vals), log(end_time_vals), n = 10)
 
 ###introducing jitter
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% rowwise() %>%
-  mutate(log_day_0_for_plot_with_jitter_units_per_million = rnorm(1,mean=log_day_0_for_plot_units_per_million, sd=1/(log_day_0_for_plot_units_per_million + 10)))   #the SD is important in determining the amount of jitter
+  mutate(log_day_0_for_plot_with_jitter_u_p_m = rnorm(1,mean=log_day_0_for_plot_u_p_m, sd=1/(log_day_0_for_plot_u_p_m + 10)))   #the SD is important in determining the amount of jitter
 
 subset_pat_439679_alpha_prod_wide <- subset_pat_439679_alpha_prod_wide %>% rowwise() %>%
-  mutate(log_day_7_for_plot_with_jitter_units_per_million = rnorm(1,mean=log_day_7_for_plot_units_per_million, sd=1/(log_day_7_for_plot_units_per_million + 10)))   #the SD is important in determining the amount of jitter
+  mutate(log_day_7_for_plot_with_jitter_u_p_m = rnorm(1,mean=log_day_7_for_plot_u_p_m, sd=1/(log_day_7_for_plot_u_p_m + 10)))   #the SD is important in determining the amount of jitter
 
 #need to scale the significance lines so that they too are in units of TCR per million (not actual count)
-ordered_low_sig_lim_list_units_per_million <- ((10**6)/(total_TCRs_day_7))*ordered_low_sig_lim_list
-ordered_high_sig_lim_list_units_per_million <- ((10**6)/(total_TCRs_day_7))*ordered_high_sig_lim_list
-ordered_lam_vals_used_unique_units_per_million <- ((10**6)/(total_TCRs_day_0))*ordered_lam_vals_used_unique
+ordered_low_sig_lim_list_u_p_m <- ((10**6)/(total_TCRs_day_7))*ordered_low_sig_lim_list
+ordered_high_sig_lim_list_u_p_m <- ((10**6)/(total_TCRs_day_7))*ordered_high_sig_lim_list
+ordered_lam_vals_used_unique_u_p_m <- ((10**6)/(total_TCRs_day_0))*ordered_lam_vals_used_unique
 
 #Put significance lines into a big data frame for plotting
-log_ordered_lam_vals_used_unique_units_per_million <- log(ordered_lam_vals_used_unique_units_per_million)
-log_ordered_low_sig_lim_list_units_per_million <- log(ordered_low_sig_lim_list_units_per_million)
-log_ordered_high_sig_lim_list_units_per_million <- log(ordered_high_sig_lim_list_units_per_million)
-subset_pat_439679_alpha_prod_wide_sig_lines <- data.frame(log_ordered_lam_vals_used_unique_units_per_million, log_ordered_low_sig_lim_list_units_per_million, log_ordered_high_sig_lim_list_units_per_million)
+log_ordered_lam_vals_used_unique_u_p_m <- log(ordered_lam_vals_used_unique_u_p_m)
+log_ordered_low_sig_lim_list_u_p_m <- log(ordered_low_sig_lim_list_u_p_m)
+log_ordered_high_sig_lim_list_u_p_m <- log(ordered_high_sig_lim_list_u_p_m)
+subset_pat_439679_alpha_prod_wide_sig_lines <- data.frame(log_ordered_lam_vals_used_unique_u_p_m, log_ordered_low_sig_lim_list_u_p_m, log_ordered_high_sig_lim_list_u_p_m)
 
 #we dont want to plot the start of the lower significance line, as it looks incorrect with the jitter
-chopped_log_ordered_low_sig_lim_list_units_per_million <- log_ordered_low_sig_lim_list_units_per_million[max(which(log(ordered_low_sig_lim_list_units_per_million) == min(log(ordered_low_sig_lim_list_units_per_million)))):length(log_ordered_low_sig_lim_list_units_per_million)]
-chopped_log_ordered_lam_vals_used_unique_units_per_million <- log_ordered_lam_vals_used_unique_units_per_million[max(which(log(ordered_low_sig_lim_list_units_per_million) == min(log(ordered_low_sig_lim_list_units_per_million)))):length(log_ordered_low_sig_lim_list_units_per_million)]
-subset_pat_439679_alpha_prod_wide_chopped_sig_lines <- data.frame(chopped_log_ordered_low_sig_lim_list_units_per_million, chopped_log_ordered_lam_vals_used_unique_units_per_million)
+chopped_log_ordered_low_sig_lim_list_u_p_m <- log_ordered_low_sig_lim_list_u_p_m[max(which(log(ordered_low_sig_lim_list_u_p_m) == min(log(ordered_low_sig_lim_list_u_p_m)))):length(log_ordered_low_sig_lim_list_u_p_m)]
+chopped_log_ordered_lam_vals_used_unique_u_p_m <- log_ordered_lam_vals_used_unique_u_p_m[max(which(log(ordered_low_sig_lim_list_u_p_m) == min(log(ordered_low_sig_lim_list_u_p_m)))):length(log_ordered_low_sig_lim_list_u_p_m)]
+subset_pat_439679_alpha_prod_wide_chopped_sig_lines <- data.frame(chopped_log_ordered_low_sig_lim_list_u_p_m, chopped_log_ordered_lam_vals_used_unique_u_p_m)
 
 p1 <- ggplot(subset_pat_439679_alpha_prod_wide) #define the dataframe to plot
-#p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter, log_day_7_for_plot_with_jitter, color = density), shape = sig_day_7_from_day_0) + xlab("log(TCR actual count day 0)") + ylab("log(TCR actual count day 7)")  #if we want colour for density
-p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter_units_per_million, log_day_7_for_plot_with_jitter_units_per_million), shape = sig_day_7_from_day_0, colour = sig_day_7_from_day_0+1) + xlab("log(TCR per million day 0)") + ylab("log(TCR per million day 7)") #make the scatterplot and give axis labels
-p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_chopped_sig_lines, aes(x=chopped_log_ordered_lam_vals_used_unique_units_per_million,y=chopped_log_ordered_low_sig_lim_list_units_per_million),linetype="dashed", color = 'blue', size = 2) #plot the lower significance boundary line
-p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique_units_per_million,y=log_ordered_high_sig_lim_list_units_per_million),linetype="dashed", color = 'blue', size = 2) #plot the upper significance boundary line
-p5 <- p4 + coord_cartesian(xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter_units_per_million), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter_units_per_million), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter_units_per_million))))) #define the xlim of the plot
-p6 <- p5 + coord_cartesian(ylim=c(min(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter_units_per_million), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter_units_per_million), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter_units_per_million)))) #define the ylim of the plot, coordinates cartesian ensures that we plot all of the line
+p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter_u_p_m, log_day_7_for_plot_with_jitter_u_p_m), shape = sig_day_7_from_day_0, colour = sig_day_7_from_day_0+1) + xlab("log(TCR per million day 0)") + ylab("log(TCR per million day 7)") #make the scatterplot and give axis labels
+p3 <- p2 + geom_line(data=subset_pat_439679_alpha_prod_wide_chopped_sig_lines, aes(x=chopped_log_ordered_lam_vals_used_unique_u_p_m,y=chopped_log_ordered_low_sig_lim_list_u_p_m),linetype="dashed", color = 'blue', size = 2) #plot the lower significance boundary line
+p4 <- p3 + geom_line(data=subset_pat_439679_alpha_prod_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique_u_p_m,y=log_ordered_high_sig_lim_list_u_p_m),linetype="dashed", color = 'blue', size = 2) #plot the upper significance boundary line
+p5 <- p4 + coord_cartesian(xlim(c(min(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter_u_p_m), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter_u_p_m), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter_u_p_m))))) #define the xlim of the plot
+p6 <- p5 + coord_cartesian(ylim=c(min(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter_u_p_m), if_else(max(lam_vals) > max(end_time_vals), max(subset_pat_439679_alpha_prod_wide$log_day_0_for_plot_with_jitter_u_p_m), max(subset_pat_439679_alpha_prod_wide$log_day_7_for_plot_with_jitter_u_p_m)))) #define the ylim of the plot, coordinates cartesian ensures that we plot all of the line
 p7 <- p6 + geom_abline() #plot the line y=x
 p7 #show the plot
 
