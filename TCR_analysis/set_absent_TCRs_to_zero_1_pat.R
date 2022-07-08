@@ -81,15 +81,15 @@ end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
 #end_time_vals <- c(10,0,2,7,3,3,0)
 
 ####dealing with the errors in the significance colour for having no TCR abundance on day 7
-ar_before_1 <- vector()
-count <- 0
-for (z in 1:max(lam_vals)) {
-  ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=0)) #here we are finding height of 1st line in poisson centered at means from 1 to maximum day 0 value
-  if (ar_before_1 < (p_value/2)) { #use the p value above to calculate what the threshold in this case should be
-    count=count+1 #count increases if height of 1st line is below the threshold set by (p value/2). (So it is significant)
-  }
-}
-count_1_thresh <- max(lam_vals) - count  #this finds the lowest value of the mean where the sum at x=0 is significant
+# ar_before_1 <- vector()
+# count <- 0
+# for (z in 1:max(lam_vals)) {
+#   ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=0)) #here we are finding height of 1st line in poisson centered at means from 1 to maximum day 0 value
+#   if (ar_before_1 < (p_value/2)) { #use the p value above to calculate what the threshold in this case should be
+#     count=count+1 #count increases if height of 1st line is below the threshold set by (p value/2). (So it is significant)
+#   }
+# }
+# count_1_thresh <- max(lam_vals) - count  #this finds the lowest value of the mean where the sum at x=0 is significant
 
 ####dealing with the errors in the significance colour for having no TCR abundance on day 0
 ar_bef_1 <- vector()

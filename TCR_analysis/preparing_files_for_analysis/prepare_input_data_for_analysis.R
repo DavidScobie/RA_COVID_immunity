@@ -11,8 +11,13 @@ library(pracma)
 library(MASS)
 
 #read the input data in to begin the analysis
-data_path <- "C:/Research_Assistant/work/data/TCR_data/NS087/"
-input_data<-read.csv(paste0(data_path,"result.csv"))
+data_path_NS087 <- "C:/Research_Assistant/work/data/TCR_data/"
+input_data_NS087<-read.csv(paste0(data_path_NS087,"input_data_chop_NS087.csv"))
+data_path_NS085 <- "C:/Research_Assistant/work/data/TCR_data/"
+input_data_NS085<-read.csv(paste0(data_path_NS085,"input_data_chop_NS085.csv"))
+
+#concatenate the 2 input data files
+input_data <- bind_rows(input_data_NS085,input_data_NS087)
 
 #only keep columns with productive=TRUE and stop_codon=FALSE
 input_data_prod <- subset(input_data, subset = productive == TRUE)
@@ -23,19 +28,19 @@ myvars <- c("filename", "junction_aa", "duplicate_count")
 input_data_chop <- input_data_prod_cod[myvars]
 
 # Adding column of day based on string in filename:
-input_data_chop %>%
+input_data_chop <- input_data_chop %>%
   mutate(day = case_when(
     grepl("pre_1", filename, fixed = TRUE) ~ 0,
     grepl("post_1", filename, fixed = TRUE) ~ 0,
     grepl("day14", filename, fixed = TRUE) ~ 14,
     grepl("day7", filename, fixed = TRUE) ~ 7,
     grepl("day13", filename, fixed = TRUE) ~ 13,
-    grepl("day10", filename, fixed = TRUE) ~ 10,
+    grepl("day10", filename, fixed = TRUE) ~ 10
   ))
 
 # Adding column of subject based on string in filename:
-input_data_chop %>%
-  mutate(day = case_when(
+input_data_chop <- input_data_chop %>%
+  mutate(subject = case_when(
     grepl("550630", filename, fixed = TRUE) ~ 550630,
     grepl("627506", filename, fixed = TRUE) ~ 627506,
     grepl("634105", filename, fixed = TRUE) ~ 634105,
@@ -61,6 +66,47 @@ input_data_chop %>%
     grepl("666475", filename, fixed = TRUE) ~ 666475,
     grepl("667082", filename, fixed = TRUE) ~ 667082,
     grepl("672533", filename, fixed = TRUE) ~ 672533,
-    grepl("673067", filename, fixed = TRUE) ~ 673067,
+    grepl("673067", filename, fixed = TRUE) ~ 673067
   ))
 
+# Adding column of chain based on filename
+input_data_chop <- input_data_chop %>%
+  mutate(chain = case_when(
+    grepl("alpha", filename, fixed = TRUE) ~ "alpha",
+    grepl("beta", filename, fixed = TRUE) ~ "beta"
+  ))
+
+#Adding column of PCR_positive based on filename
+input_data_chop <- input_data_chop %>%
+  mutate(PCR_positive = case_when(
+    grepl("550630", filename, fixed = TRUE) ~ 1,
+    grepl("627506", filename, fixed = TRUE) ~ 1,
+    grepl("634105", filename, fixed = TRUE) ~ 1,
+    grepl("635331", filename, fixed = TRUE) ~ 1,
+    grepl("635729", filename, fixed = TRUE) ~ 1,
+    grepl("635779", filename, fixed = TRUE) ~ 1,
+    grepl("637340", filename, fixed = TRUE) ~ 1,
+    grepl("647785", filename, fixed = TRUE) ~ 1,
+    grepl("635495", filename, fixed = TRUE) ~ 1,
+    grepl("651806", filename, fixed = TRUE) ~ 1,
+    grepl("666427", filename, fixed = TRUE) ~ 1,
+    grepl("666482", filename, fixed = TRUE) ~ 1,
+    grepl("666660", filename, fixed = TRUE) ~ 1,
+    grepl("667186", filename, fixed = TRUE) ~ 1,
+    grepl("439679", filename, fixed = TRUE) ~ 0,
+    grepl("635742", filename, fixed = TRUE) ~ 0,
+    grepl("636163", filename, fixed = TRUE) ~ 0,
+    grepl("637269", filename, fixed = TRUE) ~ 0,
+    grepl("643925", filename, fixed = TRUE) ~ 0,
+    grepl("634418", filename, fixed = TRUE) ~ 0,
+    grepl("645438", filename, fixed = TRUE) ~ 0,
+    grepl("655401", filename, fixed = TRUE) ~ 0,
+    grepl("666475", filename, fixed = TRUE) ~ 0,
+    grepl("667082", filename, fixed = TRUE) ~ 0,
+    grepl("672533", filename, fixed = TRUE) ~ 0,
+    grepl("673067", filename, fixed = TRUE) ~ 0
+  ))
+
+#write the input_data_chop to a new file
+data_path <- "C:/Research_Assistant/work/data/TCR_data/"
+write.csv(input_data_chop,paste0(data_path,'input_data_chop.csv'), row.names = FALSE)
