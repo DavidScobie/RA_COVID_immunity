@@ -50,11 +50,6 @@ subset_pat_439679_alpha_prod_wide[is.na(subset_pat_439679_alpha_prod_wide)] <- 0
 
 rownames(subset_pat_439679_alpha_prod_wide) <- NULL  #This resets the index of the rows of the dataframe
 
-#find total number of TCR's on each day
-total_TCRs_day_0 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.0))
-total_TCRs_day_7 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.7))     #This is required for finding TCR per million
-total_TCRs_day_14 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.14))
-
 #######day 0 to day 7 significance
 
 p_value <- 0.0001
@@ -80,21 +75,10 @@ end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
 #end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7[1:500] #just taking a subset
 #end_time_vals <- c(10,0,2,7,3,3,0)
 
-####dealing with the errors in the significance colour for having no TCR abundance on day 7
-# ar_before_1 <- vector()
-# count <- 0
-# for (z in 1:max(lam_vals)) {
-#   ar_before_1 <- sapply(z, function(x) sum_poisson(x,start=0,stop=0)) #here we are finding height of 1st line in poisson centered at means from 1 to maximum day 0 value
-#   if (ar_before_1 < (p_value/2)) { #use the p value above to calculate what the threshold in this case should be
-#     count=count+1 #count increases if height of 1st line is below the threshold set by (p value/2). (So it is significant)
-#   }
-# }
-# count_1_thresh <- max(lam_vals) - count  #this finds the lowest value of the mean where the sum at x=0 is significant
-
-####dealing with the errors in the significance colour for having no TCR abundance on day 0
+####Cannot have a poisson dist centred at 0. Therefore take significance boundary for poisson centred at 1 and take same limit. Make sig line straight at LHS of graph.
 ar_bef_1 <- vector()
 count2 <- 0
-for (z in 1:max(end_time_vals)) {
+for (z in 1:max(end_time_vals)) {  #from 1 up to the maximum of the day 7 count values
   ar_bef_1 <- sapply(1, function(x) sum_poisson(x,start=0,stop=z))
   #print(paste("ar_bef_1",ar_bef_1))
   if (ar_bef_1 > (1-(p_value/2))) {
@@ -111,16 +95,17 @@ start_day_0_count = 0
 start_day_7_count = 0
 manual_x_threshold = 50 #what value of x do we start approximating sig with (mean +- (num_std_devs*sqrt(lambda))) ?
 top_x_threshold = 180 #what value of x do we make the significance lines flat?
-bottom_threshold = 1.2
+#what value of x do you want the straight line on the LHS beginning for the upper sig bound to go up to. Surely just 0 and 1? Hence 1.2 value
+bottom_threshold = 1 #not right to have this as a decimal because it means we are considering a poisson dist centred not on an integer
 
 low_sig_lim_list <- vector() #initialise list for plotting lower significance bound
 high_sig_lim_list <- vector()
 lam_vals_used <- vector()
 
 for (p in 1:length(lam_vals)) {
-  greater_than_min_sig <- vector() #initialise empty array
+  greater_than_min_sig <- vector() #initialise empty array for greater than minimum significance level
   low_counter <- 0 #initialize lower significance level counter
-  lesser_than_max_sig <- vector() #initialise empty array
+  lesser_than_max_sig <- vector() #initialise empty array for less than max significance level
   high_counter <- 0 #initialize higher significance level counter
 
   greater_than_up_sig_bound <- vector() #error check vector for upper significance bound
@@ -129,7 +114,7 @@ for (p in 1:length(lam_vals)) {
   ###################need to rethink this whole section of code. it is not giving the vertical line at low TCR per mil day 0 as required
 
   #logic to find upper significance level
-  if (lam_vals[p] < bottom_threshold) { #the beginning cut off with straight significance lines
+  if (lam_vals[p] <= bottom_threshold) { #the beginning cut off with straight significance lines
 
     num_lam_multip = 8
 
@@ -147,14 +132,15 @@ for (p in 1:length(lam_vals)) {
       }
 
       if (summation[k] > (1-(p_value/2))) { #logic to check if any values in summation are above the upper sig bound
-        sig_error_check_counter = sig_error_check_counter + 1
+        sig_error_check_counter = sig_error_check_counter + 1  #we need the code to go through this loop at least once, or there is an error. We are not finding upper significance threshold properly
       }
     }
     #if no values in summation above upper sig bound throw error because using wrong indicie for significance
     if( sig_error_check_counter < 1 ) stop('NOT CORRECTLY FINDING UPPER SIGNIFICANCE THRESHOLD. Raise num_lam_multip to fix this. Or increase p_value.')
 
     #low_sig_lim = min(greater_than_min_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
-    low_sig_lim = 0
+    #if (low_counter < 1) { #i.e. we dont go through the low sig level loop
+      low_sig_lim = 0  #as we are just dealing with the first few lambda values, the low_sig_lim will be zero.
     high_sig_lim = max(lesser_than_max_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
 
     ###########################
@@ -269,6 +255,11 @@ end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
 ordered_lam_vals_used_unique <- replace(ordered_lam_vals_used_unique, ordered_lam_vals_used_unique==0, 0.5)
 ordered_low_sig_lim_list <- replace(ordered_low_sig_lim_list, ordered_low_sig_lim_list==0, 0.5)
 ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig_lim_list==0, 0.5)
+
+#find total number of TCR's on each day
+total_TCRs_day_0 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.0))
+total_TCRs_day_7 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.7))     #This is required for finding TCR per million
+total_TCRs_day_14 <- sum(as.numeric(subset_pat_439679_alpha_prod_wide$duplicate_count.14))
 
 #need to scale the lam_vals and end_time_vals so that units are in TCR per million
 lam_vals_u_p_m <- ((10**6)/(total_TCRs_day_0))*lam_vals
