@@ -58,13 +58,13 @@ sum_poisson = function(lam, start=0, stop=5) {
 }
 
 #the first timepoint data set
-#lam_vals <- all_pats_wide$duplicate_count.0
-lam_vals <- all_pats_wide$duplicate_count.0[1:500] #just taking a subset
+lam_vals <- all_pats_wide$duplicate_count.0
+#lam_vals <- all_pats_wide$duplicate_count.0[1:500] #just taking a subset
 #lam_vals <- c(30,0,2,0,2,30,1)
 
 #the end timepoint dataset
-#end_time_vals <- all_pats_wide$duplicate_count.7
-end_time_vals <- all_pats_wide$duplicate_count.7[1:500] #just taking a subset
+end_time_vals <- all_pats_wide$duplicate_count.7
+#end_time_vals <- all_pats_wide$duplicate_count.7[1:500] #just taking a subset
 #end_time_vals <- c(10,0,2,7,3,3,0)
 
 ####Cannot have a poisson dist centred at 0. Therefore take significance boundary for poisson centred at 1 and take same limit. Make sig line straight at LHS of graph.
@@ -72,13 +72,144 @@ ar_bef_1 <- vector()
 count2 <- 0
 for (z in 1:max(end_time_vals)) {  #from 1 up to the maximum of the day 7 count values
   ar_bef_1 <- sapply(1, function(x) sum_poisson(x,start=0,stop=z))
-  #print(paste("ar_bef_1",ar_bef_1))
   if (ar_bef_1 > (1-(p_value/2))) {
     count2 = count2+1
   }
 }
 count_2_thresh <- max(end_time_vals) - count2
+#######
+
+#the binary array to see if significant or not
+sig_day_7_from_day_0 <- vector()
+
+manual_x_threshold = 50 #what value of x do we start approximating sig with (mean +- (num_std_devs*sqrt(lambda))) ?
+top_x_threshold = 180 #what value of x do we make the significance lines flat?
+#what value of x do you want the straight line on the LHS beginning for the upper sig bound to go up to. Surely just 0 and 1? Hence 1.2 value
+bottom_threshold = 1 #not right to have this as a decimal because it means we are considering a poisson dist centred not on an integer
+
+low_sig_lim_list <- vector() #initialise list for plotting lower significance bound
+high_sig_lim_list <- vector()
+lam_vals_used <- vector()
 
 
+for (p in 1:length(lam_vals)) {
+  greater_than_min_sig <- vector() #initialise empty array for greater than minimum significance level
+  low_counter <- 0 #initialize lower significance level counter
+  lesser_than_max_sig <- vector() #initialise empty array for less than max significance level
+  high_counter <- 0 #initialize higher significance level counter
+  
+  greater_than_up_sig_bound <- vector() #error check vector for upper significance bound
+  sig_error_check_counter <- 0 #counter for the error checker on upper significance bound
+  
+  #logic to find upper significance level
+  if (lam_vals[p] <= bottom_threshold) { #the beginning cut off with straight significance lines
+    
+    num_lam_multip = 8  #how many multiples of lambda do we want the summation of poisson to go up to. This is important for memory reasons
+    
+    stops = linspace(0, num_lam_multip*bottom_threshold, n = (num_lam_multip*bottom_threshold)-(0)+1)  #need stops to go far beyond
+    summation = sapply(bottom_threshold, function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
+    for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
+      if (summation[k] > (p_value/2)) {   #logic for finding the lower significance level
+        low_counter = low_counter + 1
+        greater_than_min_sig[low_counter] = k
+      }
+      if (summation[k] < (1-(p_value/2))) {  #logic for finding the upper significance level
+        high_counter = high_counter + 1
+        lesser_than_max_sig[high_counter] = k
+      }
+      
+      if (summation[k] > (1-(p_value/2))) { #logic to check if any values in summation are above the upper sig bound
+        sig_error_check_counter = sig_error_check_counter + 1  #we need the code to go through this loop at least once, or there is an error. We are not finding upper significance threshold properly
+      }
+    }
+    #if no values in summation above upper sig bound throw error because using wrong indicie for significance
+    if( sig_error_check_counter < 1 ) stop('NOT CORRECTLY FINDING UPPER SIGNIFICANCE THRESHOLD. Raise num_lam_multip to fix this. Or increase p_value.')
+    
+    #low_sig_lim = min(greater_than_min_sig) -1 #this is the proper way, but this gives Inf as greater_than_min_sig is empty for small lam_vals. So have low_sig_lim=0
+    low_sig_lim = 0  #as we are just dealing with the first few lambda values, the low_sig_lim will be zero.
+    high_sig_lim = max(lesser_than_max_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
+    
+    ###########################
+    
+    
+  }
+  
+  else if (lam_vals[p] < manual_x_threshold) {     #lambda is low, so manually sum to find significance level
+    
+    #this loop is in to save memory. We only need large num_lam_multip for small lambdas (in order to find upper p value threshold). Can always add steps in the loop to be more memory efficient
+    if (lam_vals[p] < 10) {
+      num_lam_multip = 8  #number of multiples of lambda to sum up to in the poisson distribution
+    } else {
+      num_lam_multip = 3
+    }
+    
+    stops = linspace(0, num_lam_multip*lam_vals[p], n = (num_lam_multip*lam_vals[p])-(0)+1)  #need stops to go far beyond
+    summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
+    for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
+      if (summation[k] > (p_value/2)) {   #logic for finding the lower significance level
+        low_counter = low_counter + 1
+        greater_than_min_sig[low_counter] = k
+      }
+      if (summation[k] < (1-(p_value/2))) {  #logic for finding the upper significance level
+        high_counter = high_counter + 1
+        lesser_than_max_sig[high_counter] = k
+      }
+      
+      if (summation[k] > (1-(p_value/2))) { #logic to check if any values in summation are above the upper sig bound
+        sig_error_check_counter = sig_error_check_counter + 1
+      }
+    }
+    #if no values in summation above upper sig bound throw error because using wrong indicie for significance
+    if( sig_error_check_counter < 1 ) stop('NOT CORRECTLY FINDING UPPER SIGNIFICANCE THRESHOLD. Raise num_lam_multip to fix this. Or increase p_value.')
+    
+    low_sig_lim = min(greater_than_min_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
+    high_sig_lim = max(lesser_than_max_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
+    
+  } else if (lam_vals[p] < top_x_threshold) {  #lambda is big so approximate as normal dist. use qnorm to find the number of standard deviations from the p value
+    num_std_devs_gauss <- qnorm(1-(p_value/2))
+    low_sig_lim <- ceiling(lam_vals[p] - (num_std_devs_gauss*sqrt(lam_vals[p])))
+    high_sig_lim <- floor(lam_vals[p] + (num_std_devs_gauss*sqrt(lam_vals[p])))
+    
+  } else { #lambda is really big so have the significance lines go straight from this point onwards
+    num_std_devs_gauss <- qnorm(1-(p_value/2))
+    low_sig_lim <- ceiling(top_x_threshold - (num_std_devs_gauss*sqrt(top_x_threshold)))
+    high_sig_lim <- ((10**100)*max(lam_vals))  #This is a huge number which makes the significance line go almost directly up
+  }
+  
+  ######### making the low_sig_lim and high_sig_lim into lists ready to plot as dashed lines
+  
+  #for each lam_vals value (day 0 abundance value), append low_sig_lim to a list and high_sig_lim to a list
+  if (p == 1) {  #the vector is of length zero in the beginning so we have to append in the first instance
+    low_sig_lim_list <- append(low_sig_lim_list, low_sig_lim)
+    high_sig_lim_list <- append(high_sig_lim_list, high_sig_lim)
+  }
+  #we only want to append low_sig_lim and high_sig_lim to lists if they are new values. Otherwise we will have too many points for plotting
+  else if (setequal(lam_vals_used_unique[!(lam_vals_used_unique %in% lam_vals[p])], lam_vals_used_unique)) {   #here we are checking if lam_vals[p] appears in lam_vals_used_unique. If it does then we do not do the else if loop. If it does not then we append to list
+    low_sig_lim_list <- append(low_sig_lim_list, low_sig_lim)
+    high_sig_lim_list <- append(high_sig_lim_list, high_sig_lim)
+  }
+  
+  lam_vals_used_unique <- unique(append(lam_vals_used_unique, lam_vals[p])) #we append the lam_vals value to this list each time to check whether low_sig_lim and high_sig_lim need to be appended onto their lists in future iterations
+  
+  ########## comparing the end_time_vals[p] value to the significance thresholds to determine significance and hence if sig_day_7_from_day_0 = 0 or 1
+  
+  #compare the end timepoint value to the significance thresholds
+  if (end_time_vals[p] < low_sig_lim) { #it is significant at lower end
+    sig_day_7_from_day_0[p] = 1
+  } else if (end_time_vals[p] > high_sig_lim) { #it is significant at higher end
+    sig_day_7_from_day_0[p] = 1
+  } else { #it is not significant
+    sig_day_7_from_day_0[p] = 0
+  }
+  
+  ##########  for zero count in day 0 the significance checker comes out as always non-significant, so we have this to check the values properly
+  
+  if (lam_vals[p] < 1) { #these are just the zero readings in the first count
+    if (end_time_vals[p] <= count_2_thresh) {
+      sig_day_7_from_day_0[p] = 0
+    }
+  }
+  
+}
 
 
