@@ -213,3 +213,70 @@ for (p in 1:length(lam_vals)) {
 }
 
 
+#we need to order the arrays of low_sig_lim_list, high_sig_lim_list and lam_vals_used_unique for plotting
+ordered_low_sig_lim_list <- low_sig_lim_list[order(lam_vals_used_unique)]
+ordered_high_sig_lim_list <- high_sig_lim_list[order(lam_vals_used_unique)]
+ordered_lam_vals_used_unique <- sort(lam_vals_used_unique)
+
+#replace the -Inf at the start of ordered_high_sig_lim_list with the value at indicie of 2. This is because high_sig_lim list is undefined when lam_vals[p]=0 as cannot have poisson centred at zero.
+if (ordered_lam_vals_used_unique[1] == 0) {  #Only if first value in ordered_lam_vals_used_unique is 0. This is only time the high_sig_lim value is undefined
+  ordered_high_sig_lim_list[1] = ordered_high_sig_lim_list[2] #we just call the high_sig_lim value the value when lam_vals[p]=2 as this is defined and we want same significance threshold
+}
+
+
+#change the entries in lam_vals and end_time_vals from 0 to 0.5 so that they appear in the log plot
+lam_vals_used_unique <- replace(lam_vals_used_unique, lam_vals_used_unique==0, 0.5)
+lam_vals <- replace(lam_vals, lam_vals==0, 0.5)
+end_time_vals <- replace(end_time_vals, end_time_vals==0, 0.5)
+
+#do the same for the lines I am plotting
+ordered_lam_vals_used_unique <- replace(ordered_lam_vals_used_unique, ordered_lam_vals_used_unique==0, 0.5)
+ordered_low_sig_lim_list <- replace(ordered_low_sig_lim_list, ordered_low_sig_lim_list==0, 0.5)
+ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig_lim_list==0, 0.5)
+
+#####find total number of TCR's on each day
+total_TCRs_day_0 <- sum(as.numeric(all_pats_wide$duplicate_count.0))
+total_TCRs_day_7 <- sum(as.numeric(all_pats_wide$duplicate_count.0))     #This is required for using units of TCR per million in the plot
+
+#need to scale the lam_vals and end_time_vals so that units are in TCR per million
+lam_vals_u_p_m <- ((10**6)/(total_TCRs_day_0))*lam_vals
+end_time_vals_u_p_m <- ((10**6)/(total_TCRs_day_7))*end_time_vals
+
+#take all the important arrays and place them into a dataframe. First the points and significance binary
+all_pats_wide$log_day_0_for_plot_u_p_m <- log(lam_vals_u_p_m)
+all_pats_wide$log_day_7_for_plot_u_p_m <- log(end_time_vals_u_p_m)
+all_pats_wide$sig_day_7_from_day_0 <- sig_day_7_from_day_0
+
+###introducing jitter, so that the points dont overlap, meaning we cant ascertain the number of points in each place on the plot
+all_pats_wide <- all_pats_wide %>% rowwise() %>%
+  mutate(log_day_0_for_plot_with_jitter_u_p_m = rnorm(1,mean=log_day_0_for_plot_u_p_m, sd=1/(log_day_0_for_plot_u_p_m + 10)))   #the SD is important in determining the amount of jitter
+
+all_pats_wide <- all_pats_wide %>% rowwise() %>%
+  mutate(log_day_7_for_plot_with_jitter_u_p_m = rnorm(1,mean=log_day_7_for_plot_u_p_m, sd=1/(log_day_7_for_plot_u_p_m + 10)))   #the SD is important in determining the amount of jitter
+
+#need to scale the significance lines so that they too are in units of TCR per million (not actual count)
+ordered_low_sig_lim_list_u_p_m <- ((10**6)/(total_TCRs_day_7))*ordered_low_sig_lim_list
+ordered_high_sig_lim_list_u_p_m <- ((10**6)/(total_TCRs_day_7))*ordered_high_sig_lim_list
+ordered_lam_vals_used_unique_u_p_m <- ((10**6)/(total_TCRs_day_0))*ordered_lam_vals_used_unique
+
+#Put significance lines into a big data frame for plotting
+log_ordered_lam_vals_used_unique_u_p_m <- log(ordered_lam_vals_used_unique_u_p_m)
+log_ordered_low_sig_lim_list_u_p_m <- log(ordered_low_sig_lim_list_u_p_m)
+log_ordered_high_sig_lim_list_u_p_m <- log(ordered_high_sig_lim_list_u_p_m)
+all_pats_wide_sig_lines <- data.frame(log_ordered_lam_vals_used_unique_u_p_m, log_ordered_low_sig_lim_list_u_p_m, log_ordered_high_sig_lim_list_u_p_m)
+
+#we dont want to plot the start of the lower significance line, as it looks incorrect with the jitter. Therefore we chop off the start of the array which are all the points which have value zero
+chopped_log_ordered_low_sig_lim_list_u_p_m <- log_ordered_low_sig_lim_list_u_p_m[max(which(log(ordered_low_sig_lim_list_u_p_m) == min(log(ordered_low_sig_lim_list_u_p_m)))):length(log_ordered_low_sig_lim_list_u_p_m)]
+chopped_log_ordered_lam_vals_used_unique_u_p_m <- log_ordered_lam_vals_used_unique_u_p_m[max(which(log(ordered_low_sig_lim_list_u_p_m) == min(log(ordered_low_sig_lim_list_u_p_m)))):length(log_ordered_low_sig_lim_list_u_p_m)]
+all_pats_wide_chopped_sig_lines <- data.frame(chopped_log_ordered_low_sig_lim_list_u_p_m, chopped_log_ordered_lam_vals_used_unique_u_p_m)  #put the chopped values into a new dataframe for plotting
+
+p1 <- ggplot(all_pats_wide) #define the dataframe to plot
+p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter_u_p_m, log_day_7_for_plot_with_jitter_u_p_m), shape = sig_day_7_from_day_0, colour = sig_day_7_from_day_0+1) + xlab("log(TCR per million day 0)") + ylab("log(TCR per million day 7)") #make the scatterplot and give axis labels
+p3 <- p2 + geom_line(data=all_pats_wide_chopped_sig_lines, aes(x=chopped_log_ordered_lam_vals_used_unique_u_p_m,y=chopped_log_ordered_low_sig_lim_list_u_p_m),linetype="dashed", color = 'blue', size = 2) #plot the chopped lower significance boundary line
+p4 <- p3 + geom_line(data=all_pats_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique_u_p_m,y=log_ordered_high_sig_lim_list_u_p_m),linetype="dashed", color = 'blue', size = 2) #plot the upper significance boundary line
+p5 <- p4 + coord_cartesian(xlim(c(min(all_pats_wide$log_day_0_for_plot_with_jitter_u_p_m), if_else(max(lam_vals) > max(end_time_vals), max(all_pats_wide$log_day_0_for_plot_with_jitter_u_p_m), max(all_pats_wide$log_day_7_for_plot_with_jitter_u_p_m))))) #define the xlim of the plot, coordinates cartesian ensures that we plot all of the line
+p6 <- p5 + coord_cartesian(ylim=c(min(all_pats_wide$log_day_7_for_plot_with_jitter_u_p_m), if_else(max(lam_vals) > max(end_time_vals), max(all_pats_wide$log_day_0_for_plot_with_jitter_u_p_m), max(all_pats_wide$log_day_7_for_plot_with_jitter_u_p_m)))) #define the ylim of the plot, coordinates cartesian ensures that we plot all of the line
+p7 <- p6 + geom_abline() #plot the line y=x
+p7 #show the plot
+
+
