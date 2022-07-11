@@ -17,12 +17,12 @@ library(MASS)
 
 #read in the 3 timepoints for 1st patient alpha chain
 data_path<-"C:/Research_Assistant/work/data/TCR_data/NS085/"
-pat_439679_day_0_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_pre_1_alpha.csv"))
-pat_439679_day_7_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_alpha.csv"))
-pat_439679_day_14_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_day14_1_alpha.csv"))
-# pat_439679_day_0_alpha<-read.csv(paste0(data_path,"dcr_HVO_635729_pre_1_alpha.csv"))
-# pat_439679_day_7_alpha<-read.csv(paste0(data_path,"dcr_HVO_635729_day7_1_alpha.csv"))
-# pat_439679_day_14_alpha<-read.csv(paste0(data_path,"dcr_HVO_635729_day14_1_alpha.csv"))
+# pat_439679_day_0_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_pre_1_alpha.csv"))
+# pat_439679_day_7_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_alpha.csv"))
+# pat_439679_day_14_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_day14_1_alpha.csv"))
+pat_439679_day_0_alpha<-read.csv(paste0(data_path,"dcr_HVO_635729_pre_1_alpha.csv"))
+pat_439679_day_7_alpha<-read.csv(paste0(data_path,"dcr_HVO_635729_day7_1_alpha.csv"))
+pat_439679_day_14_alpha<-read.csv(paste0(data_path,"dcr_HVO_635729_day14_1_alpha.csv"))
 
 #only keep columns with productive=TRUE
 pat_439679_day_0_alpha_prod <- subset(pat_439679_day_0_alpha, subset = productive == TRUE)
@@ -219,7 +219,7 @@ for (p in 1:length(lam_vals)) {
 
 }
 
-#we need to take only the unique values and order the arrays of low_sig_lim_list, high_sig_lim_list and lam_vals_used_unique for plotting
+#we need to order the arrays of low_sig_lim_list, high_sig_lim_list and lam_vals_used_unique for plotting
 ordered_low_sig_lim_list <- low_sig_lim_list[order(lam_vals_used_unique)]
 ordered_high_sig_lim_list <- high_sig_lim_list[order(lam_vals_used_unique)]
 ordered_lam_vals_used_unique <- sort(lam_vals_used_unique)

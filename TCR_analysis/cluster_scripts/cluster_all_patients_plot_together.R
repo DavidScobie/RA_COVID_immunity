@@ -18,7 +18,7 @@ library(MASS)
 ##To start with we want to look at all PCR+ve patients from day 0 to day 7, on both alpha and beta chains
 
 #read in the data for all of the patients with no filename, on days 0, 7 and 14, with only necessary data inside
-data_path<-"C:/Research_Assistant/work/data/TCR_data/"
+data_path = "/home/dscobie/RA_work/TCR_data/" 
 input_data_chop_all<-read.csv(paste0(data_path,"input_data_chop_all_reg_days_no_filename.csv"))
 
 #chop out all the patients who are PCR-ve, as we just want PCR+ve people in this case
@@ -39,14 +39,14 @@ for (n in 1:length(list_of_subjects)) {  #from 1 to the number of patients
   #bind the dataframe for this subject onto the dataframes for the other subjects
   all_pats_wide <- bind_rows(all_pats_wide,a_subject_wide)
 }  
-  
+
 all_pats_wide[is.na(all_pats_wide)] <- 0  #replace duplicate count = NA with duplicate count = 0
 
 rownames(all_pats_wide) <- NULL  #This resets the index of the rows of the dataframe
 
 #######the significance level
 
-p_value <- 10**(-6)  #0.0001 = 10**(-4)
+p_value <- 10**(-7)  #0.0001 = 10**(-4)
 
 ############# This function is summing poisson distributions of means (lam_vals) from 0 up to (stops)
 sum_poisson = function(lam, start=0, stop=5) {
@@ -104,7 +104,7 @@ for (p in 1:length(lam_vals)) {
   #logic to find upper significance level
   if (lam_vals[p] <= bottom_threshold) { #the beginning cut off with straight significance lines
     
-    num_lam_multip = 13  #how many multiples of lambda do we want the summation of poisson to go up to. This is important for memory reasons
+    num_lam_multip = 16  #how many multiples of lambda do we want the summation of poisson to go up to. This is important for memory reasons
     
     stops = linspace(0, num_lam_multip*bottom_threshold, n = (num_lam_multip*bottom_threshold)-(0)+1)  #need stops to go far beyond
     summation = sapply(bottom_threshold, function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
@@ -138,7 +138,7 @@ for (p in 1:length(lam_vals)) {
     
     #this loop is in to save memory. We only need large num_lam_multip for small lambdas (in order to find upper p value threshold). Can always add steps in the loop to be more memory efficient
     if (lam_vals[p] < 10) {
-      num_lam_multip = 13  #number of multiples of lambda to sum up to in the poisson distribution
+      num_lam_multip = 16  #number of multiples of lambda to sum up to in the poisson distribution
     } else {
       num_lam_multip = 3
     }
@@ -270,17 +270,15 @@ chopped_log_ordered_low_sig_lim_list_u_p_m <- log_ordered_low_sig_lim_list_u_p_m
 chopped_log_ordered_lam_vals_used_unique_u_p_m <- log_ordered_lam_vals_used_unique_u_p_m[max(which(log(ordered_low_sig_lim_list_u_p_m) == min(log(ordered_low_sig_lim_list_u_p_m)))):length(log_ordered_low_sig_lim_list_u_p_m)]
 all_pats_wide_chopped_sig_lines <- data.frame(chopped_log_ordered_low_sig_lim_list_u_p_m, chopped_log_ordered_lam_vals_used_unique_u_p_m)  #put the chopped values into a new dataframe for plotting
 
-p1 <- ggplot(all_pats_wide) #define the dataframe to plot
-p2 <- p1 + geom_point(aes(log_day_0_for_plot_with_jitter_u_p_m, log_day_7_for_plot_with_jitter_u_p_m), shape = sig_day_7_from_day_0, colour = sig_day_7_from_day_0+1) + xlab("log(TCR per million day 0)") + ylab("log(TCR per million day 7)") #make the scatterplot and give axis labels
-p3 <- p2 + geom_line(data=all_pats_wide_chopped_sig_lines, aes(x=chopped_log_ordered_lam_vals_used_unique_u_p_m,y=chopped_log_ordered_low_sig_lim_list_u_p_m),linetype="dashed", color = 'blue', size = 2) #plot the chopped lower significance boundary line
-p4 <- p3 + geom_line(data=all_pats_wide_sig_lines, aes(x=log_ordered_lam_vals_used_unique_u_p_m,y=log_ordered_high_sig_lim_list_u_p_m),linetype="dashed", color = 'blue', size = 2) #plot the upper significance boundary line
-p5 <- p4 + coord_cartesian(xlim(c(min(all_pats_wide$log_day_0_for_plot_with_jitter_u_p_m), if_else(max(lam_vals) > max(end_time_vals), max(all_pats_wide$log_day_0_for_plot_with_jitter_u_p_m), max(all_pats_wide$log_day_7_for_plot_with_jitter_u_p_m))))) #define the xlim of the plot, coordinates cartesian ensures that we plot all of the line
-p6 <- p5 + coord_cartesian(ylim=c(min(all_pats_wide$log_day_7_for_plot_with_jitter_u_p_m), if_else(max(lam_vals) > max(end_time_vals), max(all_pats_wide$log_day_0_for_plot_with_jitter_u_p_m), max(all_pats_wide$log_day_7_for_plot_with_jitter_u_p_m)))) #define the ylim of the plot, coordinates cartesian ensures that we plot all of the line
-p7 <- p6 + geom_abline() #plot the line y=x
-p7 #show the plot
+###subset the data that is required for plotting
+all_pats_wide_plotting <- all_pats_wide[ , c("log_day_0_for_plot_with_jitter_u_p_m", "log_day_7_for_plot_with_jitter_u_p_m", "sig_day_7_from_day_0")] 
+all_pats_wide_chopped_sig_lines_plotting <- all_pats_wide_chopped_sig_lines[ , c("chopped_log_ordered_lam_vals_used_unique_u_p_m", "chopped_log_ordered_low_sig_lim_list_u_p_m")]
+all_pats_wide_sig_lines_plotting <- all_pats_wide_sig_lines[ , c("log_ordered_lam_vals_used_unique_u_p_m", "log_ordered_high_sig_lim_list_u_p_m")]
 
 #subset the data for just the significant TCRs and save these for further examination
 sig_TCRs <- all_pats_wide %>% filter(sig_day_7_from_day_0 == 1)  #subsetting the full dataframe for just the significant TCRs
-data_path <- "C:/Research_Assistant/work/data/TCR_data/significant_TCR_csvs/"
-write.csv(sig_TCRs,paste0(data_path,'P_10exp(-6)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
-
+data_path <- "/home/dscobie/RA_work/TCR_data/sig_CSVs_and_plotting" 
+write.csv(sig_TCRs,paste0(data_path,'sig_TCRs_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
+write.csv(all_pats_wide_plotting,paste0(data_path,'all_pats_wide_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
+write.csv(all_pats_wide_chopped_sig_lines_plotting,paste0(data_path,'all_pats_wide_chopped_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
+write.csv(all_pats_wide_sig_lines_plotting,paste0(data_path,'all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
