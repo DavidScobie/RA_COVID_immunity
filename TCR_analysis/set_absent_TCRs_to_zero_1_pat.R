@@ -116,6 +116,11 @@ for (p in 1:length(lam_vals)) {
     stops = linspace(0, num_lam_multip*bottom_threshold, n = (num_lam_multip*bottom_threshold)-(0)+1)  #need stops to go far beyond
     summation = sapply(bottom_threshold, function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
     for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
+      
+      if (is.nan(summation[k])) {
+        print(paste0("summation",summation,"lam_vals[p]",lam_vals[p],"loop 1"))
+      }
+      
       if (summation[k] > (p_value/2)) {   #logic for finding the lower significance level
         low_counter = low_counter + 1
         greater_than_min_sig[low_counter] = k
@@ -130,6 +135,9 @@ for (p in 1:length(lam_vals)) {
       }
     }
     #if no values in summation above upper sig bound throw error because using wrong indicie for significance
+    if (sig_error_check_counter < 1) {   #we want to find the lam_vals[p] value that has broken it
+      print(paste0("summation",summation,"lam_vals[p]",lam_vals[p],"loop 1"))
+    }
     if( sig_error_check_counter < 1 ) stop('NOT CORRECTLY FINDING UPPER SIGNIFICANCE THRESHOLD. Raise num_lam_multip to fix this. Or increase p_value.')
 
     #low_sig_lim = min(greater_than_min_sig) -1 #this is the proper way, but this gives Inf as greater_than_min_sig is empty for small lam_vals. So have low_sig_lim=0
@@ -153,6 +161,11 @@ for (p in 1:length(lam_vals)) {
     stops = linspace(0, num_lam_multip*lam_vals[p], n = (num_lam_multip*lam_vals[p])-(0)+1)  #need stops to go far beyond
     summation = sapply(lam_vals[p], function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
     for (k in 1:length(summation)) {  #for loop to check each value in the array of summation
+      
+      if (is.nan(summation[k])) {
+        print(paste0("summation",summation,"lam_vals[p]",lam_vals[p],"loop 2"))
+      }
+        
       if (summation[k] > (p_value/2)) {   #logic for finding the lower significance level
         low_counter = low_counter + 1
         greater_than_min_sig[low_counter] = k
@@ -167,6 +180,9 @@ for (p in 1:length(lam_vals)) {
       }
     }
     #if no values in summation above upper sig bound throw error because using wrong indicie for significance
+    if (sig_error_check_counter < 1) {   #we want to find the lam_vals[p] value that has broken it
+      print(paste0("summation",summation,"lam_vals[p]",lam_vals[p],"loop 2"))
+    }
     if( sig_error_check_counter < 1 ) stop('NOT CORRECTLY FINDING UPPER SIGNIFICANCE THRESHOLD. Raise num_lam_multip to fix this. Or increase p_value.')
 
     low_sig_lim = min(greater_than_min_sig) -1 #we need to allow this to be 0 if necessary. Need -1 to work with indices as k in 1:length(summation)
