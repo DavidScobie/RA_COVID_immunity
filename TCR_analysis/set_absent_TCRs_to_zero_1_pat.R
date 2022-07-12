@@ -66,12 +66,12 @@ sum_poisson = function(lam, start=0, stop=5) {
 }
 
 #the first timepoint data set
-lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0
+lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
 #lam_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.0[1:500] #just taking a subset
 #lam_vals <- c(0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2)
 
 #the timepoint 7 dataset
-end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7
+end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.14
 #end_time_vals <- subset_pat_439679_alpha_prod_wide$duplicate_count.7[1:500] #just taking a subset
 #end_time_vals <- c(3,4,5,6,7,8,3,4,5,6,7,8,3,4,5,6,7,8,)
 

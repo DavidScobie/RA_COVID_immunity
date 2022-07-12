@@ -25,7 +25,7 @@ input_data_chop_all<-read.csv(paste0(data_path,"input_data_chop_all_reg_days_no_
 input_data_chop_all_PCR_pos <- input_data_chop_all[!grepl(0, input_data_chop_all$PCR_positive),]
 
 #chop out all the data from day 14 from the data set, as this will give us too many counts which are (0,0)
-input_data_chop_all_without_14 <- input_data_chop_all_PCR_pos[!grepl(14, input_data_chop_all_PCR_pos$day),]
+input_data_chop_all_without_14 <- input_data_chop_all_PCR_pos[!grepl(0, input_data_chop_all_PCR_pos$day),]       ########CHANGEEEEE
 
 #make a list containing all of the possible subjects for subsetting the data
 list_of_subjects <- as.list(unique(input_data_chop_all_without_14$subject))
@@ -58,12 +58,12 @@ sum_poisson = function(lam, start=0, stop=5) {
 }
 
 #the first timepoint data set
-lam_vals <- all_pats_wide$duplicate_count.0
+lam_vals <- all_pats_wide$duplicate_count.7                                  ########CHANGEEEEE
 #lam_vals <- all_pats_wide$duplicate_count.0[1:500] #just taking a subset
 #lam_vals <- c(30,0,2,0,2,30,1)
 
 #the end timepoint dataset
-end_time_vals <- all_pats_wide$duplicate_count.7
+end_time_vals <- all_pats_wide$duplicate_count.14                                  ########CHANGEEEEE
 #end_time_vals <- all_pats_wide$duplicate_count.7[1:500] #just taking a subset
 #end_time_vals <- c(10,0,2,7,3,3,0)
 
@@ -253,8 +253,8 @@ ordered_low_sig_lim_list <- replace(ordered_low_sig_lim_list, ordered_low_sig_li
 ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig_lim_list==0, 0.5)
 
 #####find total number of TCR's on each day
-total_TCRs_day_0 <- sum(as.numeric(all_pats_wide$duplicate_count.0))
-total_TCRs_day_7 <- sum(as.numeric(all_pats_wide$duplicate_count.0))     #This is required for using units of TCR per million in the plot
+total_TCRs_day_0 <- sum(as.numeric(all_pats_wide$duplicate_count.7))               ########CHANGEEEEE
+total_TCRs_day_7 <- sum(as.numeric(all_pats_wide$duplicate_count.14))               ########CHANGEEEEE
 
 #need to scale the lam_vals and end_time_vals so that units are in TCR per million
 lam_vals_u_p_m <- ((10**6)/(total_TCRs_day_0))*lam_vals
@@ -296,7 +296,8 @@ all_pats_wide_sig_lines_plotting <- all_pats_wide_sig_lines[ , c("log_ordered_la
 #subset the data for just the significant TCRs and save these for further examination
 sig_TCRs <- all_pats_wide %>% filter(sig_day_7_from_day_0 == 1)  #subsetting the full dataframe for just the significant TCRs
 data_path <- "/home/dscobie/RA_work/TCR_data/sig_CSVs_and_plotting/" 
-write.csv(sig_TCRs,paste0(data_path,'sig_TCRs_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
-write.csv(all_pats_wide_plotting,paste0(data_path,'all_pats_wide_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
-write.csv(all_pats_wide_chopped_sig_lines_plotting,paste0(data_path,'all_pats_wide_chopped_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
-write.csv(all_pats_wide_sig_lines_plotting,paste0(data_path,'all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
+write.csv(sig_TCRs,paste0(data_path,'sig_TCRs_P_10exp(-7)_PCR_pos_alph_bet_day7_day14.csv'), row.names = FALSE)                   ########CHANGEEEEE
+write.csv(all_pats_wide_plotting,paste0(data_path,'all_pats_wide_plotting_P_10exp(-7)_PCR_pos_alph_bet_day7_day14.csv'), row.names = FALSE)                    ########CHANGEEEEE
+write.csv(all_pats_wide_chopped_sig_lines_plotting,paste0(data_path,'all_pats_wide_chopped_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day7_day14.csv'), row.names = FALSE)       ########CHANGEEEEE
+write.csv(all_pats_wide_sig_lines_plotting,paste0(data_path,'all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day7_day14.csv'), row.names = FALSE)                ########CHANGEEEEE
+

@@ -46,7 +46,7 @@ rownames(all_pats_wide) <- NULL  #This resets the index of the rows of the dataf
 
 #######the significance level
 
-p_value <- 10**(-6)  #0.0001 = 10**(-4)
+p_value <- 10**(-4)  #0.0001 = 10**(-4)
 
 ############# This function is summing poisson distributions of means (lam_vals) from 0 up to (stops)
 sum_poisson = function(lam, start=0, stop=5) {
@@ -58,12 +58,12 @@ sum_poisson = function(lam, start=0, stop=5) {
 }
 
 #the first timepoint data set
-lam_vals <- all_pats_wide$duplicate_count.0
+lam_vals <- all_pats_wide$duplicate_count.7
 #lam_vals <- all_pats_wide$duplicate_count.0[1:500] #just taking a subset
 #lam_vals <- c(30,0,2,0,2,30,1)
 
 #the end timepoint dataset
-end_time_vals <- all_pats_wide$duplicate_count.7
+end_time_vals <- all_pats_wide$duplicate_count.14
 #end_time_vals <- all_pats_wide$duplicate_count.7[1:500] #just taking a subset
 #end_time_vals <- c(10,0,2,7,3,3,0)
 
@@ -104,7 +104,7 @@ for (p in 1:length(lam_vals)) {
   #logic to find upper significance level
   if (lam_vals[p] <= bottom_threshold) { #the beginning cut off with straight significance lines
     
-    num_lam_multip = 13  #how many multiples of lambda do we want the summation of poisson to go up to. This is important for memory reasons
+    num_lam_multip = 8  #how many multiples of lambda do we want the summation of poisson to go up to. This is important for memory reasons
     
     stops = linspace(0, num_lam_multip*bottom_threshold, n = (num_lam_multip*bottom_threshold)-(0)+1)  #need stops to go far beyond
     summation = sapply(bottom_threshold, function(x) { sapply(stops, function(y) sum_poisson(x, start=0, stop=y))})
@@ -138,7 +138,7 @@ for (p in 1:length(lam_vals)) {
     
     #this loop is in to save memory. We only need large num_lam_multip for small lambdas (in order to find upper p value threshold). Can always add steps in the loop to be more memory efficient
     if (lam_vals[p] < 10) {
-      num_lam_multip = 13  #number of multiples of lambda to sum up to in the poisson distribution
+      num_lam_multip = 8  #number of multiples of lambda to sum up to in the poisson distribution
     } else {
       num_lam_multip = 3
     }
@@ -236,7 +236,7 @@ ordered_high_sig_lim_list <- replace(ordered_high_sig_lim_list, ordered_high_sig
 
 #####find total number of TCR's on each day
 total_TCRs_day_0 <- sum(as.numeric(all_pats_wide$duplicate_count.0))
-total_TCRs_day_7 <- sum(as.numeric(all_pats_wide$duplicate_count.0))     #This is required for using units of TCR per million in the plot
+total_TCRs_day_7 <- sum(as.numeric(all_pats_wide$duplicate_count.7))     #This is required for using units of TCR per million in the plot
 
 #need to scale the lam_vals and end_time_vals so that units are in TCR per million
 lam_vals_u_p_m <- ((10**6)/(total_TCRs_day_0))*lam_vals
@@ -280,7 +280,7 @@ p7 <- p6 + geom_abline() #plot the line y=x
 p7 #show the plot
 
 #subset the data for just the significant TCRs and save these for further examination
-sig_TCRs <- all_pats_wide %>% filter(sig_day_7_from_day_0 == 1)  #subsetting the full dataframe for just the significant TCRs
-data_path <- "C:/Research_Assistant/work/data/TCR_data/significant_TCR_csvs/"
-write.csv(sig_TCRs,paste0(data_path,'P_10exp(-6)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
+# sig_TCRs <- all_pats_wide %>% filter(sig_day_7_from_day_0 == 1)  #subsetting the full dataframe for just the significant TCRs
+# data_path <- "C:/Research_Assistant/work/data/TCR_data/significant_TCR_csvs/"
+# write.csv(sig_TCRs,paste0(data_path,'P_10exp(-6)_PCR_pos_alph_bet_day0_day7.csv'), row.names = FALSE)
 
