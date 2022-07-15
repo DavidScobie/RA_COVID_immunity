@@ -8,6 +8,7 @@ from scipy.stats import norm, lognorm
 import matplotlib.mlab as mlab
 import scipy.stats as stats
 import statistics
+from matplotlib import cm
 
 #import the excel data
 
@@ -523,9 +524,15 @@ plt.ylabel('Density of beta values')
 ###################### Make a surface plot of the BIC
 alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=5)
 betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=5)
-# X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
+X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
 # print('X',X)
 
+#sum_diff_squ = [] #the sum of the difference between gn_Ftrue and Dn
+sn=1 #the error on each point
+k=2 # the number of parameters in the model
+n_points = len(t_measured_init) #the number of data points for the average of all patients
+BIC = [] #initialise the array of BIC
+sum_diff_squ = []
 for i in (alphas_to_surf):
     for j in (betas_to_surf):
 
@@ -542,19 +549,40 @@ for i in (alphas_to_surf):
 
         #plot the fitted data and the model for log(virus) against day
         log_V_measured = np.log10(V_measured_init)
-        log_I_fitted = np.log10(data_fitted[:, 1])
+        gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
         #########plot the log of virus amount against time
         plt.figure()
         plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-        plt.plot(t_measured_init, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+        plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
         plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
         plt.xlim(left=0)
         plt.legend()
         plt.xlabel('Days Post Infection')
         plt.ylabel('Concentration (Log10 copies/mL)')
-        # plt.title('alpha=%i' %i, 'beta=%i' %j)
         plt.title("alpha={i}, beta={j}".format(i=i, j=j))
 
+        #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
 
+        #find differences between the gnFtrue virus amount and the virus amount for all of the models
+        diff = [] #the difference between gn_Ftrue and Dn
+        for k in range (len(t_measured_init)):
+            diff.append(log_V_measured[k] - gn_Ftrue_log_I_fitted[k])
+        #print('diff_squ',diff_squ)
+        #sum_diff_squ.append(np.sum(np.square(diff)))
+
+        lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
+        BIC.append((k*np.log(n_points))-(2*np.log(np.absolute(lik_term))))
+
+print('BIC',BIC)
+BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
+print('BIC_mat',BIC_mat)
+
+# Plot the surface.
+fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+surf = ax.plot_surface(X, Y, BIC_mat, cmap=cm.coolwarm,
+                       linewidth=0, antialiased=False)
+ax.set_xlabel('alpha')
+ax.set_ylabel('beta')
+ax.set_zlabel('BIC')
 plt.show()
