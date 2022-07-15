@@ -486,4 +486,75 @@ for i in range (len(variances)):
         refined_alphas.append(alphas[i])
         refined_betas.append(betas[i])
 
+##############################################################################
+
+####Find the median of the alpha values
+alpha_med = np.median(alphas)
+
+########use a normal distribution to compute the random effect and find the new adjusted alpha values (hopefully in a lognormal dist)
+adj_alphas = []
+for i in range (len(alphas)): #length 18 for all the patients
+    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    adj_alph = alpha_med*np.exp(exponent) #add the fixed term onto the random term
+    adj_alphas.append(adj_alph) #append it to an array
+
+print('adj_alphas',adj_alphas)
+plt.figure()
+plt.hist(adj_alphas, density=False, bins=8)
+plt.xlabel('Alpha value')
+plt.ylabel('Density of alpha values')
+
+####Find the median of the beta values
+beta_med = np.median(betas)
+
+########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
+adj_betas = []
+for i in range (len(betas)): #length 18 for all the patients
+    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    adj_bet = beta_med*np.exp(exponent) #add the fixed term onto the random term
+    adj_betas.append(adj_bet) #append it to an array
+
+print('adj_betas',adj_betas)
+plt.figure()
+plt.hist(adj_betas, density=False, bins=8)
+plt.xlabel('Beta value')
+plt.ylabel('Density of beta values')
+
+###################### Make a surface plot of the BIC
+alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=5)
+betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=5)
+# X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
+# print('X',X)
+
+for i in (alphas_to_surf):
+    for j in (betas_to_surf):
+
+        params = Parameters()
+        params.add('U0', value=U0, vary=False)
+        params.add('I0', value=I0_init, vary=False)
+
+        params.add('alpha', value=i, min=i - 10**(-11), max=i + 10**(-11))   #rate that viral particles infect susceptible cells
+        params.add('beta', value=j, min=j - 10**(-11), max=j + 10**(-11))
+
+        result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
+        # check results of the fit
+        data_fitted = g(t_measured_init, y0_init, result.params)
+
+        #plot the fitted data and the model for log(virus) against day
+        log_V_measured = np.log10(V_measured_init)
+        log_I_fitted = np.log10(data_fitted[:, 1])
+
+        #########plot the log of virus amount against time
+        plt.figure()
+        plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+        plt.plot(t_measured_init, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+        plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+        plt.xlim(left=0)
+        plt.legend()
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Concentration (Log10 copies/mL)')
+        # plt.title('alpha=%i' %i, 'beta=%i' %j)
+        plt.title("alpha={i}, beta={j}".format(i=i, j=j))
+
+
 plt.show()

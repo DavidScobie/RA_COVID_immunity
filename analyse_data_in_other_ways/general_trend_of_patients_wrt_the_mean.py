@@ -214,5 +214,7 @@ plt.ylabel('Number of patients')
 
 #############make plot of the diff = (number of points above average curve) - (number of points below average curve) for each patient
 
+
+
 plt.show()
 

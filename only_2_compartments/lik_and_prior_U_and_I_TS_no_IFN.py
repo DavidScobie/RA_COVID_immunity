@@ -502,7 +502,7 @@ for i in range (len(variances)):
         refined_alphas.append(alphas[i])
         refined_betas.append(betas[i])
 
-########################### plot histograms of alpha, beta and kappa
+########################### plot histograms of alpha, beta
 
 n_bins = 50   #number of bins for the histogram
 
