@@ -155,6 +155,12 @@ for j in effective_day:
 #print('div_vir_list_sum',div_vir_list_sum)
 
 plt.plot(eff_day_vals,div_vir_list_sum,'-rx')
+plt.title('Average of all patients')
+plt.xlabel('Study Day')
+plt.ylabel('Virus Titre (Log10 copies/mL)')
+plt.xlim([1,18.5])
+plt.ylim([-0.1,10.4])
+
 everyone_average_virus_titre = np.sum(div_vir_list_sum) / len(div_vir_list_sum)
 
 #how many patients do we have? do the patients get sick or stay healthy or both? (out of the 36)
@@ -184,27 +190,29 @@ for j in Subject_ID_vals:
     #plt.figure()
     df2_Subj_ID_sorted = df2_str_sorted[df2_str_sorted['Subject ID'].str.contains(str(j)) == True]  #make a subset of the dataframe based on the subject ID
     df2_Subj_ID_sub_eff_sort = df2_Subj_ID_sorted.sort_values(["effective_day"], ascending=True) #sort the values of the dataframe based on the effective_day
-    df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[2.8,10.4]) #plot the subject points as a line plot
+    # df2_Subj_ID_sub_eff_sort.plot(x='effective_day', y='Virus Titre (Log10 copies/mL)',kind='line',xlim=[1,18.5],ylim=[-0.1,10.4]) #plot the subject points as a line plot
 
-    plt.title('Subject ID=%i' %j)
-    plt.xlabel('Study Day')
-    plt.ylabel('Virus Titre (Log10 copies/mL)')
+    # plt.title('Subject ID=%i' %j)
+    # plt.xlabel('Study Day')
+    # plt.ylabel('Virus Titre (Log10 copies/mL)')
 
     # print('subject_ID',j)
     # print('df2_Subj_ID_sub_eff_sort',df2_Subj_ID_sub_eff_sort)
 
+    #collecting data for the histogram
     number_of_virus_vals = df2_Subj_ID_sub_eff_sort.shape[0]
     sum_of_virus_vals = np.sum(df2_Subj_ID_sub_eff_sort['Virus Titre (Log10 copies/mL)'].tolist())
     pat_average_virus_titre.append(sum_of_virus_vals / number_of_virus_vals)
 
 print('pat_average_virus_titre',pat_average_virus_titre)
-
+#histogram of the average of the virus titres
 plt.figure()
 plt.hist(pat_average_virus_titre, density=False, bins=10)
 plt.axvline(x=everyone_average_virus_titre,color='red')
 plt.xlabel('Average virus titre over full time course')
 plt.ylabel('Number of patients')
 
+#############make plot of the diff = (number of points above average curve) - (number of points below average curve) for each patient
 
 plt.show()
 
