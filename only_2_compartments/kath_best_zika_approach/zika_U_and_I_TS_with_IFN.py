@@ -438,7 +438,7 @@ for j in Subject_ID_vals_short:
         #my optimised parameters
         params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
         params.add('beta', value=1.2*(10**(0)), min=0, max=1.1*(10**(2)))
-        params.add('kappa', value=2.1*(10**-11), min=1*(10**-11), max=3*(10**-7))
+        params.add('kappa', value=5*(10**-11), min=1*(10**-11), max=3*(10**-7))
 
         # fit model
         result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -480,6 +480,7 @@ for j in Subject_ID_vals_short:
 
 print('alphas',alphas)
 print('betas',betas)
+print('kappas',kappas)
 #print('residuals',residuals)
 print('sum_residuals_squs',sum_residuals_squs)
 print('ndatas',ndatas)
@@ -552,67 +553,74 @@ plt.ylabel('Density of kappa values')
 ########alternatively dont make a plot, just store the data in a bigger matrix. Will need an extra nested loop for the kappa. Will need some thinking for this
 ###############also have a thik about whether you really need that -1/2 in the likelihood equation. Need to scale this properly with the kln(n) part with BIC
 
-# alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=5)
-# betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=5)
-# X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
-# # print('X',X)
+sn=1 #the error on each point
+k_param=3 # the number of parameters in the model
+n_points = len(t_measured_init) #the number of data points for the average of all patients
 
-# #sum_diff_squ = [] #the sum of the difference between gn_Ftrue and Dn
-# sn=1 #the error on each point
-# k=2 # the number of parameters in the model
-# n_points = len(t_measured_init) #the number of data points for the average of all patients
-# BIC = [] #initialise the array of BIC
-# sum_diff_squ = []
-# for i in (alphas_to_surf):
-#     for j in (betas_to_surf):
+alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=5)
+betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=5)
+kappas_to_surf = np.linspace(np.min(adj_kappas), np.max(adj_kappas), num=5)
+print('kappas_to_surf',kappas_to_surf)
+#for m in (kappas_to_surf[1:3]):
+for m in (np.array([kappa_med])):
+    print('kappa = ',m)
+    X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
+    # print('X',X)
+    BIC = [] #initialise the array of BIC
+    sum_diff_squ = []
+    for i in (alphas_to_surf):
+        print('alpha = ',i)
+        for j in (betas_to_surf):
+            print('beta = ',j)
 
-#         params = Parameters()
-#         params.add('U0', value=U0, vary=False)
-#         params.add('I0', value=I0_init, vary=False)
+            params = Parameters()
+            params.add('U0', value=U0, vary=False)
+            params.add('I0', value=I0_init, vary=False)
 
-#         params.add('alpha', value=i, min=i - 10**(-11), max=i + 10**(-11))   #rate that viral particles infect susceptible cells
-#         params.add('beta', value=j, min=j - 10**(-11), max=j + 10**(-11))
+            params.add('alpha', value=i, min=i - 10**(-11), max=i + 10**(-11))   #rate that viral particles infect susceptible cells
+            params.add('beta', value=j, min=j - 10**(-11), max=j + 10**(-11))
+            params.add('kappa', value=m, min=m - 10**(-11), max=m + 10**(-11))
 
-#         result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
-#         # check results of the fit
-#         data_fitted = g(t_measured_init, y0_init, result.params)
+            result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
+            # check results of the fit
+            data_fitted = g(t_measured_init, y0_init, result.params)
 
-#         #plot the fitted data and the model for log(virus) against day
-#         log_V_measured = np.log10(V_measured_init)
-#         gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
+            #plot the fitted data and the model for log(virus) against day
+            log_V_measured = np.log10(V_measured_init)
+            gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
-#         #########plot the log of virus amount against time
-#         # plt.figure()
-#         # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-#         # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-#         # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
-#         # plt.xlim(left=0)
-#         # plt.legend()
-#         # plt.xlabel('Days Post Infection')
-#         # plt.ylabel('Concentration (Log10 copies/mL)')
-#         # plt.title("alpha={i}, beta={j}".format(i=i, j=j))
+            #########plot the log of virus amount against time
+            # plt.figure()
+            # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+            # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+            # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+            # plt.xlim(left=0)
+            # plt.legend()
+            # plt.xlabel('Days Post Infection')
+            # plt.ylabel('Concentration (Log10 copies/mL)')
+            # plt.title("alpha={i}, beta={j}".format(i=i, j=j))
 
-#         #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
+            #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
 
-#         #find differences between the gnFtrue virus amount and the virus amount for all of the models
-#         diff = [] #the difference between gn_Ftrue and Dn
-#         for k in range (len(t_measured_init)):
-#             diff.append(log_V_measured[k] - gn_Ftrue_log_I_fitted[k])
-#         #print('diff_squ',diff_squ)
-#         #sum_diff_squ.append(np.sum(np.square(diff)))
+            #find differences between the gnFtrue virus amount and the virus amount for all of the models
+            diff = [] #the difference between gn_Ftrue and Dn
+            for k in range (len(t_measured_init)):
+                diff.append(log_V_measured[k] - gn_Ftrue_log_I_fitted[k])
+            #print('np.square(diff)',np.square(diff))
 
-#         lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
-#         BIC.append((k*np.log(n_points))-(2*np.log(np.absolute(lik_term))))
+            log_lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
+            BIC.append((k_param*np.log(n_points))-(2*log_lik_term))
 
-# print('BIC',BIC)
-# BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
-# print('BIC_mat',BIC_mat)
+    print('BIC',BIC)
+    BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
+    print('BIC_mat',BIC_mat)
 
-# # Plot the surface.
-# fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-# surf = ax.plot_surface(X, Y, BIC_mat, cmap=cm.coolwarm,
-#                        linewidth=0, antialiased=False)
-# ax.set_xlabel('alpha')
-# ax.set_ylabel('beta')
-# ax.set_zlabel('BIC')
+    # Plot the surface.
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf = ax.plot_surface(X, Y, BIC_mat, cmap=cm.coolwarm,
+                        linewidth=0, antialiased=False)
+    ax.set_xlabel('alpha')
+    ax.set_ylabel('beta')
+    ax.set_zlabel('BIC')
+    ax.set_title('kappa=%.6e' %m) # f represents a float
 plt.show()
