@@ -550,6 +550,8 @@ plt.ylabel('Density of kappa values')
 
 ###################### Need to rethink this. It will be different for 3 parameters. The space may need to become 3d for alpha, beta and kappa, and have colour coding for BIC?
 ########alternatively dont make a plot, just store the data in a bigger matrix. Will need an extra nested loop for the kappa. Will need some thinking for this
+###############also have a thik about whether you really need that -1/2 in the likelihood equation. Need to scale this properly with the kln(n) part with BIC
+
 # alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=5)
 # betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=5)
 # X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)

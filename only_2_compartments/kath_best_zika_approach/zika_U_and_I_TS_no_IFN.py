@@ -529,7 +529,7 @@ X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
 
 #sum_diff_squ = [] #the sum of the difference between gn_Ftrue and Dn
 sn=1 #the error on each point
-k=2 # the number of parameters in the model
+k_param=2 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 BIC = [] #initialise the array of BIC
 sum_diff_squ = []
@@ -552,15 +552,15 @@ for i in (alphas_to_surf):
         gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
         #########plot the log of virus amount against time
-        # plt.figure()
-        # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-        # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-        # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
-        # plt.xlim(left=0)
-        # plt.legend()
-        # plt.xlabel('Days Post Infection')
-        # plt.ylabel('Concentration (Log10 copies/mL)')
-        # plt.title("alpha={i}, beta={j}".format(i=i, j=j))
+        plt.figure()
+        plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+        plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+        plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+        plt.xlim(left=0)
+        plt.legend()
+        plt.xlabel('Days Post Infection')
+        plt.ylabel('Concentration (Log10 copies/mL)')
+        plt.title("alpha={i}, beta={j}".format(i=i, j=j))
 
         #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
 
@@ -568,11 +568,10 @@ for i in (alphas_to_surf):
         diff = [] #the difference between gn_Ftrue and Dn
         for k in range (len(t_measured_init)):
             diff.append(log_V_measured[k] - gn_Ftrue_log_I_fitted[k])
-        #print('diff_squ',diff_squ)
-        #sum_diff_squ.append(np.sum(np.square(diff)))
+        print('np.square(diff)',np.square(diff))
 
-        lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
-        BIC.append((k*np.log(n_points))-(2*np.log(np.absolute(lik_term))))
+        log_lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
+        BIC.append((k_param*np.log(n_points))-(2*log_lik_term))
 
 print('BIC',BIC)
 BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
