@@ -590,15 +590,15 @@ for m in (np.array([kappa_med])):
             gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
             #########plot the log of virus amount against time
-            # plt.figure()
-            # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-            # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-            # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
-            # plt.xlim(left=0)
-            # plt.legend()
-            # plt.xlabel('Days Post Infection')
-            # plt.ylabel('Concentration (Log10 copies/mL)')
-            # plt.title("alpha={i}, beta={j}".format(i=i, j=j))
+            plt.figure()
+            plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+            plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+            plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+            plt.xlim(left=0)
+            plt.legend()
+            plt.xlabel('Days Post Infection')
+            plt.ylabel('Concentration (Log10 copies/mL)')
+            plt.title("alpha={i}, beta={j}".format(i=i, j=j))
 
             #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
 
