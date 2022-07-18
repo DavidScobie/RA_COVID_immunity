@@ -13,29 +13,37 @@ library(tidyr)
 library(pracma)
 library(MASS)
 
-#read in the 3 timepoints for 1st patient alpha chain
-data_path = "/home/dscobie/RA_work/TCR_data/NS085/"          
+#read in the timepoints for 1st patient alpha chain
+data_path = "/home/dscobie/RA_work/TCR_data/NS085/"                                       ###########CHANGEEEEE    
 pat_439679_day_0_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_pre_1_alpha.csv"))
 pat_439679_day_7_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_alpha.csv"))
 
+#read in the timepoints for 1st patient beta chain                                          
+pat_439679_day_0_beta<-read.csv(paste0(data_path,"dcr_HVO_439679_pre_1_beta.csv"))      ###########CHANGEEEEE 
+pat_439679_day_7_beta<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_beta.csv"))
+
+#concatenate the alpha and beta chains together
+pat_439679_day_0 = bind_rows(pat_439679_day_0_alpha, pat_439679_day_0_beta)
+pat_439679_day_7 = bind_rows(pat_439679_day_7_alpha, pat_439679_day_7_beta)
+
 #only keep columns with productive=TRUE
-pat_439679_day_0_alpha_prod <- subset(pat_439679_day_0_alpha, subset = productive == TRUE)
-pat_439679_day_7_alpha_prod <- subset(pat_439679_day_7_alpha, subset = productive == TRUE)
+pat_439679_day_0_prod <- subset(pat_439679_day_0, subset = productive == TRUE)
+pat_439679_day_7_prod <- subset(pat_439679_day_7, subset = productive == TRUE)
 
 # add column to dataframe of the day
-pat_439679_day_0_alpha_prod$day <- 0
-pat_439679_day_7_alpha_prod$day <- 7
+pat_439679_day_0_prod$day <- 0
+pat_439679_day_7_prod$day <- 7
 
-#combine the 3 data frames for patient 439679 into 1 big data frame (to get the long format)
-pat_439679_alpha_prod <- bind_rows(pat_439679_day_0_alpha_prod, pat_439679_day_7_alpha_prod)
+#combine the 2 data frames for patient 439679 into 1 big data frame (to get the long format)
+pat_439679_prod <- bind_rows(pat_439679_day_0_prod, pat_439679_day_7_prod)
 
 #make the data frame wide
-pat_439679_alpha_prod_wide <- reshape(pat_439679_alpha_prod, idvar = "junction_aa", timevar = "day", direction = "wide")
+pat_439679_prod_wide <- reshape(pat_439679_prod, idvar = "junction_aa", timevar = "day", direction = "wide")
 
 # select variables junction_aa, duplicate_count.0, duplicate_count.7
 myvars <- c("junction_aa", "duplicate_count.0", "duplicate_count.7")
-all_pats_wide <- pat_439679_alpha_prod_wide[myvars]
-#all_pats_wide <- pat_439679_alpha_prod_wide[myvars][1:22,] #only want first 500 for speed
+all_pats_wide <- pat_439679_prod_wide[myvars]
+#all_pats_wide <- pat_439679_prod_wide[myvars][1:22,] #only want first 500 for speed
 
 #replace duplicate count NA with duplicate count = 0
 all_pats_wide[is.na(all_pats_wide)] <- 0
@@ -292,9 +300,10 @@ all_pats_wide_sig_lines_plotting <- all_pats_wide_sig_lines[ , c("log_ordered_la
 
 #subset the data for just the significant TCRs and save these for further examination
 sig_TCRs <- all_pats_wide %>% filter(sig_day_7_from_day_0 == 1)  #subsetting the full dataframe for just the significant TCRs
-data_path <- "/home/dscobie/RA_work/TCR_data/sig_CSVs_and_plotting/individual_pats/"
-write.csv(sig_TCRs,paste0(data_path,'sig_TCRs_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv'), row.names = FALSE)                   ########CHANGEEEEE
-write.csv(all_pats_wide_plotting,paste0(data_path,'all_pats_wide_plotting_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv'), row.names = FALSE)                    ########CHANGEEEEE
-write.csv(all_pats_wide_chopped_sig_lines_plotting,paste0(data_path,'all_pats_wide_chopped_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv'), row.names = FALSE)       ########CHANGEEEEE
-write.csv(all_pats_wide_sig_lines_plotting,paste0(data_path,'all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv'), row.names = FALSE)                ########CHANGEEEEE
+data_path <- "/home/dscobie/RA_work/TCR_data/sig_CSVs_and_plotting/individual_pats/alpha_and_beta/"
+write.csv(sig_TCRs,paste0(data_path,'sig_TCRs_P_10exp(-7)_PCR_pos_day0_day7_439679.csv'), row.names = FALSE)                   ########CHANGEEEEE
+write.csv(all_pats_wide_plotting,paste0(data_path,'all_pats_wide_plotting_P_10exp(-7)_PCR_pos_day0_day7_439679.csv'), row.names = FALSE)                    ########CHANGEEEEE
+write.csv(all_pats_wide_chopped_sig_lines_plotting,paste0(data_path,'all_pats_wide_chopped_sig_lines_plotting_P_10exp(-7)_PCR_pos_day0_day7_439679.csv'), row.names = FALSE)       ########CHANGEEEEE
+write.csv(all_pats_wide_sig_lines_plotting,paste0(data_path,'all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_day0_day7_439679.csv'), row.names = FALSE)                ########CHANGEEEEE
 
+#####################################################
