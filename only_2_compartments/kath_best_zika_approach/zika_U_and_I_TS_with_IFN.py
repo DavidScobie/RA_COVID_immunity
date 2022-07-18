@@ -436,9 +436,9 @@ for j in Subject_ID_vals_short:
         params.add('I0', value=I0, vary=False)
 
         #my optimised parameters
-        params.add('alpha', value=1.9*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
-        params.add('beta', value=1.2*(10**(0)), min=0, max=1.1*(10**(2)))
-        params.add('kappa', value=5*(10**-11), min=1*(10**-11), max=3*(10**-7))
+        params.add('alpha', value=4.3*(10**(-8)), min=1*(10**(-9)), max=6.3*(10**(-7)))   #rate that viral particles infect susceptible cells
+        params.add('beta', value=11.4*(10**(0)), min=0, max=1.1*(10**(2)))
+        params.add('kappa', value=5.4*(10**-8), min=1*(10**-11), max=3*(10**-6))
 
         # fit model
         result = minimize(residual, params, args=(t_measured, V_measured), method='leastsq')  # leastsq nelder
@@ -557,12 +557,25 @@ sn=1 #the error on each point
 k_param=3 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 
-alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=5)
-betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=5)
-kappas_to_surf = np.linspace(np.min(adj_kappas), np.max(adj_kappas), num=5)
+how_many_points = 3
+range_alph = np.max(adj_alphas) - np.min(adj_alphas)
+range_bet = np.max(adj_betas) - np.min(adj_betas)
+range_kap = np.max(adj_kappas) - np.min(adj_kappas)
+proportion = 0.4
+
+alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))), num=how_many_points)
+betas_to_surf = np.linspace(np.min(adj_betas) + (range_bet*((1-proportion)/(2))), np.max(adj_betas) - (range_bet*((1-proportion)/(2))), num=how_many_points)
+kappas_to_surf = np.linspace(np.min(adj_kappas) + (range_kap*((1-proportion)/(2))), np.max(adj_kappas) - (range_kap*((1-proportion)/(2))), num=how_many_points)
+
+######old code
+# alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=how_many_points)
+# betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=how_many_points)
+# kappas_to_surf = np.linspace(np.min(adj_kappas), np.max(adj_kappas), num=how_many_points)
+
+
 print('kappas_to_surf',kappas_to_surf)
-#for m in (kappas_to_surf[1:3]):
-for m in (np.array([kappa_med])):
+for m in (kappas_to_surf):
+#for m in (np.array([kappa_med])):
     print('kappa = ',m)
     X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
     # print('X',X)
@@ -585,20 +598,22 @@ for m in (np.array([kappa_med])):
             # check results of the fit
             data_fitted = g(t_measured_init, y0_init, result.params)
 
+            print('result.chisqr',result.chisqr)
+
             #plot the fitted data and the model for log(virus) against day
             log_V_measured = np.log10(V_measured_init)
             gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
             #########plot the log of virus amount against time
-            plt.figure()
-            plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-            plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-            plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
-            plt.xlim(left=0)
-            plt.legend()
-            plt.xlabel('Days Post Infection')
-            plt.ylabel('Concentration (Log10 copies/mL)')
-            plt.title("alpha={i}, beta={j}".format(i=i, j=j))
+            # plt.figure()
+            # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+            # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+            # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+            # plt.xlim(left=0)
+            # plt.legend()
+            # plt.xlabel('Days Post Infection')
+            # plt.ylabel('Concentration (Log10 copies/mL)')
+            # plt.title("alpha={i}, beta={j}, kappa={m}".format(i=i, j=j, m=m))
 
             #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
 
@@ -616,6 +631,7 @@ for m in (np.array([kappa_med])):
     print('BIC_mat',BIC_mat)
 
     # Plot the surface.
+    #plt.figure()
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     surf = ax.plot_surface(X, Y, BIC_mat, cmap=cm.coolwarm,
                         linewidth=0, antialiased=False)

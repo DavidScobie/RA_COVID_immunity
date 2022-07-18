@@ -12,11 +12,11 @@ library(pracma)
 library(MASS)
 
 #read the data frames in
-data_path = "C:/Research_Assistant/work/data/TCR_data/significant_TCR_csvs/P_10exp(-7)_PCR_pos_alph_bet_day0_day14/" 
-sig_TCRs <- read.csv(paste0(data_path,"sig_TCRs_P_10exp(-7)_PCR_pos_alph_bet_day0_day14.csv"))
-all_pats_wide_plotting<-read.csv(paste0(data_path,"all_pats_wide_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day14.csv"))
-all_pats_wide_chopped_sig_lines_plotting <- read.csv(paste0(data_path,"all_pats_wide_chopped_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day14.csv"))
-all_pats_wide_sig_lines_plotting <- read.csv(paste0(data_path,"all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_bet_day0_day14.csv"))
+data_path = "C:/Research_Assistant/work/data/TCR_data/significant_TCR_csvs/individual_pats/" 
+sig_TCRs <- read.csv(paste0(data_path,"sig_TCRs_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv"))
+all_pats_wide_plotting<-read.csv(paste0(data_path,"all_pats_wide_plotting_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv"))
+all_pats_wide_chopped_sig_lines_plotting <- read.csv(paste0(data_path,"all_pats_wide_chopped_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv"))
+all_pats_wide_sig_lines_plotting <- read.csv(paste0(data_path,"all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_alph_day0_day7_439679.csv"))
 
 
 p1 <- ggplot(all_pats_wide_plotting) #define the dataframe to plot

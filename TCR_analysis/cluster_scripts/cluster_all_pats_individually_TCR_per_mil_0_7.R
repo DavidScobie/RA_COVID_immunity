@@ -15,12 +15,12 @@ library(MASS)
 
 #read in the timepoints for 1st patient alpha chain
 data_path = "/home/dscobie/RA_work/TCR_data/NS085/"                                       ###########CHANGEEEEE    
-pat_439679_day_0_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_pre_1_alpha.csv"))
-pat_439679_day_7_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_alpha.csv"))
+pat_439679_day_0_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_pre_1_alpha.csv"))      ###########CHANGEEEEE
+pat_439679_day_7_alpha<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_alpha.csv"))     ###########CHANGEEEEE
 
 #read in the timepoints for 1st patient beta chain                                          
 pat_439679_day_0_beta<-read.csv(paste0(data_path,"dcr_HVO_439679_pre_1_beta.csv"))      ###########CHANGEEEEE 
-pat_439679_day_7_beta<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_beta.csv"))
+pat_439679_day_7_beta<-read.csv(paste0(data_path,"dcr_HVO_439679_day7_1_beta.csv"))     ###########CHANGEEEEE
 
 #concatenate the alpha and beta chains together
 pat_439679_day_0 = bind_rows(pat_439679_day_0_alpha, pat_439679_day_0_beta)
@@ -41,7 +41,7 @@ pat_439679_prod <- bind_rows(pat_439679_day_0_prod, pat_439679_day_7_prod)
 pat_439679_prod_wide <- reshape(pat_439679_prod, idvar = "junction_aa", timevar = "day", direction = "wide")
 
 # select variables junction_aa, duplicate_count.0, duplicate_count.7
-myvars <- c("junction_aa", "duplicate_count.0", "duplicate_count.7")
+myvars <- c("junction_aa", "duplicate_count.0", "duplicate_count.7")      ###########CHANGEEEEE
 all_pats_wide <- pat_439679_prod_wide[myvars]
 #all_pats_wide <- pat_439679_prod_wide[myvars][1:22,] #only want first 500 for speed
 
@@ -66,10 +66,10 @@ sum_poisson = function(lam, start=0, stop=5) {
 }
 
 #the first timepoint data set
-lam_vals <- all_pats_wide$duplicate_count.0
+lam_vals <- all_pats_wide$duplicate_count.0              ###########CHANGEEEEE
 
 #the timepoint 7 dataset
-end_time_vals <- all_pats_wide$duplicate_count.7
+end_time_vals <- all_pats_wide$duplicate_count.7         ###########CHANGEEEEE
 
 ####Cannot have a poisson dist centred at 0. Therefore take significance boundary for poisson centred at 1 and take same limit. Make sig line straight at LHS of graph.
 ar_bef_1 <- vector()
@@ -307,3 +307,4 @@ write.csv(all_pats_wide_chopped_sig_lines_plotting,paste0(data_path,'all_pats_wi
 write.csv(all_pats_wide_sig_lines_plotting,paste0(data_path,'all_pats_wide_sig_lines_plotting_P_10exp(-7)_PCR_pos_day0_day7_439679.csv'), row.names = FALSE)                ########CHANGEEEEE
 
 #####################################################
+
