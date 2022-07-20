@@ -292,13 +292,7 @@ params = Parameters()
 params.add('U0', value=U0, vary=False)
 params.add('Id0', value=Id0, vary=False)
 params.add('Is0', value=Is0, vary=False)
-"""
-#parameters optimised on first 6 days of data
-params.add('alpha', value=4.24*(10**(-7)), min=4.23*(10**(-7)), max=4.25*(10**(-7)))   #rate that viral particles infect susceptible cells
-params.add('beta', value=61.2, min=61.1, max=61.3)    #Clearance rate of infected cells
-params.add('gamma', value=1.83, min=1.82, max=1.84)        #Infected cells release virus at rate gamma
-params.add('delta', value=1.45, min=1.44, max=1.46)     #clearance rate of virus particles
-"""
+
 #my optimised parameters
 params.add('alpha', value=5.5*(10**(-7)), min=7.99*(10**(-8)), max=8.01*(10**(-7)))   #rate that viral particles infect susceptible cells
 params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
@@ -310,53 +304,39 @@ result = minimize(residual, params, args=(t_measured, V_measured), method='least
 # check results of the fit
 data_fitted = g(t_measured, y0, result.params)
 
+##############################
+
 # plot fitted data
-#plt.figure()
-ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='red', label='fitted V data')
+ax1.plot(t_measured, 10**(-6)*data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
+ax1.plot(t_measured, 10**(-6)*data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
+ax1.plot(t_measured, (10**(-6)*data_fitted[:, 2]) + (10**(-6)*data_fitted[:, 1]), '-', linewidth=2, color='red', label='fitted (Is + Id) data')
 ax1.legend()
 ax1.set_xlim([0, max(t_measured)])
-ax1.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
+#ax1.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
 ax1.set_xlabel('Days Post Infection')
 ax1.set_ylabel('Virus Titre Concentration (million copies/mL)')
 ax1.set_title('a)')
 # display fitted statistics
 report_fit(result)
 
-#collect the parameters from the overall model
-overall_alpha=[]
-overall_beta=[]
-overall_gamma=[]
-overall_delta=[]
-for name, param in result.params.items():
-    if name == 'alpha':
-        overall_alpha.append(param.value)
-    if name == 'beta':
-        overall_beta.append(param.value)
-    if name == 'gamma':
-        overall_gamma.append(param.value)
-    if name == 'delta':
-        overall_delta.append(param.value)
-
 #compute the variance
-variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
-print('variance',variance)
+print('chisqr',result.chisqr)
+print('ndata',result.ndata)
+overall_variance = (result.chisqr) / (result.ndata) #(chi_squ / N)
+print('overall_variance',overall_variance)
 
 #plot the fitted data and the model for log(virus) against day
 log_V_measured = np.log10(V_measured)
-log_V_fitted = np.log10(data_fitted[:, 1])
-V_fitted = data_fitted[:, 1]
+log_Id_fitted = np.log10(data_fitted[:, 1])
+log_Is_fitted = np.log10(data_fitted[:, 2])
+log_Id_Is_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
 #plt.figure()
-# ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured qPCR V data', s=75)
-# ax2.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted qPCR V data')
-# ax2.set_xlim(left=0)
-# ax2.set_xlabel('Days Post Infection')
-# ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
-# ax2.set_title('b)')
+ax2.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured (Id+Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+ax2.plot(t_measured, log_Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
+ax2.plot(t_measured, log_Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
+ax2.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted (Id + Is) data')
 
-ax2.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-ax2.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted I data')
-
-#################plotting curve from day -3
+#plotting curve from day -3
 first_vir_vals = np.array([(-3*b)+a,a])
 
 first_eff_day_vals = np.array([-3,0])
@@ -372,53 +352,27 @@ ax2.set_title('b)')
 
 print('virus val day minus 3: ',(-3*b)+a,'virus val day minus 2: ',(-2*b)+a,'virus val day minus 1: ',(-1*b)+a)
 
-print('log_V_measured',log_V_measured, 'LENGTH log_V_measured',len(log_V_measured),'IT IS SAVED HERE')
-#np.save('TS_log_V_measured', log_V_measured)
-#np.save('TS_t_measured', t_measured)
-print('t_measured',t_measured)
-"""
-#####plot the FFA data on top
-FFA_virus=np.array([78.22279965, 586.58819126, 641.94820653, 2290.86793783, 239.88332219, 194.98447853, 429.86622684, 245.47088348, 218.77614918, 169.04409205, 50.11872428])
-log_FFA_virus = np.log10(FFA_virus)
-FFA_effective_day = np.array([3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0])
-ax2.plot(FFA_effective_day, log_FFA_virus, marker='o', color='black', label='measured FFA V data')
-ax2.legend()
-##
-"""
 #plot the measured data, along with the fitted model for V, I and U
 #plt.figure()
-ax3.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured V data', s=75)
-ax3.plot(t_measured, 10**(-6)*V_fitted, '-', linewidth=2, color='red', label='fitted V data')
+Id_fitted = data_fitted[:, 1]
+ax3.scatter(t_measured[1:], 10**(-6)*V_measured[1:], marker='o', color='red', label='measured (Id + Is) data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+ax3.plot(t_measured, 10**(-6)*Id_fitted, '-', linewidth=2, color='green', label='fitted Id data')
 U_fitted = data_fitted[:, 0]
-I_fitted = data_fitted[:, 2]
-ax3.plot(t_measured, 10**(-6)*U_fitted, '-', linewidth=2, color='green', label='fitted U data')
-ax3.plot(t_measured, 10**(-6)*I_fitted, '-', linewidth=2, color='blue', label='fitted I data')
+Is_fitted = data_fitted[:, 2]
+ax3.plot(t_measured, 10**(-6)*U_fitted, '-', linewidth=2, color='black', label='fitted U data')
+ax3.plot(t_measured, 10**(-6)*Is_fitted, '-', linewidth=2, color='blue', label='fitted Is data')
 #plt.ylim(bottom=0.9 * min(log_V_measured))
 ax3.set_xlim(left=0)
-ax3.set_ylim([0, 1.1 * 10**(-6)*max(V_measured)])
+#ax3.set_ylim([0, 1.1 * 10**(-6)*max(Id_measured)])
 ax3.legend()
 ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
 
-###################################################################
+############################
 
-############## find area under the Is and Id curves
-# plt.figure()
-# plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
-# # print('Id points',data_fitted[:, 1])
-# plt.plot(t_measured, data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
-# # print('Is points',data_fitted[:, 2])
-# plt.legend()
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Virus Titre (copies/mL)')
-"""
 I_area = np.trapz(data_fitted[:, 1], dx=0.5)
-print('I_area',I_area,'I_area',I_area)
-
-#save arrays
-#np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
-#np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
+print('I_area',I_area)
 
 ##########################################
 #fit models to different patients
@@ -464,9 +418,9 @@ for j in Subject_ID_vals_short:
 
         #my optimised initial conditions
         U0 = 4*(10**(8))  #the number of target cells in an adult is 4x10^8
-        V0 = act_div_vir_list_sum[0]
-        I0 = 0
-        y0 = [U0, V0, I0]
+        Is0 = act_div_vir_list_sum[0]
+        Id0 = 0
+        y0 = [U0, Id0, Is0]
 
         # measured data
         t_measured = eff_day_list
@@ -478,14 +432,14 @@ for j in Subject_ID_vals_short:
         # set parameters including bounds; you can also fix parameters (use vary=False)
         params = Parameters()
         params.add('U0', value=U0, vary=False)
-        params.add('V0', value=V0, vary=False)
-        params.add('I0', value=I0, vary=False)
+        params.add('Id0', value=Id0, vary=False)
+        params.add('Is0', value=Is0, vary=False)
 
         #my optimised parameters
-        params.add('alpha', value=5.2*(10**(-6)), min=1*(10**(-8)), max=9*(10**(-5)))   #rate that viral particles infect susceptible cells
-        params.add('beta', value=1, min=0, max=7)    #Clearance rate of infected cells
-        params.add('gamma', value=0.025, min=0, max=2)        #Infected cells release virus at rate gamma
-        params.add('delta', value=0.87, min=0, max=2)     #clearance rate of virus particles
+        params.add('alpha', value=5.5*(10**(-7)), min=2*(10**(-8)), max=8.01*(10**(-6)))   #rate that viral particles infect susceptible cells
+        params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+        params.add('gamma', value=214, min=0, max=600)        #Infected cells release virus at rate gamma
+        params.add('delta', value=0.86, min=0, max=100)     #clearance rate of virus particles
 
 
         # fit model
@@ -514,12 +468,14 @@ for j in Subject_ID_vals_short:
 
         #plot the fitted data and the model for log(virus) against day
         log_V_measured = np.log10(V_measured)
-        log_I_fitted = np.log10(data_fitted[:, 1])
+        log_Id_fitted = np.log10(data_fitted[:, 1])
+        log_Is_fitted = np.log10(data_fitted[:, 2])
+        log_Id_Is_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
 
         #########plot the log of virus amount against time
         plt.figure()
         plt.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-        plt.plot(t_measured, log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+        plt.plot(t_measured, log_Id_Is_fitted, '-', linewidth=2, color='red', label='fitted I data')
         plt.ylim(bottom=0.9 * min(log_V_measured))
         plt.xlim(left=0)
         plt.legend()
@@ -538,6 +494,7 @@ print('ndatas',ndatas)
 variances = np.array(sum_residuals_squs) / np.array(ndatas)
 print('variances',variances)
 print('average variance',sum(variances)/len(variances))
+
 
 #only include patients who have variance less than a value
 refined_alphas = []
@@ -621,7 +578,7 @@ plt.ylabel('Density of delta values')
 ###################### Need to rethink this. It will be different for 3 parameters. The space may need to become 3d for alpha, beta and gamma, and have colour coding for BIC?
 ########alternatively dont make a plot, just store the data in a bigger matrix. Will need an extra nested loop for the gamma. Will need some thinking for this
 ###############also have a thik about whether you really need that -1/2 in the likelihood equation. Need to scale this properly with the kln(n) part with BIC
-
+"""
 sn=1 #the error on each point
 k_param=4 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients

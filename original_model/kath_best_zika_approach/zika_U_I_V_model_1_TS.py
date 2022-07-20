@@ -345,13 +345,6 @@ print('variance',variance)
 log_V_measured = np.log10(V_measured)
 log_V_fitted = np.log10(data_fitted[:, 1])
 V_fitted = data_fitted[:, 1]
-#plt.figure()
-# ax2.scatter(t_measured, log_V_measured, marker='o', color='red', label='measured qPCR V data', s=75)
-# ax2.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted qPCR V data')
-# ax2.set_xlim(left=0)
-# ax2.set_xlabel('Days Post Infection')
-# ax2.set_ylabel('Virus Titre Concentration (Log10 copies/mL)')
-# ax2.set_title('b)')
 
 ax2.scatter(t_measured[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
 ax2.plot(t_measured, log_V_fitted, '-', linewidth=2, color='red', label='fitted I data')
@@ -376,15 +369,7 @@ print('log_V_measured',log_V_measured, 'LENGTH log_V_measured',len(log_V_measure
 #np.save('TS_log_V_measured', log_V_measured)
 #np.save('TS_t_measured', t_measured)
 print('t_measured',t_measured)
-"""
-#####plot the FFA data on top
-FFA_virus=np.array([78.22279965, 586.58819126, 641.94820653, 2290.86793783, 239.88332219, 194.98447853, 429.86622684, 245.47088348, 218.77614918, 169.04409205, 50.11872428])
-log_FFA_virus = np.log10(FFA_virus)
-FFA_effective_day = np.array([3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0])
-ax2.plot(FFA_effective_day, log_FFA_virus, marker='o', color='black', label='measured FFA V data')
-ax2.legend()
-##
-"""
+
 #plot the measured data, along with the fitted model for V, I and U
 #plt.figure()
 ax3.scatter(t_measured, 10**(-6)*V_measured, marker='o', color='red', label='measured V data', s=75)
