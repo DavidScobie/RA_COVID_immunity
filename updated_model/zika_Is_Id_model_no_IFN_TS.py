@@ -585,17 +585,19 @@ sn=1 #the error on each point
 k_param=3 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 
-how_many_points_alph_gam = 3
-how_many_points_del = 3
+how_many_points_alph_gam = 5
+how_many_points_del = 4
 
 range_alph = np.max(adj_alphas) - np.min(adj_alphas)
 range_gam = np.max(adj_gammas) - np.min(adj_gammas)
 range_del = np.max(adj_deltas) - np.min(adj_deltas)
 
-proportion = 0.5 #the proportion of parameter space that we want to explore (use this for unstable models)
-proportion_del = 0.5
-shift_alpha = 0.7
-shift_gamma = -0.7
+proportion = 1 #the proportion of parameter space that we want to explore (use this for unstable models)
+proportion_del = 1
+# shift_alpha = 0.7
+# shift_gamma = -0.7
+shift_alpha = 0
+shift_gamma = 0
 
 alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2)))  + (range_alph*shift_alpha) , np.max(adj_alphas) - (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), num=how_many_points_alph_gam)
 gammas_to_surf = np.linspace(np.min(adj_gammas) + (range_gam*((1-proportion)/(2))) + (range_alph*shift_gamma), np.max(adj_gammas) - (range_gam*((1-proportion)/(2))) + (range_alph*shift_gamma), num=how_many_points_alph_gam)
@@ -629,7 +631,7 @@ for n in (deltas_to_surf):
             params.add('delta', value=n, min=n - 10**(-10), max=n + 10**(-10))
 
             # fit model
-            result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
+            result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq', nan_policy='propagate')  # leastsq nelder
             # check results of the fit
             data_fitted_2 = g(t_measured_init, y0_init, result.params)
 
@@ -640,15 +642,15 @@ for n in (deltas_to_surf):
             gn_Ftrue_log_I_fitted = np.log10(data_fitted_2[:, 1] + data_fitted_2[:, 2])
 
             #########plot the log of virus amount against time
-            plt.figure()
-            plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-            plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-            plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
-            plt.xlim(left=0)
-            plt.legend()
-            plt.xlabel('Days Post Infection')
-            plt.ylabel('Concentration (Log10 copies/mL)')
-            plt.title("alpha={i}, gamma={j}, delta={n}".format(i=i, j=j, n=n))
+            # plt.figure()
+            # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+            # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+            # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+            # plt.xlim(left=0)
+            # plt.legend()
+            # plt.xlabel('Days Post Infection')
+            # plt.ylabel('Concentration (Log10 copies/mL)')
+            # plt.title("alpha={i}, gamma={j}, delta={n}".format(i=i, j=j, n=n))
 
             #find differences between the gnFtrue virus amount and the virus amount for all of the models
             diff = [] #the difference between gn_Ftrue and Dn
@@ -662,10 +664,17 @@ for n in (deltas_to_surf):
 
 
     print('BIC',BIC)
+
+    ############change the nans to the highest value in the array
+    BIC = np.array(BIC)  #turn BIC to numpy array
+    BIC[np.isnan(BIC)] = np.nanmax(BIC)
+
     BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(gammas_to_surf)))
     print('BIC_mat',BIC_mat)
 
     BICs_all.append(BIC)
+
+    #########
 
     # Plot the surface.
     #plt.figure()
