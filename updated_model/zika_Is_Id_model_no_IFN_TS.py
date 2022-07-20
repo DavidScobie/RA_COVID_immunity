@@ -447,6 +447,8 @@ for j in Subject_ID_vals_short:
         # check results of the fit
         data_fitted = g(t_measured, y0, result.params)
 
+        #print('data_fitted',data_fitted)
+
         # display fitted statistics and append parameters to lists
         subj_IDs_over_5.append(j)
         report_fit(result)
@@ -578,13 +580,13 @@ plt.ylabel('Density of delta values')
 ###################### Need to rethink this. It will be different for 3 parameters. The space may need to become 3d for alpha, beta and gamma, and have colour coding for BIC?
 ########alternatively dont make a plot, just store the data in a bigger matrix. Will need an extra nested loop for the gamma. Will need some thinking for this
 ###############also have a thik about whether you really need that -1/2 in the likelihood equation. Need to scale this properly with the kln(n) part with BIC
-"""
+
 sn=1 #the error on each point
 k_param=4 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 
-how_many_points_gam = 2
-how_many_points_alph_bet = 5
+how_many_points_bet = 2
+how_many_points_alph_gam = 3
 how_many_points_del = 2
 
 range_alph = np.max(adj_alphas) - np.min(adj_alphas)
@@ -592,13 +594,13 @@ range_bet = np.max(adj_betas) - np.min(adj_betas)
 range_gam = np.max(adj_gammas) - np.min(adj_gammas)
 range_del = np.max(adj_deltas) - np.min(adj_deltas)
 
-proportion = 1 #the proportion of parameter space that we want to explore (use this for unstable models)
+proportion = 0.5 #the proportion of parameter space that we want to explore (use this for unstable models)
 shift_alpha = 0 #if we want to shift the parameters away from the centre of the alpha space then change this
 shift_beta = 0 #if we want to shift the parameters away from the centre of the beta space then change this
 
-alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), num=how_many_points_alph_bet)
-betas_to_surf = np.linspace(np.min(adj_betas) + (range_bet*((1-proportion)/(2))) + (range_bet*shift_beta), np.max(adj_betas) - (range_bet*((1-proportion)/(2))) + (range_bet*shift_beta), num=how_many_points_alph_bet)
-gammas_to_surf = np.linspace(np.min(adj_gammas) + (range_gam*((1-proportion)/(2))), np.max(adj_gammas) - (range_gam*((1-proportion)/(2))), num=how_many_points_gam)
+alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), num=how_many_points_alph_gam)
+betas_to_surf = np.linspace(np.min(adj_betas) + (range_bet*((1-proportion)/(2))) + (range_bet*shift_beta), np.max(adj_betas) - (range_bet*((1-proportion)/(2))) + (range_bet*shift_beta), num=how_many_points_bet)
+gammas_to_surf = np.linspace(np.min(adj_gammas) + (range_gam*((1-proportion)/(2))), np.max(adj_gammas) - (range_gam*((1-proportion)/(2))), num=how_many_points_alph_gam)
 deltas_to_surf = np.linspace(np.min(adj_deltas) + (range_del*((1-proportion)/(2))), np.max(adj_deltas) - (range_del*((1-proportion)/(2))), num=how_many_points_del)
 
 print('alphas_to_surf',alphas_to_surf)
@@ -615,82 +617,97 @@ print('gammas_to_surf',gammas_to_surf)
 print('deltas_to_surf',deltas_to_surf)
 
 for n in (deltas_to_surf):
-    for m in (gammas_to_surf):
-    #for m in (np.array([gamma_med])):
-        #print('gamma = ',m)
-        X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
-        # print('X',X)
-        BIC = [] #initialise the array of BIC
-        sum_diff_squ = []
-        for i in (alphas_to_surf):
-            #print('alpha = ',i)
-            for j in (betas_to_surf):
-                #print('beta = ',j)
+    print('delta = ',n)
+    X, Y = np.meshgrid(alphas_to_surf, gammas_to_surf)
+    print('X',X,'Y',Y)
+    BIC = [] #initialise the array of BIC
+    sum_diff_squ = []
+    for i in (alphas_to_surf):
+        print('alpha = ',i)
+        for j in (gammas_to_surf):
+            print('gamma = ',j)
 
-                params = Parameters()
-                params.add('U0', value=U0, vary=False)
-                params.add('V0', value=V0_init, vary=False)
-                params.add('I0', value=I0, vary=False)
+            params = Parameters()
+            params.add('U0', value=U0, vary=False)
+            params.add('Id0', value=Id0, vary=False)
+            params.add('Is0', value=Is0, vary=False)
 
-                #my optimised parameters
-                params.add('alpha', value=i, min=i - 10**(-11), max=i + 10**(-11))   #rate that viral particles infect susceptible cells
-                params.add('beta', value=j, min=j - 10**(-11), max=j + 10**(-11))
-                params.add('gamma', value=m, min=m - 10**(-11), max=m + 10**(-11))
-                params.add('delta', value=n, min=n - 10**(-11), max=n + 10**(-11))     #clearance rate of virus particles
+            #my optimised parameters
+            # params.add('alpha', value=5.5*(10**(-7)), min=7.99*(10**(-8)), max=8.01*(10**(-7)))   #rate that viral particles infect susceptible cells
+            # params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+            # params.add('gamma', value=214, min=0, max=400)        #Infected cells release virus at rate gamma
+            # params.add('delta', value=0.86, min=0, max=100)     #clearance rate of virus particles
 
+            params.add('alpha', value=i, min=i - 10**(-10), max=i + 10**(-10))   #rate that viral particles infect susceptible cells
+            params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
+            params.add('gamma', value=m, min=m - 10**(-10), max=m + 10**(-10))
+            params.add('delta', value=n, min=n - 10**(-10), max=n + 10**(-10))
 
-                result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
-                # check results of the fit
-                data_fitted = g(t_measured_init, y0_init, result.params)
+            # fit model
+            result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
+            # check results of the fit
+            data_fitted_2 = g(t_measured_init, y0, result.params)
 
-                #print('result.chisqr',result.chisqr)
+            #plot the fitted data and the model for log(virus) against day
+            log_V_measured = np.log10(V_measured_init)
+            log_Id_fitted = np.log10(data_fitted_2[:, 1])
+            log_Is_fitted = np.log10(data_fitted_2[:, 2])
+            gn_Ftrue_log_I_fitted = np.log10(data_fitted_2[:, 1] + data_fitted_2[:, 2])
 
-                #plot the fitted data and the model for log(virus) against day
-                log_V_measured = np.log10(V_measured_init)
-                gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
+            ###############################
 
-                #########plot the log of virus amount against time
-                # plt.figure()
-                # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-                # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-                # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
-                # plt.xlim(left=0)
-                # plt.legend()
-                # plt.xlabel('Days Post Infection')
-                # plt.ylabel('Concentration (Log10 copies/mL)')
-                # plt.title("alpha={i}, beta={j}, gamma={m}, delta={n}".format(i=i, j=j, m=m, n=n))
+            #print('data_fitted',data_fitted)
 
-                #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
+            #plot the fitted data and the model for log(virus) against day
+            # log_V_measured = np.log10(V_measured_init)
+            # log_Id_fitted = np.log10(data_fitted[:, 1])
+            # log_Is_fitted = np.log10(data_fitted[:, 2])
+            # gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1] + data_fitted[:, 2])
+            # gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
-                #find differences between the gnFtrue virus amount and the virus amount for all of the models
-                diff = [] #the difference between gn_Ftrue and Dn
-                for k in range (len(t_measured_init)):
-                    diff.append(log_V_measured[k] - gn_Ftrue_log_I_fitted[k])
-                #print('np.square(diff)',np.square(diff))
+            #########plot the log of virus amount against time
+            plt.figure()
+            plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+            plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+            plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+            plt.xlim(left=0)
+            plt.legend()
+            plt.xlabel('Days Post Infection')
+            plt.ylabel('Concentration (Log10 copies/mL)')
+            plt.title("alpha={i}, beta=0, gamma={j}, delta={n}".format(i=i, j=j, n=n))
 
-                log_lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
-                BIC.append((k_param*np.log(n_points))-(2*log_lik_term))
+            #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
 
-        print('BIC',BIC)
-        BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
-        print('BIC_mat',BIC_mat)
+            #find differences between the gnFtrue virus amount and the virus amount for all of the models
+            diff = [] #the difference between gn_Ftrue and Dn
+            for k in range (len(t_measured_init)):
+                diff.append(log_V_measured[k] - gn_Ftrue_log_I_fitted[k])
+            #print('np.square(diff)',np.square(diff))
 
-        BICs_all.append(BIC)
+            log_lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
+            BIC.append((k_param*np.log(n_points))-(2*log_lik_term))
 
-        # Plot the surface.
-        #plt.figure()
-        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-        surf = ax.plot_surface(X, Y, BIC_mat, cmap=cm.coolwarm,
-                            linewidth=0, antialiased=False)
-        ax.set_xlabel('alpha')
-        ax.set_ylabel('beta')
-        ax.set_zlabel('BIC')
-        #ax.set_title('gamma=%.6e' %m) # f represents a float
-        ax.set_title("gamma={m}, delta={n}".format(m=m, n=n)) # f represents a float
+    print('BIC',BIC)
+    BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(gammas_to_surf)))
+    print('BIC_mat',BIC_mat)
+
+    BICs_all.append(BIC)
+
+    # Plot the surface.
+    #plt.figure()
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    surf = ax.plot_surface(X, Y, BIC_mat, cmap=cm.coolwarm,
+                        linewidth=0, antialiased=False)
+    ax.set_xlabel('alpha')
+    ax.set_ylabel('gamma')
+    ax.set_zlabel('BIC')
+    #ax.set_title('gamma=%.6e' %m) # f represents a float
+    ax.set_title("delta=0, delta={n}".format( n=n)) # f represents a float
 
 flat_BICs_all = [food for sublist in BICs_all for food in sublist] #flatten the BIC list
 
 min_indic = np.argmin(flat_BICs_all) #finding the lowest BIC
 print('flat_BICs_all',flat_BICs_all,'min_indic',min_indic,'np.min(flat_BICs_all)',np.min(flat_BICs_all))
-"""
+
 plt.show()
