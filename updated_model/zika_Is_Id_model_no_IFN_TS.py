@@ -594,13 +594,9 @@ range_del = np.max(adj_deltas) - np.min(adj_deltas)
 
 proportion = 1 #the proportion of parameter space that we want to explore (use this for unstable models)
 proportion_del = 1
-# shift_alpha = 0.7
-# shift_gamma = -0.7
-shift_alpha = 0
-shift_gamma = 0
 
-alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2)))  + (range_alph*shift_alpha) , np.max(adj_alphas) - (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), num=how_many_points_alph_gam)
-gammas_to_surf = np.linspace(np.min(adj_gammas) + (range_gam*((1-proportion)/(2))) + (range_alph*shift_gamma), np.max(adj_gammas) - (range_gam*((1-proportion)/(2))) + (range_alph*shift_gamma), num=how_many_points_alph_gam)
+alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))), num=how_many_points_alph_gam)
+gammas_to_surf = np.linspace(np.min(adj_gammas) + (range_gam*((1-proportion)/(2))), np.max(adj_gammas) - (range_gam*((1-proportion)/(2))), num=how_many_points_alph_gam)
 deltas_to_surf = np.linspace(np.min(adj_deltas) + (range_del*((1-proportion_del)/(2))), np.max(adj_deltas) - (range_del*((1-proportion_del)/(2))), num=how_many_points_del)
 
 print('alphas_to_surf',alphas_to_surf)

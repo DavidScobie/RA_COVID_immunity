@@ -501,13 +501,15 @@ for i in range (len(variances)):
 
 ##############################################################################
 
+omega = 0.6 #how much of a random effect do we want in our mixed effects modelling approach?
+
 ####Find the median of the alpha values
 alpha_med = np.median(alphas)
 
 ########use a normal distribution to compute the random effect and find the new adjusted alpha values (hopefully in a lognormal dist)
 adj_alphas = []
 for i in range (len(alphas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_alph = alpha_med*np.exp(exponent) #add the fixed term onto the random term
     adj_alphas.append(adj_alph) #append it to an array
 
@@ -523,7 +525,7 @@ beta_med = np.median(betas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_betas = []
 for i in range (len(betas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_bet = beta_med*np.exp(exponent) #add the fixed term onto the random term
     adj_betas.append(adj_bet) #append it to an array
 
@@ -539,7 +541,7 @@ kappa_med = np.median(kappas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_kappas = []
 for i in range (len(kappas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_kap = kappa_med*np.exp(exponent) #add the fixed term onto the random term
     adj_kappas.append(adj_kap) #append it to an array
 
@@ -562,7 +564,7 @@ how_many_points_alph_bet = 5
 range_alph = np.max(adj_alphas) - np.min(adj_alphas)
 range_bet = np.max(adj_betas) - np.min(adj_betas)
 range_kap = np.max(adj_kappas) - np.min(adj_kappas)
-proportion = 0.4 #the proportion of parameter space that we want to explore (use this for unstable models)
+proportion = 1 #the proportion of parameter space that we want to explore (use this for unstable models)
 shift_alpha = 0 #if we want to shift the parameters away from the centre of the alpha space then change this
 shift_beta = 0 #if we want to shift the parameters away from the centre of the beta space then change this
 
@@ -573,21 +575,13 @@ kappas_to_surf = np.linspace(np.min(adj_kappas) + (range_kap*((1-proportion)/(2)
 print('alphas_to_surf',alphas_to_surf)
 print('betas_to_surf',betas_to_surf)
 
-######old code
-# alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=how_many_points)
-# betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=how_many_points)
-# kappas_to_surf = np.linspace(np.min(adj_kappas), np.max(adj_kappas), num=how_many_points)
-
 BICs_all = [] #array for storing all of the BICs. In order to find the lowest one
 
 print('kappas_to_surf',kappas_to_surf)
 for m in (kappas_to_surf):
-#for m in (np.array([kappa_med])):
     #print('kappa = ',m)
     X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
-    # print('X',X)
     BIC = [] #initialise the array of BIC
-    sum_diff_squ = []
     for i in (alphas_to_surf):
         #print('alpha = ',i)
         for j in (betas_to_surf):
@@ -601,26 +595,24 @@ for m in (kappas_to_surf):
             params.add('beta', value=j, min=j - 10**(-11), max=j + 10**(-11))
             params.add('kappa', value=m, min=m - 10**(-11), max=m + 10**(-11))
 
-            result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
+            result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq', nan_policy='propagate')  # leastsq nelder
             # check results of the fit
             data_fitted = g(t_measured_init, y0_init, result.params)
-
-            #print('result.chisqr',result.chisqr)
 
             #plot the fitted data and the model for log(virus) against day
             log_V_measured = np.log10(V_measured_init)
             gn_Ftrue_log_I_fitted = np.log10(data_fitted[:, 1])
 
             #########plot the log of virus amount against time
-            # plt.figure()
-            # plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
-            # plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
-            # plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
-            # plt.xlim(left=0)
-            # plt.legend()
-            # plt.xlabel('Days Post Infection')
-            # plt.ylabel('Concentration (Log10 copies/mL)')
-            # plt.title("alpha={i}, beta={j}, kappa={m}".format(i=i, j=j, m=m))
+            plt.figure()
+            plt.scatter(t_measured_init[1:], log_V_measured[1:], marker='o', color='red', label='measured V data', s=75) #the first point is found by extrapolation. Therefore it is not physical so dont plot it.
+            plt.plot(t_measured_init, gn_Ftrue_log_I_fitted, '-', linewidth=2, color='red', label='fitted I data')
+            plt.ylim(bottom=0.9 * min(log_V_measured), top=9)
+            plt.xlim(left=0)
+            plt.legend()
+            plt.xlabel('Days Post Infection')
+            plt.ylabel('Concentration (Log10 copies/mL)')
+            plt.title("alpha={i}, beta={j}, kappa={m}".format(i=i, j=j, m=m))
 
             #print('t_measured_init',len(t_measured_init),'log_V_measured',len(log_V_measured),'gn_Ftrue_log_I_fitted',len(gn_Ftrue_log_I_fitted))
 
@@ -634,6 +626,11 @@ for m in (kappas_to_surf):
             BIC.append((k_param*np.log(n_points))-(2*log_lik_term))
 
     print('BIC',BIC)
+
+    ############change the nans to the highest value in the array
+    BIC = np.array(BIC)  #turn BIC to numpy array
+    BIC[np.isnan(BIC)] = np.nanmax(BIC)
+
     BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
     print('BIC_mat',BIC_mat)
 

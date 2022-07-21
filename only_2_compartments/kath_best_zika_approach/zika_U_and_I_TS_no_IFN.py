@@ -489,13 +489,15 @@ for i in range (len(variances)):
 
 ##############################################################################
 
+omega = 0.6
+
 ####Find the median of the alpha values
 alpha_med = np.median(alphas)
 
 ########use a normal distribution to compute the random effect and find the new adjusted alpha values (hopefully in a lognormal dist)
 adj_alphas = []
 for i in range (len(alphas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_alph = alpha_med*np.exp(exponent) #add the fixed term onto the random term
     adj_alphas.append(adj_alph) #append it to an array
 
@@ -511,7 +513,7 @@ beta_med = np.median(betas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_betas = []
 for i in range (len(betas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_bet = beta_med*np.exp(exponent) #add the fixed term onto the random term
     adj_betas.append(adj_bet) #append it to an array
 
@@ -522,19 +524,30 @@ plt.xlabel('Beta value')
 plt.ylabel('Density of beta values')
 
 ###################### Make a surface plot of the BIC
-alphas_to_surf = np.linspace(np.min(adj_alphas), np.max(adj_alphas), num=5)
-betas_to_surf = np.linspace(np.min(adj_betas), np.max(adj_betas), num=5)
-X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
-# print('X',X)
 
-#sum_diff_squ = [] #the sum of the difference between gn_Ftrue and Dn
+#defining the parameter space to map
+how_many_points = 5
+proportion = 1
+
+range_alph = np.max(adj_alphas) - np.min(adj_alphas)
+range_bet = np.max(adj_betas) - np.min(adj_betas)
+
+alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))), num=how_many_points)
+betas_to_surf = np.linspace(np.min(adj_betas) + (range_bet*((1-proportion)/(2))), np.max(adj_betas) - (range_bet*((1-proportion)/(2))), num=how_many_points)
+
+print('alphas_to_surf',alphas_to_surf,'betas_to_surf',betas_to_surf)
+X, Y = np.meshgrid(alphas_to_surf, betas_to_surf)
+
 sn=1 #the error on each point
 k_param=2 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 BIC = [] #initialise the array of BIC
-sum_diff_squ = []
+
 for i in (alphas_to_surf):
+    print('alpha =',i)
+
     for j in (betas_to_surf):
+        print('beta =',j)
 
         params = Parameters()
         params.add('U0', value=U0, vary=False)
@@ -543,7 +556,7 @@ for i in (alphas_to_surf):
         params.add('alpha', value=i, min=i - 10**(-11), max=i + 10**(-11))   #rate that viral particles infect susceptible cells
         params.add('beta', value=j, min=j - 10**(-11), max=j + 10**(-11))
 
-        result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
+        result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq', nan_policy='propagate')  # leastsq nelder
         # check results of the fit
         data_fitted = g(t_measured_init, y0_init, result.params)
 
@@ -568,12 +581,17 @@ for i in (alphas_to_surf):
         diff = [] #the difference between gn_Ftrue and Dn
         for k in range (len(t_measured_init)):
             diff.append(log_V_measured[k] - gn_Ftrue_log_I_fitted[k])
-        print('np.square(diff)',np.square(diff))
+        #print('np.square(diff)',np.square(diff))
 
         log_lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
         BIC.append((k_param*np.log(n_points))-(2*log_lik_term))
 
 print('BIC',BIC)
+
+############change the nans to the highest value in the array
+BIC = np.array(BIC)  #turn BIC to numpy array
+BIC[np.isnan(BIC)] = np.nanmax(BIC)
+
 BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
 print('BIC_mat',BIC_mat)
 
@@ -584,4 +602,8 @@ surf = ax.plot_surface(X, Y, BIC_mat, cmap=cm.coolwarm,
 ax.set_xlabel('alpha')
 ax.set_ylabel('beta')
 ax.set_zlabel('BIC')
+
+min_indic = np.argmin(BIC) #finding the lowest BIC
+print('BIC',BIC,'min_indic',min_indic,'np.min(BIC)',np.min(BIC))
+
 plt.show()

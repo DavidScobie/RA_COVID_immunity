@@ -366,8 +366,6 @@ ax2.set_title('b)')
 print('virus val day minus 3: ',(-3*b)+a,'virus val day minus 2: ',(-2*b)+a,'virus val day minus 1: ',(-1*b)+a)
 
 print('log_V_measured',log_V_measured, 'LENGTH log_V_measured',len(log_V_measured),'IT IS SAVED HERE')
-#np.save('TS_log_V_measured', log_V_measured)
-#np.save('TS_t_measured', t_measured)
 print('t_measured',t_measured)
 
 #plot the measured data, along with the fitted model for V, I and U
@@ -386,24 +384,8 @@ ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
 
-###################################################################
-
-############## find area under the Is and Id curves
-# plt.figure()
-# plt.plot(t_measured, data_fitted[:, 1], '-', linewidth=2, color='green', label='fitted Id data')
-# # print('Id points',data_fitted[:, 1])
-# plt.plot(t_measured, data_fitted[:, 2], '-', linewidth=2, color='blue', label='fitted Is data')
-# # print('Is points',data_fitted[:, 2])
-# plt.legend()
-# plt.xlabel('Days Post Infection')
-# plt.ylabel('Virus Titre (copies/mL)')
-
 I_area = np.trapz(data_fitted[:, 1], dx=0.5)
 print('I_area',I_area,'I_area',I_area)
-
-#save arrays
-#np.save('qPCR_MTS_V_measured_NON_DET_eq_zero_fit_Id+Is', V_measured)
-#np.save('qPCR_MTS_t_measured_NON_DET_eq_zero_fit_Id+Is', t_measured)
 
 ##########################################
 #fit models to different patients
@@ -539,13 +521,15 @@ for i in range (len(variances)):
 
 ##############################################################################
 
+omega = 0.6
+
 ####Find the median of the alpha values
 alpha_med = np.median(alphas)
 
 ########use a normal distribution to compute the random effect and find the new adjusted alpha values (hopefully in a lognormal dist)
 adj_alphas = []
 for i in range (len(alphas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_alph = alpha_med*np.exp(exponent) #add the fixed term onto the random term
     adj_alphas.append(adj_alph) #append it to an array
 
@@ -561,7 +545,7 @@ beta_med = np.median(betas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_betas = []
 for i in range (len(betas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_bet = beta_med*np.exp(exponent) #add the fixed term onto the random term
     adj_betas.append(adj_bet) #append it to an array
 
@@ -577,7 +561,7 @@ gamma_med = np.median(gammas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_gammas = []
 for i in range (len(gammas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_gam = gamma_med*np.exp(exponent) #add the fixed term onto the random term
     adj_gammas.append(adj_gam) #append it to an array
 
@@ -593,7 +577,7 @@ delta_med = np.median(deltas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_deltas = []
 for i in range (len(deltas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_del = delta_med*np.exp(exponent) #add the fixed term onto the random term
     adj_deltas.append(adj_del) #append it to an array
 
@@ -667,7 +651,7 @@ for n in (deltas_to_surf):
                 params.add('delta', value=n, min=n - 10**(-11), max=n + 10**(-11))     #clearance rate of virus particles
 
 
-                result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq')  # leastsq nelder
+                result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq', nan_policy='propagate')  # leastsq nelder
                 # check results of the fit
                 data_fitted = g(t_measured_init, y0_init, result.params)
 
@@ -700,6 +684,11 @@ for n in (deltas_to_surf):
                 BIC.append((k_param*np.log(n_points))-(2*log_lik_term))
 
         print('BIC',BIC)
+
+        ############change the nans to the highest value in the array
+        BIC = np.array(BIC)  #turn BIC to numpy array
+        BIC[np.isnan(BIC)] = np.nanmax(BIC)
+
         BIC_mat = np.reshape(BIC, (len(alphas_to_surf), len(betas_to_surf)))
         print('BIC_mat',BIC_mat)
 
