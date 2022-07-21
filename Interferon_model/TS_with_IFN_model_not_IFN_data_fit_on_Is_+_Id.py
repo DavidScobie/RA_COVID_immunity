@@ -421,7 +421,7 @@ ax3.legend()
 ax3.set_xlabel('Days Post Infection')
 ax3.set_ylabel('Concentration (million copies/mL)')
 ax3.set_title('c)')
-"""
+
 #print('Is_fitted',Is_fitted,'Id_fitted',Id_fitted)
 
 #########################################################
@@ -656,5 +656,5 @@ y, x, _ = plt.hist(kappas, density=False, bins=10,color = "skyblue")
 X = [overall_kappa, overall_kappa]
 Y = [0, y.max()]
 plt.plot(X,Y,color='red')
-"""
+
 plt.show()
