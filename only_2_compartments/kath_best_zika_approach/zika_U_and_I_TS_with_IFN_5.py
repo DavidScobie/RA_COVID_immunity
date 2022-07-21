@@ -560,7 +560,7 @@ k_param=3 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 
 how_many_points_kap = 3
-how_many_points_alph_bet = 3
+how_many_points_alph_bet = 5
 range_alph = np.max(adj_alphas) - np.min(adj_alphas)
 range_bet = np.max(adj_betas) - np.min(adj_betas)
 range_kap = np.max(adj_kappas) - np.min(adj_kappas)
@@ -651,7 +651,7 @@ print('flat_BICs_all',flat_BICs_all,'min_indic',min_indic,'np.min(flat_BICs_all)
 
 ####################################################################### take the data for 1 patient and plot their posterior map
 
-Subject_ID_vals_shorter = Subject_ID_vals[0:1]  #just have the first patient to begin with
+Subject_ID_vals_shorter = Subject_ID_vals[16:17]  #just have 1 patient in the validation set
 print('Subject_ID_vals_shorter',Subject_ID_vals_shorter)
 
 for q in Subject_ID_vals_shorter:
@@ -730,7 +730,7 @@ for q in Subject_ID_vals_shorter:
 
                 #####compute the log likelihood term
                 lik_term = -0.5*np.sum((np.square(diff)/(sn**2)) + np.log(2*np.pi*(sn**2)))
-
+                print('lik_term',lik_term)
                 ##################compute the prior term
                 alpha_first_bit = 1/(((2*np.pi)**0.5)*(omega**2))
                 alpha_exponent = -((i - overall_alpha)**2)/(2*(omega**2))
@@ -763,6 +763,7 @@ for q in Subject_ID_vals_shorter:
         print('posteriors_mat',posteriors_mat)
 
         posteriors_all.append(posteriors) #this is for going over multiple kappas
+        print('posteriors_all',posteriors_all)
 
         # Plot the surface.
         #plt.figure()
@@ -771,7 +772,7 @@ for q in Subject_ID_vals_shorter:
                             linewidth=0, antialiased=False)
         ax.set_xlabel('alpha')
         ax.set_ylabel('beta')
-        ax.set_zlabel('posterior')
+        ax.set_zlabel('ln(posterior)')
         ax.set_title("kappa={m}".format(m=f'{m:.2}')) # f represents a float
 
     flat_posteriors_all = [food for sublist in posteriors_all for food in sublist] #flatten the BIC list
