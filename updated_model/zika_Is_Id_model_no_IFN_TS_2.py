@@ -436,10 +436,10 @@ for j in Subject_ID_vals_short:
         params.add('Is0', value=Is0, vary=False)
 
         #my optimised parameters
-        params.add('alpha', value=5.5*(10**(-7)), min=2*(10**(-8)), max=8.01*(10**(-6)))   #rate that viral particles infect susceptible cells
+        params.add('alpha', value=5.7*(10**(-7)), min=2*(10**(-8)), max=8.01*(10**(-6)))   #rate that viral particles infect susceptible cells
         params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
-        params.add('gamma', value=214, min=0, max=600)        #Infected cells release virus at rate gamma
-        params.add('delta', value=0.86, min=0, max=100)     #clearance rate of virus particles
+        params.add('gamma', value=225, min=0, max=600)        #Infected cells release virus at rate gamma
+        params.add('delta', value=0.85, min=0, max=100)     #clearance rate of virus particles
 
 
         # fit model
@@ -513,13 +513,15 @@ for i in range (len(variances)):
 
 ##############################################################################
 
+omega = 0.4
+
 ####Find the median of the alpha values
 alpha_med = np.median(alphas)
 
 ########use a normal distribution to compute the random effect and find the new adjusted alpha values (hopefully in a lognormal dist)
 adj_alphas = []
 for i in range (len(alphas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_alph = alpha_med*np.exp(exponent) #add the fixed term onto the random term
     adj_alphas.append(adj_alph) #append it to an array
 
@@ -535,7 +537,7 @@ beta_med = np.median(betas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_betas = []
 for i in range (len(betas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_bet = beta_med*np.exp(exponent) #add the fixed term onto the random term
     adj_betas.append(adj_bet) #append it to an array
 
@@ -551,7 +553,7 @@ gamma_med = np.median(gammas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_gammas = []
 for i in range (len(gammas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_gam = gamma_med*np.exp(exponent) #add the fixed term onto the random term
     adj_gammas.append(adj_gam) #append it to an array
 
@@ -567,7 +569,7 @@ delta_med = np.median(deltas)
 ########use a normal distribution to compute the random effect and find the new adjusted beta values (hopefully in a lognormal dist)
 adj_deltas = []
 for i in range (len(deltas)): #length 18 for all the patients
-    exponent = np.random.normal(loc=0.0, scale=0.4) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
+    exponent = np.random.normal(loc=0.0, scale=omega) #this is the random effect. Randomly sample from a normal distribution with mean zero and w=0.4
     adj_del = delta_med*np.exp(exponent) #add the fixed term onto the random term
     adj_deltas.append(adj_del) #append it to an array
 
@@ -586,18 +588,17 @@ k_param=3 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 
 how_many_points_alph_gam = 5
-how_many_points_del = 4
+how_many_points_del = 3
 
 range_alph = np.max(adj_alphas) - np.min(adj_alphas)
 range_gam = np.max(adj_gammas) - np.min(adj_gammas)
 range_del = np.max(adj_deltas) - np.min(adj_deltas)
 
 proportion = 1 #the proportion of parameter space that we want to explore (use this for unstable models)
-proportion_del = 1
 
 alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))), num=how_many_points_alph_gam)
 gammas_to_surf = np.linspace(np.min(adj_gammas) + (range_gam*((1-proportion)/(2))), np.max(adj_gammas) - (range_gam*((1-proportion)/(2))), num=how_many_points_alph_gam)
-deltas_to_surf = np.linspace(np.min(adj_deltas) + (range_del*((1-proportion_del)/(2))), np.max(adj_deltas) - (range_del*((1-proportion_del)/(2))), num=how_many_points_del)
+deltas_to_surf = np.linspace(np.min(adj_deltas) + (range_del*((1-proportion)/(2))), np.max(adj_deltas) - (range_del*((1-proportion)/(2))), num=how_many_points_del)
 
 print('alphas_to_surf',alphas_to_surf)
 
@@ -621,10 +622,10 @@ for n in (deltas_to_surf):
             params.add('Id0', value=Id0, vary=False)
             params.add('Is0', value=Is0_init, vary=False)
 
-            params.add('alpha', value=i, min=i - 10**(-10), max=i + 10**(-10))   #rate that viral particles infect susceptible cells
+            params.add('alpha', value=i, min=i - 10**(-11), max=i + 10**(-11))   #rate that viral particles infect susceptible cells
             params.add('beta', value=1*(10**(-11)), min=0, max=1.1*(10**(-11)))    #Clearance rate of infected cells
             params.add('gamma', value=j, min=j - 10**(-10), max=j + 10**(-10))
-            params.add('delta', value=n, min=n - 10**(-10), max=n + 10**(-10))
+            params.add('delta', value=n, min=n - 10**(-11), max=n + 10**(-11))
 
             # fit model
             result = minimize(residual, params, args=(t_measured_init, V_measured_init), method='leastsq', nan_policy='propagate')  # leastsq nelder
@@ -681,7 +682,7 @@ for n in (deltas_to_surf):
     ax.set_xlabel('alpha')
     ax.set_ylabel('gamma')
     ax.set_zlabel('BIC')
-    ax.set_title("delta={n}".format( n=n)) # f represents a float
+    ax.set_title("delta={n}".format( n=f'{n:.2}')) # f represents a float
 
 flat_BICs_all = [food for sublist in BICs_all for food in sublist] #flatten the BIC list
 

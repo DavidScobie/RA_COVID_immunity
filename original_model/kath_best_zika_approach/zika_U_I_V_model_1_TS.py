@@ -450,7 +450,7 @@ for j in Subject_ID_vals_short:
 
         #my optimised parameters
         params.add('alpha', value=5.2*(10**(-6)), min=1*(10**(-8)), max=9*(10**(-5)))   #rate that viral particles infect susceptible cells
-        params.add('beta', value=1, min=0, max=7)    #Clearance rate of infected cells
+        params.add('beta', value=1.07, min=0, max=7)    #Clearance rate of infected cells
         params.add('gamma', value=0.025, min=0, max=2)        #Infected cells release virus at rate gamma
         params.add('delta', value=0.87, min=0, max=2)     #clearance rate of virus particles
 
@@ -521,7 +521,7 @@ for i in range (len(variances)):
 
 ##############################################################################
 
-omega = 0.6
+omega = 0.4
 
 ####Find the median of the alpha values
 alpha_med = np.median(alphas)
@@ -595,9 +595,9 @@ sn=1 #the error on each point
 k_param=4 # the number of parameters in the model
 n_points = len(t_measured_init) #the number of data points for the average of all patients
 
-how_many_points_gam = 2
+how_many_points_gam = 3
 how_many_points_alph_bet = 5
-how_many_points_del = 2
+how_many_points_del = 3
 
 range_alph = np.max(adj_alphas) - np.min(adj_alphas)
 range_bet = np.max(adj_betas) - np.min(adj_betas)
@@ -605,11 +605,9 @@ range_gam = np.max(adj_gammas) - np.min(adj_gammas)
 range_del = np.max(adj_deltas) - np.min(adj_deltas)
 
 proportion = 1 #the proportion of parameter space that we want to explore (use this for unstable models)
-shift_alpha = 0 #if we want to shift the parameters away from the centre of the alpha space then change this
-shift_beta = 0 #if we want to shift the parameters away from the centre of the beta space then change this
 
-alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))) + (range_alph*shift_alpha), num=how_many_points_alph_bet)
-betas_to_surf = np.linspace(np.min(adj_betas) + (range_bet*((1-proportion)/(2))) + (range_bet*shift_beta), np.max(adj_betas) - (range_bet*((1-proportion)/(2))) + (range_bet*shift_beta), num=how_many_points_alph_bet)
+alphas_to_surf = np.linspace(np.min(adj_alphas) + (range_alph*((1-proportion)/(2))), np.max(adj_alphas) - (range_alph*((1-proportion)/(2))), num=how_many_points_alph_bet)
+betas_to_surf = np.linspace(np.min(adj_betas) + (range_bet*((1-proportion)/(2))), np.max(adj_betas) - (range_bet*((1-proportion)/(2))), num=how_many_points_alph_bet)
 gammas_to_surf = np.linspace(np.min(adj_gammas) + (range_gam*((1-proportion)/(2))), np.max(adj_gammas) - (range_gam*((1-proportion)/(2))), num=how_many_points_gam)
 deltas_to_surf = np.linspace(np.min(adj_deltas) + (range_del*((1-proportion)/(2))), np.max(adj_deltas) - (range_del*((1-proportion)/(2))), num=how_many_points_del)
 
@@ -702,8 +700,7 @@ for n in (deltas_to_surf):
         ax.set_xlabel('alpha')
         ax.set_ylabel('beta')
         ax.set_zlabel('BIC')
-        #ax.set_title('gamma=%.6e' %m) # f represents a float
-        ax.set_title("gamma={m}, delta={n}".format(m=m, n=n)) # f represents a float
+        ax.set_title("gamma={m}, delta={n}".format(m=f'{m:.2}', n=f'{n:.2}'))
 
 flat_BICs_all = [food for sublist in BICs_all for food in sublist] #flatten the BIC list
 
